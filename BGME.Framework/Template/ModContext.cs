@@ -1,7 +1,7 @@
 ﻿using Reloaded.Mod.Interfaces;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
 
-namespace BGME.Reloaded.Template
+namespace BGME.Framework.Template
 {
     /// <summary>
     /// Represents information passed in from the mod loader template to the implementing mod.

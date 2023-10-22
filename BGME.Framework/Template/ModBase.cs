@@ -1,5 +1,5 @@
 ﻿
-namespace BGME.Reloaded.Template
+namespace BGME.Framework.Template
 {
     /// <summary>
     /// Base class for implementing mod functionality.

@@ -7,7 +7,7 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
 
-namespace BGME.Reloaded.Template
+namespace BGME.Framework.Template
 {
     public class Startup : IMod
     {
