@@ -16,6 +16,6 @@
   "IsUniversalMod": false,
   "ModDependencies": [ "reloaded.sharedlib.hooks" ],
   "OptionalDependencies": [],
-  "SupportedAppId": [],
+  "SupportedAppId": [ "p4g.exe", "p5r.exe", "p3p.exe" ],
   "ProjectUrl": ""
 }
