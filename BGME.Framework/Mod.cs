@@ -1,6 +1,7 @@
 ﻿using BGME.Framework.Template;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Serilog;
 
 namespace BGME.Framework;
 
@@ -20,7 +21,7 @@ public class Mod : ModBase
     /// <summary>
     /// Provides access to the Reloaded logger.
     /// </summary>
-    private readonly ILogger _logger;
+    private readonly Reloaded.Mod.Interfaces.ILogger _logger;
 
     /// <summary>
     /// Entry point into the mod, instance that created this class.
@@ -41,6 +42,24 @@ public class Mod : ModBase
         _logger = context.Logger;
         _owner = context.Owner;
         _modConfig = context.ModConfig;
+
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Sink(new BgmeLogger(this._logger))
+            .MinimumLevel.Debug()
+            .CreateLogger();
+
+        try
+        {
+            Log.Information("Initializing.");
+
+            this.soundPatcher = new(this._hooks);
+
+            Log.Information("Initialized.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Problem encountered during intialization.");
+        }
     }
 
 
