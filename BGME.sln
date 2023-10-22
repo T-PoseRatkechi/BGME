@@ -5,6 +5,8 @@ VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BGME.Reloaded", "BGME.Reloaded\BGME.Reloaded.csproj", "{77BDE10A-6294-4C90-B707-17244E725BF9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonaMusicScript.Library", "PersonaMusicScript\src\PersonaMusicScript.Library\PersonaMusicScript.Library.csproj", "{10C4CED5-29B3-43B3-992D-5F818D2DF799}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{77BDE10A-6294-4C90-B707-17244E725BF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77BDE10A-6294-4C90-B707-17244E725BF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77BDE10A-6294-4C90-B707-17244E725BF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10C4CED5-29B3-43B3-992D-5F818D2DF799}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10C4CED5-29B3-43B3-992D-5F818D2DF799}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10C4CED5-29B3-43B3-992D-5F818D2DF799}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10C4CED5-29B3-43B3-992D-5F818D2DF799}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
