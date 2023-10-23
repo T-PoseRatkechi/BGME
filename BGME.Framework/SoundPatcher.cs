@@ -19,11 +19,11 @@ internal class SoundPatcher
     private readonly IHook<PlaySound> playSoundHook;
 
     private int? waveformAddress;
-    private ushort currentAwbIndex = 0;
+    private int currentAwbIndex = 0;
     private ushort currentShellCueId = 0;
 
-    [Function(new[] { Register.rcx, Register.rdx, Register.r8, Register.r9 }, Register.rax, false)]
-    unsafe private delegate void* PlaySound(int soundCategory, ushort soundId, int param3, int param4);
+    [Function(CallingConventions.Microsoft)]
+    unsafe private delegate void* PlaySound(int soundCategory, int soundId, int param3, int param4);
 
     public SoundPatcher(IReloadedHooks? hooks)
     {
@@ -67,7 +67,7 @@ internal class SoundPatcher
     /// <param name="param3">Unknown param.</param>
     /// <param name="param4">Unknown param.</param>
     /// <returns></returns>
-    private unsafe void* PlaySoundImpl(int soundCategory, ushort soundId, int param3, int param4)
+    private unsafe void* PlaySoundImpl(int soundCategory, int soundId, int param3, int param4)
     {
         if (!UseExtendedBgm(soundCategory, soundId))
         {
@@ -83,11 +83,11 @@ internal class SoundPatcher
 
         if (this.currentShellCueId == SONG_CUE_ID_1)
         {
-            this.SetWaveformAwbIndex(SONG_WAVEFORM_INDEX_1, this.currentAwbIndex);
+            this.SetWaveformAwbIndex(SONG_WAVEFORM_INDEX_1, (ushort)this.currentAwbIndex);
         }
         else
         {
-            this.SetWaveformAwbIndex(SONG_WAVEFORM_INDEX_2, this.currentAwbIndex);
+            this.SetWaveformAwbIndex(SONG_WAVEFORM_INDEX_2, (ushort)this.currentAwbIndex);
         }
 
         Log.Debug("Playing AWB index {currentAwbIndex} using Cue ID {currentShellCueId}.", this.currentAwbIndex, this.currentShellCueId);
