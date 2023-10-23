@@ -14,7 +14,7 @@
   "ReleaseMetadataFileName": "BGME.Framework.ReleaseMetadata.json",
   "PluginData": {},
   "IsUniversalMod": false,
-  "ModDependencies": [ "reloaded.sharedlib.hooks" ],
+  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII" ],
   "OptionalDependencies": [],
   "SupportedAppId": [ "p4g.exe", "p5r.exe", "p3p.exe" ],
   "ProjectUrl": ""
