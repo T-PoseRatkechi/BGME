@@ -1,7 +1,6 @@
 ﻿using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Serilog;
-using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework;
 

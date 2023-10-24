@@ -55,7 +55,7 @@ internal class FloorPatcher
         Log.Debug("Floor: {id}", floorId);
         if (this.music.Floors.TryGetValue(floorId, out var floorMusic))
         {
-            Log.Debug("Floor using BGME");
+            Log.Debug("Floor uses BGME");
             return Utilities.CalculateMusicId(floorMusic);
         }
 
