@@ -10,7 +10,7 @@ namespace BGME.Framework;
 internal class BgmeLogger : ILogEventSink
 {
     private readonly ILogger log;
-    private readonly ITextFormatter formatter = new MessageTemplateTextFormatter("[BGME Framework] [{Level}] {Message:lj}", null);
+    private readonly ITextFormatter formatter = new MessageTemplateTextFormatter("[BGME Framework] [{Level:u3}] {Message:lj}{NewLine}{Exception}", null);
 
     public BgmeLogger(ILogger log)
     {
@@ -24,6 +24,6 @@ internal class BgmeLogger : ILogEventSink
         var color = logEvent.Level == LogEventLevel.Error ? Color.Red
             : logEvent.Level == LogEventLevel.Debug ? Color.LightGreen : Color.White;
 
-        this.log.WriteLine(message.ToString(), color);
+        this.log.Write(message.ToString(), color);
     }
 }
