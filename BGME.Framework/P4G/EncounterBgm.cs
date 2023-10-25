@@ -1,16 +1,14 @@
 ﻿using BGME.Framework.Models;
 using BGME.Framework.Music;
-using PersonaMusicScript.Library.Models;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
-namespace BGME.Framework;
+namespace BGME.Framework.P4G;
 
-internal unsafe partial class EncounterPatcher
+internal unsafe class EncounterBgm : BaseEncounterBgm
 {
     [Function(new[] { Register.r8, Register.rcx }, Register.rax, true)]
     private delegate int GetEncounterBgm(nint encounterPtr, int encounterId);
@@ -22,16 +20,12 @@ internal unsafe partial class EncounterPatcher
     private IReverseWrapper<GetVictoryBgm>? victoryReverseWrapper;
     private IAsmHook? victoryBgmHook;
 
-    private readonly MusicService music;
-    private EncounterMusic? currentEncounterMusic;
-
-    public EncounterPatcher(
+    public EncounterBgm(
         IReloadedHooks hooks,
         IStartupScanner scanner,
         MusicService music)
+        : base(music)
     {
-        this.music = music;
-
         scanner.AddMainModuleScan("0F B7 4C D0 16", (result) =>
         {
             if (!result.Found)
@@ -84,12 +78,10 @@ internal unsafe partial class EncounterPatcher
 
     private int GetVictoryBgmImpl(int defaultMusicId)
     {
-        if (this.currentEncounterMusic?.Encounter.VictoryMusic != null)
+        var victoryMusicId = this.GetVictoryMusic();
+        if (victoryMusicId != -1)
         {
-            Log.Debug("Victory Music uses BGME");
-            var musicId = Utilities.CalculateMusicId(this.currentEncounterMusic.Encounter.VictoryMusic, this.currentEncounterMusic.Context);
-            this.currentEncounterMusic = null;
-            return musicId;
+            return victoryMusicId;
         }
 
         return defaultMusicId;
@@ -97,25 +89,8 @@ internal unsafe partial class EncounterPatcher
 
     private int GetEncounterBgmImpl(nint encounterPtr, int encounterId)
     {
-        Log.Debug("Encounter: {id}", encounterId);
-
-        var context = (EncounterContext) (*(ushort*)(encounterPtr + 0x1e));
-        Log.Debug("Context: {context}", context);
-
-        if (this.music.Encounters.TryGetValue(encounterId, out var encounter))
-        {
-            Log.Debug("Encounter uses BGME");
-            this.currentEncounterMusic = new(encounter, context);
-            if (encounter.BattleMusic != null)
-            {
-                Log.Debug("Battle Music uses BGME");
-                var musicValue = Utilities.CalculateMusicId(encounter.BattleMusic, context);
-                return musicValue;
-            }
-        }
-
-        return -1;
+        var context = (EncounterContext)(*(ushort*)(encounterPtr + 0x1e));
+        return this.GetBattleMusic(encounterId, context);
     }
 
-    private record EncounterMusic(Encounter Encounter, EncounterContext Context);
 }
