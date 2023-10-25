@@ -1,10 +1,11 @@
-﻿using Reloaded.Hooks.Definitions;
+﻿using BGME.Framework.Music;
+using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Serilog;
 
-namespace BGME.Framework;
+namespace BGME.Framework.P4G;
 
-internal class SoundPatcher
+internal class SoundPatcher : BaseSound
 {
     // Constants.
     private const int WAVEFORM_ENTRY_SIZE = 20;
@@ -24,7 +25,8 @@ internal class SoundPatcher
     [Function(CallingConventions.Microsoft)]
     unsafe private delegate void* PlaySound(int soundCategory, int soundId, int param3, int param4);
 
-    public SoundPatcher(IReloadedHooks? hooks)
+    public SoundPatcher(IReloadedHooks hooks, MusicService music)
+        : base(music)
     {
         unsafe
         {
@@ -73,10 +75,12 @@ internal class SoundPatcher
             return this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
         }
 
+        var bgmId = this.GetGlobalBgmId(soundId) ?? soundId;
+
         // Swap shell cue ID to trigger a song change.
-        if (this.currentAwbIndex != soundId)
+        if (this.currentAwbIndex != bgmId)
         {
-            this.currentAwbIndex = soundId;
+            this.currentAwbIndex = bgmId;
             this.SwitchShellCueId();
         }
 
