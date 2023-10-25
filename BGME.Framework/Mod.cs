@@ -1,67 +1,105 @@
-﻿using BGME.Framework.Template;
+﻿using BGME.Framework.Music;
+using BGME.Framework.Template;
+using PersonaMusicScript.Library;
 using Reloaded.Hooks.ReloadedII.Interfaces;
+using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Reloaded.Mod.Interfaces.Internal;
 using Serilog;
+using System.Diagnostics;
 
 namespace BGME.Framework;
 
 public class Mod : ModBase
 {
-    /// <summary>
-    /// Provides access to the mod loader API.
-    /// </summary>
+    private static readonly Dictionary<string, string> Games = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["p4g.exe"] = Game.P4G_PC,
+        ["p5r.exe"] = Game.P5R_PC,
+        ["p3p.exe"] = Game.P3P_PC,
+    };
+
     private readonly IModLoader _modLoader;
-
-    /// <summary>
-    /// Provides access to the Reloaded.Hooks API.
-    /// </summary>
-    /// <remarks>This is null if you remove dependency on Reloaded.SharedLib.Hooks in your mod.</remarks>
-    private readonly IReloadedHooks? _hooks;
-
-    /// <summary>
-    /// Provides access to the Reloaded logger.
-    /// </summary>
+    private readonly IReloadedHooks _hooks;
     private readonly Reloaded.Mod.Interfaces.ILogger _logger;
-
-    /// <summary>
-    /// Entry point into the mod, instance that created this class.
-    /// </summary>
     private readonly IMod _owner;
-
-    /// <summary>
-    /// The configuration of the currently executing mod.
-    /// </summary>
     private readonly IModConfig _modConfig;
 
-    private readonly SoundPatcher? soundPatcher;
+    private readonly IBgmeService? bgme;
+    private readonly MusicService? music;
 
     public Mod(ModContext context)
     {
         _modLoader = context.ModLoader;
-        _hooks = context.Hooks;
+        _hooks = context.Hooks ?? throw new Exception("ReloadedHooks is null.");
         _logger = context.Logger;
         _owner = context.Owner;
         _modConfig = context.ModConfig;
+
+#if DEBUG
+        Debugger.Launch();
+#endif
 
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Sink(new BgmeLogger(this._logger))
             .MinimumLevel.Debug()
             .CreateLogger();
 
-        try
+        var appId = this._modLoader.GetAppConfig().AppId;
+        if (!Games.TryGetValue(appId, out var game))
         {
-            Log.Information("Initializing.");
-
-            this.soundPatcher = new(this._hooks);
-
-            Log.Information("Initialized.");
+            Log.Error("Unsupported app id {id}.", appId);
+            return;
         }
-        catch (Exception ex)
+
+        var scannerController = this._modLoader.GetController<IStartupScanner>();
+        if (scannerController == null
+            || !scannerController.TryGetTarget(out var scanner))
         {
-            Log.Error(ex, "Problem encountered during intialization.");
+            Log.Error("Failed to get startup scanner.");
+            return;
+        }
+
+        var modDir = this._modLoader.GetDirectoryForModId(this._modConfig.ModId);
+        var resourcesDir = Path.Join(modDir, "resources");
+        var musicParser = new MusicParser(game, resourcesDir);
+
+        this.music = new(musicParser);
+        this._modLoader.ModLoading += OnModLoading;
+
+        switch (game)
+        {
+            case Game.P4G_PC:
+                this.bgme = new P4G.BgmeService(this._hooks, scanner, this.music);
+                break;
+            case Game.P3P_PC:
+                this.bgme = new P3P.BgmeService(this._hooks, scanner, this.music);
+                break;
+            case Game.P5R_PC:
+                this.bgme = new P5R.BgmeService(this._hooks, scanner, this.music);
+                break;
+            default:
+                Log.Error("Missing BGME service for game {game}.", game);
+                break;
         }
     }
 
+    private void OnModLoading(IModV1 mod, IModConfigV1 config)
+    {
+        if (!config.ModDependencies.Contains(this._modConfig.ModId))
+        {
+            return;
+        }
+
+        var modDir = this._modLoader.GetDirectoryForModId(config.ModId);
+        var bgmeDir = Path.Join(modDir, "bgme");
+        if (!Directory.Exists(bgmeDir))
+        {
+            return;
+        }
+
+        this.music?.AddMusicFolder(bgmeDir);
+    }
 
     #region For Exports, Serialization etc.
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
