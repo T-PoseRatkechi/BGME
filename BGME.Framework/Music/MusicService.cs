@@ -28,6 +28,8 @@ internal class MusicService
 
     public Dictionary<int, IMusic> Floors => this.currentMusic.Floors;
 
+    public Dictionary<int, IMusic> Global => this.currentMusic.Global;
+
     public void AddMusicFolder(string folder)
     {
         var watcher = FileSystemWatcherFactory.Create(
