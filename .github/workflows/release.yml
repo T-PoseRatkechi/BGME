@@ -27,10 +27,10 @@ jobs:
           dotnet-version: 7.0.x
 
       - name: Build project (Release)
-        run: dotnet publish BGME.Framework -c Release -o release /p:OutputPath=BGME.Framework/output
+        run: dotnet publish BGME.Framework -c Release -o Release/BGME.Framework /p:OutputPath=BGME.Framework/output
 
       - name: Zip folder
-        run: Compress-Archive -Path release -DestinationPath BGME.Framework.zip
+        run: Compress-Archive -Path Release/BGME.Framework -DestinationPath BGME.Framework.zip
 
       - name: Release
         uses: softprops/action-gh-release@v0.1.15
