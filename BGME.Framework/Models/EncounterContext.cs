@@ -5,4 +5,5 @@ public enum EncounterContext
     Normal,
     Advantage,
     Disadvantage,
+    Unknown,
 }

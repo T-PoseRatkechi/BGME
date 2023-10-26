@@ -60,14 +60,23 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
 
     private int GetEncounterBgmIdImpl(nint encounterPtr, int encounterId)
     {
-        var battleMusicId = this.GetBattleMusic(encounterId, EncounterContext.Normal);
+        var context = (EncounterContext) (*(int*)(encounterPtr + 0x28c));
 
-        // Music changed by script.
-        if (battleMusicId != -1)
+        // P5R swaps encounter context values.
+        if (context == EncounterContext.Advantage)
         {
-            var encounterBgmPtr = (int*)(encounterPtr + 0x9ac);
-            *encounterBgmPtr = battleMusicId;
+            context = EncounterContext.Disadvantage;
         }
+        else if (context == EncounterContext.Disadvantage)
+        {
+            context = EncounterContext.Advantage;
+        }
+
+        var battleMusicId = this.GetBattleMusic(encounterId, context);
+
+        // Write bgm id to encounter bgm var.
+        var encounterBgmPtr = (int*)(encounterPtr + 0x9ac);
+        *encounterBgmPtr = battleMusicId;
 
         Log.Debug("Encounter BGM ID written: {id}", battleMusicId);
         return battleMusicId;

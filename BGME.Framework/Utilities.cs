@@ -51,6 +51,9 @@ internal static class Utilities
             {
                 return CalculateMusicId(battleBgm.DisadvantageMusic);
             }
+
+            Log.Error("Unknown battle context.");
+            return -1;
         }
 
         return CalculateMusicId(music);
