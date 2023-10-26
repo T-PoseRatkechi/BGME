@@ -14,6 +14,7 @@ internal unsafe class Sound : BaseSound
     private const int EXTENDED_BGM_ID = 10000;
     private const int WAVEFORM_ENTRY_SIZE = 2;
 
+    private const int DEN_CUE_ID = 939;
     private const int FALLBACK_CUE_ID = 900;
 
     // Shell songs.
@@ -24,15 +25,19 @@ internal unsafe class Sound : BaseSound
 
     [Function(CallingConventions.Microsoft)]
     private delegate void PlayBgmFunction(nint param1, nint param2, nint param3, nint param4);
-    private IHook<PlayBgmFunction>? playBgmHook;
+    private readonly IHook<PlayBgmFunction>? playBgmHook;
 
     private IAsmHook? customAcbHook;
     private IAsmHook? customAwbHook;
     private IAsmHook? persistentDlcBgmHook;
-    private IAsmHook? alwaysLoadDlcBgmHook;
+
+    [Function(CallingConventions.Microsoft)]
+    private delegate int GetCostumeIdFunction();
+    private IHook<GetCostumeIdFunction>? getCostumeIdHook;
 
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
+    private int currentCostumeId = 1;
 
     public Sound(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
@@ -97,30 +102,32 @@ internal unsafe class Sound : BaseSound
         {
             if (!result.Found)
             {
-                throw new Exception("Failed to find always load dlc dlc bgm pattern.");
+                throw new Exception("Failed to find always load dlc bgm pattern.");
             }
 
             var address = Utilities.BaseAddress + result.Offset;
-            var patch = new string[]
-            {
-                "use64",
-                $"mov eax, 1"
-            };
-
-            this.alwaysLoadDlcBgmHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
-                ?? throw new Exception("Failed to create always load dlc bgm hook.");
+            this.getCostumeIdHook = hooks.CreateHook<GetCostumeIdFunction>(this.GetCostumeId, address);
         });
 
-
         this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, 0x155966B00).Activate()
-            ?? throw new Exception("Failed to create persist dlc bgm pattern.");
+            ?? throw new Exception("Failed to create play bgm pattern.");
     }
 
     private void PlayBgm(nint param1, nint param2, nint bgmId, nint param4)
     {
+        // BUGFIX:
+        // Entering Thieves Den disables DLC BGM and
+        // DLC BGM only reloads if the costume ID changes.
+        // If the costume ID does not change after leaving the Thieves Den
+        // the DLC BGM remains permanently disabled.
+        if (bgmId == DEN_CUE_ID)
+        {
+            this.currentCostumeId = this.currentCostumeId == 1 ? 2 : 1;
+            Log.Debug("BUGFIX: Assuming player entered Thieves Den, swapping costume ID.");
+        }
+
         var currentBgmId = this.GetGlobalBgmId((int)bgmId);
 
-        // Disable DLC BGM if trying to play original songs.
         if (bgmId == SHELL_SONG_1.CueId || bgmId == SHELL_SONG_2.CueId)
         {
             currentBgmId = FALLBACK_CUE_ID;
@@ -164,6 +171,11 @@ internal unsafe class Sound : BaseSound
 
         Log.Debug("Playing BGM ID: {id}", currentBgmId);
         this.playBgmHook?.OriginalFunction(param1, param2, currentBgmId, param4);
+    }
+
+    private int GetCostumeId()
+    {
+        return this.currentCostumeId;
     }
 
     /// <summary>
