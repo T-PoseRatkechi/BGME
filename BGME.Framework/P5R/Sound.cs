@@ -14,20 +14,11 @@ internal unsafe class Sound : BaseSound
     private const int EXTENDED_BGM_ID = 10000;
     private const int WAVEFORM_ENTRY_SIZE = 2;
 
-    private const int NORMAL_CUE_ID = 300;
-    private const int NORMAL_WAVEFORM_INDEX = 997;
-
-    private const int VICTORY_CUE_ID = 340;
-    private const int VICTORY_WAVEFORM_INDEX = 998;
-
-    private const int ADVANTAGE_CUE_ID = 907;
-    private const int ADVANTAGE_WAVEFORM_INDEX = 999;
-
     private const int FALLBACK_CUE_ID = 900;
 
     // Shell songs.
-    private static readonly ShellCue SHELL_SONG_1 = new(NORMAL_CUE_ID, NORMAL_WAVEFORM_INDEX);
-    private static readonly ShellCue SHELL_SONG_2 = new(VICTORY_CUE_ID, VICTORY_WAVEFORM_INDEX);
+    private static readonly ShellCue SHELL_SONG_1 = new(200, 997);
+    private static readonly ShellCue SHELL_SONG_2 = new(201, 998);
 
     private readonly nint* acbPointer;
 
@@ -132,7 +123,8 @@ internal unsafe class Sound : BaseSound
         // Disable DLC BGM if trying to play original songs.
         if (currentBgmId == SHELL_SONG_1.CueId || currentBgmId == SHELL_SONG_2.CueId)
         {
-            // TODO: Disable dlc bgm.
+            currentBgmId = FALLBACK_CUE_ID;
+            Log.Warning("Tried to play a shell song Cue ID. I guess they're not unused...");
         }
 
         // Use extended BGM.
@@ -217,5 +209,10 @@ internal unsafe class Sound : BaseSound
         this.currentShellSong = (this.currentShellSong == SHELL_SONG_1) ? SHELL_SONG_2 : SHELL_SONG_1;
     }
 
+    /// <summary>
+    /// Shell cue properties.
+    /// </summary>
+    /// <param name="CueId">Cue ID.</param>
+    /// <param name="WaveTableIndex">Index in DLC BGM waveform table.</param>
     private record ShellCue(int CueId, int WaveTableIndex);
 }
