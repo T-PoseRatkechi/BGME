@@ -92,5 +92,4 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
         var context = (EncounterContext)(*(ushort*)(encounterPtr + 0x1e));
         return this.GetBattleMusic(encounterId, context);
     }
-
 }

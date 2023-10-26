@@ -30,7 +30,7 @@ internal class SoundPatcher : BaseSound
     {
         unsafe
         {
-            this.playSoundHook = hooks?.CreateHook<PlaySound>(this.PlaySoundImpl, 0x16BB7F130).Activate()
+            this.playSoundHook = hooks.CreateHook<PlaySound>(this.PlaySoundImpl, 0x16BB7F130).Activate()
                 ?? throw new Exception("Failed to create play sound hook.");
         }
     }
