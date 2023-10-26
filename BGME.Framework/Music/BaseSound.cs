@@ -11,7 +11,7 @@ internal abstract class BaseSound
         this.music = music;
     }
 
-    protected int? GetGlobalBgmId(int bgmId)
+    protected int GetGlobalBgmId(int bgmId)
     {
         if (this.music.Global.TryGetValue(bgmId, out var newMusic))
         {
@@ -19,6 +19,6 @@ internal abstract class BaseSound
             return Utilities.CalculateMusicId(newMusic);
         }
 
-        return null;
+        return bgmId;
     }
 }

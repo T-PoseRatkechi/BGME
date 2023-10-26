@@ -75,7 +75,7 @@ internal class SoundPatcher : BaseSound
             return this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
         }
 
-        var bgmId = this.GetGlobalBgmId(soundId) ?? soundId;
+        var bgmId = this.GetGlobalBgmId(soundId);
 
         // Swap shell cue ID to trigger a song change.
         if (this.currentAwbIndex != bgmId)

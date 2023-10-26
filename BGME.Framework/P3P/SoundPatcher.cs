@@ -55,7 +55,7 @@ internal unsafe class SoundPatcher : BaseSound
 
     private byte* GetBgmStringImpl(int bgmId)
     {
-        var bgmString = string.Format("{0:00}.ADX\0", this.GetGlobalBgmId(bgmId) ?? bgmId);
+        var bgmString = string.Format("{0:00}.ADX\0", this.GetGlobalBgmId(bgmId));
         if (bgmString.Length > MAX_STRING_SIZE)
         {
             bgmString = "01.ADX\0";
