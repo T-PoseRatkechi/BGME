@@ -17,8 +17,8 @@ internal unsafe class Sound : BaseSound
     private const int FALLBACK_CUE_ID = 900;
 
     // Shell songs.
-    private static readonly ShellCue SHELL_SONG_1 = new(200, 997);
-    private static readonly ShellCue SHELL_SONG_2 = new(201, 998);
+    private static readonly ShellCue SHELL_SONG_1 = new(200, 0);
+    private static readonly ShellCue SHELL_SONG_2 = new(201, 1);
 
     private readonly nint* acbPointer;
 
@@ -121,7 +121,7 @@ internal unsafe class Sound : BaseSound
         var currentBgmId = this.GetGlobalBgmId((int)bgmId);
 
         // Disable DLC BGM if trying to play original songs.
-        if (currentBgmId == SHELL_SONG_1.CueId || currentBgmId == SHELL_SONG_2.CueId)
+        if (bgmId == SHELL_SONG_1.CueId || bgmId == SHELL_SONG_2.CueId)
         {
             currentBgmId = FALLBACK_CUE_ID;
             Log.Warning("Tried to play a shell song Cue ID. I guess they're not unused...");
@@ -137,7 +137,7 @@ internal unsafe class Sound : BaseSound
                 var awbIndex = (ushort)(currentBgmId - EXTENDED_BGM_ID);
 
                 // Swap shell cue ID to trigger a song change.
-                if (this.currentAwbIndex != currentBgmId)
+                if (this.currentAwbIndex != awbIndex)
                 {
                     this.SwapShellCue();
                     this.currentAwbIndex = awbIndex;
@@ -195,7 +195,7 @@ internal unsafe class Sound : BaseSound
         {
             if (this.AcbAddress is nint address)
             {
-                var waveformTableAddress = address + 2178;
+                var waveformTableAddress = address + 2146;
                 // Log.Debug("Waveform Table Address: {address}", waveformTableAddress.ToString("X"));
                 return waveformTableAddress;
             }
