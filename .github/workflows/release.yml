@@ -1,0 +1,36 @@
+﻿name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Initialize Git Submodules
+        run: git submodule update --init --recursive
+
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Build project (Release)
+        run: dotnet publish -c Release -o ./BGME/BGME.Framework
+
+      - name: Zip folder
+        run: Compress-Archive -Path ./BGME/BGME.Framework -DestinationPath ./BGME/BGME.Framework.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          files: ./BGME/BGME.Framework.zip
+          fail_on_unmatched_files: true
