@@ -24,13 +24,13 @@ jobs:
           dotnet-version: 7.0.x
 
       - name: Build project (Release)
-        run: dotnet publish -c Release -o ./BGME/BGME.Framework
+        run: dotnet publish -c Release -o ./Release
 
       - name: Zip folder
-        run: Compress-Archive -Path ./BGME/BGME.Framework -DestinationPath ./BGME/BGME.Framework.zip
+        run: Compress-Archive -Path ./Release -DestinationPath ./BGME.Framework.zip
 
       - name: Release
         uses: softprops/action-gh-release@v0.1.15
         with:
-          files: ./BGME/BGME.Framework.zip
+          files: ./BGME.Framework.zip
           fail_on_unmatched_files: true
