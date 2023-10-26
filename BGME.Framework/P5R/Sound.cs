@@ -33,10 +33,12 @@ internal unsafe class Sound : BaseSound
 
     [Function(CallingConventions.Microsoft)]
     private delegate void PlayBgmFunction(nint param1, nint param2, nint param3, nint param4);
-    private IHook<PlayBgmFunction> playBgmHook;
+    private IHook<PlayBgmFunction>? playBgmHook;
 
     private IAsmHook? customAcbHook;
     private IAsmHook? customAwbHook;
+    private IAsmHook? persistentDlcBgmHook;
+    private IAsmHook? alwaysLoadDlcBgmHook;
 
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
@@ -82,12 +84,56 @@ internal unsafe class Sound : BaseSound
                 ?? throw new Exception("Failed to create custom awb hook.");
         });
 
-        this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, 0x155966B00).Activate();
+        scanner.AddMainModuleScan("77 07 E8 01 D8 5D 00", result =>
+        {
+            if (!result.Found)
+            {
+                throw new Exception("Failed to find persist dlc bgm pattern.");
+            }
+
+            var address = Utilities.BaseAddress + result.Offset;
+            var patch = new string[]
+            {
+                "use64",
+                $"stc"
+            };
+
+            this.persistentDlcBgmHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
+                ?? throw new Exception("Failed to create persist dlc bgm hook.");
+        });
+
+        scanner.AddMainModuleScan("48 8B 0D B6 2F 23 ED", result =>
+        {
+            if (!result.Found)
+            {
+                throw new Exception("Failed to find always load dlc dlc bgm pattern.");
+            }
+
+            var address = Utilities.BaseAddress + result.Offset;
+            var patch = new string[]
+            {
+                "use64",
+                $"mov eax, 1"
+            };
+
+            this.alwaysLoadDlcBgmHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
+                ?? throw new Exception("Failed to create always load dlc bgm hook.");
+        });
+
+
+        this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, 0x155966B00).Activate()
+            ?? throw new Exception("Failed to create persist dlc bgm pattern.");
     }
 
     private void PlayBgm(nint param1, nint param2, nint bgmId, nint param4)
     {
         var currentBgmId = this.GetGlobalBgmId((int)bgmId);
+
+        // Disable DLC BGM if trying to play original songs.
+        if (currentBgmId == SHELL_SONG_1.CueId || currentBgmId == SHELL_SONG_2.CueId)
+        {
+            // TODO: Disable dlc bgm.
+        }
 
         // Use extended BGM.
         if (currentBgmId >= EXTENDED_BGM_ID)
@@ -99,7 +145,7 @@ internal unsafe class Sound : BaseSound
                 var awbIndex = (ushort)(currentBgmId - EXTENDED_BGM_ID);
 
                 // Swap shell cue ID to trigger a song change.
-                if (awbIndex != this.currentAwbIndex)
+                if (this.currentAwbIndex != currentBgmId)
                 {
                     this.SwapShellCue();
                     this.currentAwbIndex = awbIndex;
@@ -124,16 +170,8 @@ internal unsafe class Sound : BaseSound
             }
         }
 
-        if (currentBgmId != bgmId)
-        {
-            Log.Debug("Redirected BGM ID: {id}", currentBgmId);
-        }
-        else
-        {
-            Log.Debug("Playing BGM ID: {id}", currentBgmId);
-        }
-
-        this.playBgmHook.OriginalFunction(param1, param2, currentBgmId, param4);
+        Log.Debug("Playing BGM ID: {id}", currentBgmId);
+        this.playBgmHook?.OriginalFunction(param1, param2, currentBgmId, param4);
     }
 
     /// <summary>
@@ -151,7 +189,7 @@ internal unsafe class Sound : BaseSound
             }
 
             var acbAddress = *(nint*)(*this.acbPointer + 0x18);
-            Log.Debug("ACB Address: {address}", acbAddress.ToString("X"));
+            // Log.Debug("ACB Address: {address}", acbAddress.ToString("X"));
             return acbAddress;
         }
     }
@@ -166,7 +204,7 @@ internal unsafe class Sound : BaseSound
             if (this.AcbAddress is nint address)
             {
                 var waveformTableAddress = address + 2178;
-                Log.Debug("Waveform Table Address: {address}", waveformTableAddress.ToString("X"));
+                // Log.Debug("Waveform Table Address: {address}", waveformTableAddress.ToString("X"));
                 return waveformTableAddress;
             }
 

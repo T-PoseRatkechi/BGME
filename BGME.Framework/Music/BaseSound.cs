@@ -15,7 +15,7 @@ internal abstract class BaseSound
     {
         if (this.music.Global.TryGetValue(bgmId, out var newMusic))
         {
-            Log.Information("Global BGM overwriting BGM ID: {id}", bgmId);
+            Log.Debug("Global BGM overwriting BGM ID: {id}", bgmId);
             return Utilities.CalculateMusicId(newMusic);
         }
 
