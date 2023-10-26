@@ -10,12 +10,23 @@
   "ModR2RManagedDll64": "x64/BGME.Framework.dll",
   "ModNativeDll32": "",
   "ModNativeDll64": "",
+  "Tags": [],
+  "CanUnload": false,
+  "HasExports": false,
   "IsLibrary": false,
   "ReleaseMetadataFileName": "BGME.Framework.ReleaseMetadata.json",
   "PluginData": {},
   "IsUniversalMod": false,
-  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII" ],
+  "ModDependencies": [
+    "p5rpc.modloader",
+    "Reloaded.Memory.SigScan.ReloadedII",
+    "reloaded.sharedlib.hooks"
+  ],
   "OptionalDependencies": [],
-  "SupportedAppId": [ "p4g.exe", "p5r.exe", "p3p.exe" ],
+  "SupportedAppId": [
+    "p3p.exe",
+    "p4g.exe",
+    "p5r.exe"
+  ],
   "ProjectUrl": ""
 }
