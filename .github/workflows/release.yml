@@ -24,7 +24,7 @@ jobs:
           dotnet-version: 7.0.x
 
       - name: Build project (Release)
-        run: dotnet publish -c Release -o ./Release
+        run: dotnet publish -c Release -o ./Release /p:OutputPath=./build
 
       - name: Zip folder
         run: Compress-Archive -Path ./Release -DestinationPath ./BGME.Framework.zip
