@@ -37,6 +37,12 @@
     <Content Include="ModConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Update="P5REssentials\CPK\BASE.CPK\SOUND\BGM_42.acb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="P5REssentials\CPK\BASE.CPK\SOUND\BGM_42.awb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Preview.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -52,6 +58,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PersonaMusicScript\src\PersonaMusicScript.Library\PersonaMusicScript.Library.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="P5REssentials\CPK\BASE.CPK\SOUND\" />
   </ItemGroup>
 
 </Project>
