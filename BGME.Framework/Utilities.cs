@@ -25,6 +25,10 @@ internal static class Utilities
             Log.Debug("Random Song ID from ({min}, {max}): {id}", randomSong.MinSongId, randomSong.MaxSongId, randomId);
             return randomId;
         }
+        else if (music is Sound sound)
+        {
+            return CalculateMusicId(sound.Music);
+        }
 
         return -1;
     }
