@@ -30,6 +30,8 @@ internal class MusicService
 
     public Dictionary<int, IMusic> Global => this.currentMusic.Global;
 
+    public EventFrame? GetEventFrame(int majorId, int minorId) => this.currentMusic.GetEventFrame(majorId, minorId);
+
     public void AddMusicFolder(string folder)
     {
         var watcher = FileSystemWatcherFactory.Create(
