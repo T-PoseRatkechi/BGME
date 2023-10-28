@@ -20,10 +20,10 @@ internal abstract class BaseEncounterBgm
         {
             Log.Debug("Victory Music uses BGME");
             var musicId = Utilities.CalculateMusicId(currentEncounterMusic.Encounter.VictoryMusic, currentEncounterMusic.Context);
-            currentEncounterMusic = null;
             return musicId;
         }
 
+        currentEncounterMusic = null;
         return -1;
     }
 
