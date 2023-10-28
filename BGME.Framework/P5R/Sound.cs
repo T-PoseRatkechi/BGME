@@ -21,8 +21,6 @@ internal unsafe class Sound : BaseSound
     private static readonly ShellCue SHELL_SONG_1 = new(200, 0);
     private static readonly ShellCue SHELL_SONG_2 = new(201, 1);
 
-    private readonly nint* acbPointer;
-
     [Function(CallingConventions.Microsoft)]
     private delegate void PlayBgmFunction(nint param1, nint param2, nint param3, nint param4);
     private readonly IHook<PlayBgmFunction>? playBgmHook;
@@ -42,8 +40,6 @@ internal unsafe class Sound : BaseSound
     public Sound(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
     {
-        this.acbPointer = (nint*)(Utilities.BaseAddress + 0x26E05A0);
-
         scanner.AddMainModuleScan("E8 35 66 7C EA 44 0F B7 07", result =>
         {
             if (!result.Found)
@@ -185,15 +181,24 @@ internal unsafe class Sound : BaseSound
     {
         get
         {
-            // DLC BGM ACB not loaded.
-            if (*this.acbPointer == 0)
+            nint acbAddress;
+            if (AcbPointers.AcbAddres_1 is nint address1)
             {
-                Log.Warning("Attempted to get DLC BGM ACB address while none loaded.");
-                return null;
+                Log.Debug("Using ACB pointer 1.");
+                acbAddress = address1;
+            }
+            else if (AcbPointers.AcbAddress_2 is nint address2)
+            {
+                Log.Debug("Using ACB pointer 2.");
+                acbAddress = address2;
+            }
+            else
+            {
+                Log.Debug("Using ACB pointer 3.");
+                acbAddress = AcbPointers.AcbAddress_3;
             }
 
-            var acbAddress = *(nint*)(*this.acbPointer + 0x18);
-            // Log.Debug("ACB Address: {address}", acbAddress.ToString("X"));
+            Log.Debug("ACB Address: {address}", acbAddress.ToString("X"));
             return acbAddress;
         }
     }
