@@ -1,11 +1,12 @@
 ﻿using BGME.Framework.Music;
+using PersonaMusicScript.Library.Models;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Serilog;
 
 namespace BGME.Framework.P4G;
 
-internal class SoundPatcher : BaseSound
+internal unsafe class SoundPatcher : BaseSound
 {
     // Constants.
     private const int WAVEFORM_ENTRY_SIZE = 20;
@@ -16,23 +17,22 @@ internal class SoundPatcher : BaseSound
     private const ushort SONG_CUE_ID_2 = 61;
     private const ushort SONG_WAVEFORM_INDEX_2 = 60;
 
-    private readonly IHook<PlaySound> playSoundHook;
+    private readonly IHook<PlaySoundFunction> playSoundHook;
 
-    private int? waveformAddress;
     private int currentAwbIndex = 0;
     private ushort currentShellCueId = 0;
 
     [Function(CallingConventions.Microsoft)]
-    unsafe private delegate void* PlaySound(int soundCategory, int soundId, int param3, int param4);
+    private delegate void* PlaySoundFunction(int soundCategory, int soundId, nint param3, nint param4);
+    private IFunction<PlaySoundFunction> playSoundFunction;
 
     public SoundPatcher(IReloadedHooks hooks, MusicService music)
         : base(music)
     {
-        unsafe
-        {
-            this.playSoundHook = hooks.CreateHook<PlaySound>(this.PlaySoundImpl, 0x16BB7F130).Activate()
-                ?? throw new Exception("Failed to create play sound hook.");
-        }
+        this.playSoundFunction = hooks.CreateFunction<PlaySoundFunction>(0x16BB7F130);
+
+        this.playSoundHook = this.playSoundFunction.Hook(this.PlaySoundImpl).Activate()
+            ?? throw new Exception("Failed to create play sound hook.");
     }
 
     /// <summary>
@@ -42,21 +42,26 @@ internal class SoundPatcher : BaseSound
     {
         get
         {
-            if (this.waveformAddress == null)
-            {
-                // Use saved address if previously calculated.
-                if (this.waveformAddress != null)
-                {
-                    return (int)this.waveformAddress;
-                }
+            // Calculate address.
+            int* address = (int*)0x140BEAB30;
+            address = (int*)(*address + 0x18);
 
-                // Calculate address.
-                int* address = (int*)0x140BEAB30;
-                address = (int*)(*address + 0x18);
-                this.waveformAddress = *address + 0xAF77;
-            }
+            var tableAddress = *address + 0xAF77;
+            return tableAddress;
+        }
+    }
 
-            return (int)this.waveformAddress;
+    public void PlayMusic(IMusic music)
+    {
+        var bgmId = Utilities.CalculateMusicId(music);
+        if (music is Sound sound)
+        {
+            Log.Debug("PlaySound(0, {bgmId}, {setting1}, {setting2})", bgmId, sound.Setting_1, sound.Setting_2);
+            this.playSoundFunction.GetWrapper()(0, bgmId, sound.Setting_1, sound.Setting_2);
+        }
+        else
+        {
+            this.playSoundFunction.GetWrapper()(0, bgmId, 0, 0);
         }
     }
 
@@ -68,7 +73,7 @@ internal class SoundPatcher : BaseSound
     /// <param name="param3">Unknown param.</param>
     /// <param name="param4">Unknown param.</param>
     /// <returns></returns>
-    private unsafe void* PlaySoundImpl(int soundCategory, int soundId, int param3, int param4)
+    private unsafe void* PlaySoundImpl(int soundCategory, int soundId, nint param3, nint param4)
     {
         if (!UseExtendedBgm(soundCategory, soundId))
         {
