@@ -132,13 +132,18 @@ internal unsafe class SoundPatcher : BaseSound
     /// <param name="newAwbIndex">New AWB index to use.</param>
     unsafe private void SetWaveformAwbIndex(int waveformIndex, ushort newAwbIndex)
     {
+        Log.Debug("Setting Waveform AWB Index || Waveform Index: {waveIndex} || New AWB Index: {awbIndex}", waveformIndex, newAwbIndex);
+
         // AWB index property uses big endian.
         var bigEndianAwbIndex = BitConverter.ToUInt16(BitConverter.GetBytes(newAwbIndex).Reverse().ToArray());
 
         // Change AWB index.
         var entryOffset = this.WaveformAddress + waveformIndex * WAVEFORM_ENTRY_SIZE;
+        Log.Debug("Entry Address: {address}", entryOffset);
+
         ushort* entryAwbIndex = (ushort*)(entryOffset + 16);
         *entryAwbIndex = bigEndianAwbIndex;
+        Log.Debug("Set Waveform AWB Index || Waveform Index: {waveIndex} || New AWB Index: {awbIndex}", waveformIndex, newAwbIndex);
     }
 
     /// <summary>
@@ -167,5 +172,7 @@ internal unsafe class SoundPatcher : BaseSound
         {
             this.currentShellCueId = SONG_CUE_ID_1;
         }
+
+        Log.Debug("Swapped Shell Cue ID to: {id}", this.currentShellCueId);
     }
 }
