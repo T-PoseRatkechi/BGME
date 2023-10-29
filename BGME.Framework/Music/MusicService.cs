@@ -1,7 +1,6 @@
 ﻿using PersonaMusicScript.Library;
 using PersonaMusicScript.Library.Models;
 using Reloaded.Mod.Loader.IO.Utility;
-using Serilog;
 
 namespace BGME.Framework.Music;
 
@@ -75,11 +74,11 @@ internal class MusicService
         try
         {
             this.parser.ParseFile(file, this.currentMusic);
-            Log.Information("Parsed music script.\nFile: {file}", file);
+            Log.Information($"Parsed music script.\nFile: {file}");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to parse music script.\nFile: {file}", file);
+            Log.Error(ex, $"Failed to parse music script.\nFile: {file}");
         }
     }
 

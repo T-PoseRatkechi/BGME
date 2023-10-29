@@ -1,6 +1,4 @@
-﻿using Serilog;
-
-namespace BGME.Framework.P5R;
+﻿namespace BGME.Framework.P5R;
 
 internal unsafe static class AcbPointers
 {

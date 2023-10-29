@@ -1,6 +1,5 @@
 ﻿using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 
 namespace BGME.Framework;
 
@@ -18,7 +17,7 @@ internal static class StartupScannerExtensions
         {
             if (!result.Found)
             {
-                Log.Error("Failed to find pattern for {name}. Pattern: {pattern}", name, pattern);
+                Log.Error($"Failed to find pattern for {name}. Pattern: {pattern}");
                 return;
             }
 
@@ -39,13 +38,13 @@ internal static class StartupScannerExtensions
         {
             if (!result.Found)
             {
-                Log.Error("Failed to find pattern for {name}. Pattern: {pattern}", name, pattern);
+                Log.Error($"Failed to find pattern for {name}. Pattern: {pattern}");
                 callback(null);
                 return;
             }
 
             var address = Utilities.BaseAddress + result.Offset;
-            Log.Information("{name} found at {address}", name, address.ToString("X"));
+            Log.Information($"{name} found at {address:X}");
             callback(address);
         });
     }
@@ -61,14 +60,14 @@ internal static class StartupScannerExtensions
         {
             if (!result.Found)
             {
-                Log.Error("Failed to find pattern for {name}. Pattern: {pattern}", name, pattern);
+                Log.Error($"Failed to find pattern for {name}. Pattern: {pattern}");
                 return;
             }
 
             var address = Utilities.BaseAddress + result.Offset;
             var function = hooks.CreateFunction<T>(address);
 
-            Log.Debug("{name} found at {address}", name, address.ToString("X"));
+            Log.Debug($"{name} found at {address:X}");
             callback(function);
         });
     }

@@ -3,7 +3,6 @@ using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 
 namespace BGME.Framework.P5R;
 
@@ -151,21 +150,21 @@ internal unsafe class Sound : BaseSound
 
                 // Pointer to AWB property of shell cue ID.
                 var entryAwbIndexPtr = (ushort*)(address + (WAVEFORM_ENTRY_SIZE * this.currentShellSong.WaveTableIndex));
-                Log.Debug("Entry AWB Address: {address}", ((nint)entryAwbIndexPtr).ToString("X"));
+                Log.Debug($"Entry AWB Address: {(nint)entryAwbIndexPtr:X}");
                 *entryAwbIndexPtr = bigEndianAwbIndex;
 
-                Log.Debug("Playing AWB index {currentAwbIndex} using Cue ID {currentShellCueId}.", this.currentAwbIndex, this.currentShellSong.CueId);
+                Log.Debug($"Playing AWB index {this.currentAwbIndex} using Cue ID {this.currentShellSong.CueId}.");
                 currentBgmId = this.currentShellSong.CueId;
             }
             else
             {
 
-                Log.Error("Failed to play extended BGM ID: {id}", currentBgmId);
+                Log.Error($"Failed to play extended BGM ID: {currentBgmId}");
                 currentBgmId = FALLBACK_CUE_ID;
             }
         }
 
-        Log.Debug("Playing BGM ID: {id}", currentBgmId);
+        Log.Debug($"Playing BGM ID: {currentBgmId}");
         this.playBgmHook?.OriginalFunction(param1, param2, currentBgmId, param4);
     }
 
@@ -198,7 +197,7 @@ internal unsafe class Sound : BaseSound
                 acbAddress = AcbPointers.AcbAddress_3;
             }
 
-            Log.Debug("ACB Address: {address}", acbAddress.ToString("X"));
+            Log.Debug($"ACB Address: {acbAddress:X}");
             return acbAddress;
         }
     }

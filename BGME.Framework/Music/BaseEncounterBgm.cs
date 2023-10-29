@@ -1,6 +1,5 @@
 ﻿using BGME.Framework.Models;
 using PersonaMusicScript.Library.Models;
-using Serilog;
 
 namespace BGME.Framework.Music;
 
@@ -42,8 +41,8 @@ internal abstract class BaseEncounterBgm
 
     private void SetCurrentEncounter(int encounterId, EncounterContext context)
     {
-        Log.Debug("Encounter: {id}", encounterId);
-        Log.Debug("Context: {context}", context);
+        Log.Debug($"Encounter: {encounterId}");
+        Log.Debug($"Context: {context}");
         if (music.Encounters.TryGetValue(encounterId, out var encounter))
         {
             Log.Debug("Encounter uses BGME");

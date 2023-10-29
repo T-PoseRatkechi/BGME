@@ -1,6 +1,5 @@
 ﻿using BGME.Framework.Models;
 using PersonaMusicScript.Library.Models;
-using Serilog;
 using System.Diagnostics;
 
 namespace BGME.Framework;
@@ -16,13 +15,13 @@ internal static class Utilities
     {
         if (music is Song song)
         {
-            Log.Debug("Song ID: {id}", song.Id);
+            Log.Debug($"Song ID: {song.Id}");
             return song.Id;
         }
         else if (music is RandomSong randomSong)
         {
             var randomId = Random.Next(randomSong.MinSongId, randomSong.MaxSongId);
-            Log.Debug("Random Song ID from ({min}, {max}): {id}", randomSong.MinSongId, randomSong.MaxSongId, randomId);
+            Log.Debug($"Random Song ID from ({randomSong.MinSongId}, {randomSong.MaxSongId}): {randomId}");
             return randomId;
         }
         else if (music is Sound sound)
@@ -37,7 +36,7 @@ internal static class Utilities
     {
         if (music is BattleBgm battleBgm)
         {
-            Log.Debug("Battle BGM with Context: {context}", context);
+            Log.Debug($"Battle BGM with Context: {context}");
             if (context == EncounterContext.Normal
                 && battleBgm.NormalMusic != null)
             {

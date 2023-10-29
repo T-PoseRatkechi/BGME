@@ -3,7 +3,6 @@ using PersonaMusicScript.Library.Models;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 
 namespace BGME.Framework.P4G;
 
@@ -59,7 +58,7 @@ internal unsafe class SoundPatcher : BaseSound
 
             pointer = (int*)(*pointer + 0x18);
             var tableAddress = *pointer + 0xAF77;
-            Log.Debug("Waveform Table Address: {address}", tableAddress);
+            Log.Debug($"Waveform Table Address: {tableAddress}");
             return tableAddress;
         }
     }
@@ -69,12 +68,12 @@ internal unsafe class SoundPatcher : BaseSound
         var bgmId = Utilities.CalculateMusicId(music);
         if (music is Sound sound)
         {
-            Log.Debug("PlaySound(0, {bgmId}, {setting1}, {setting2})", bgmId, sound.Setting_1, sound.Setting_2);
+            Log.Debug($"PlaySound(0, {bgmId}, {sound.Setting_1}, {sound.Setting_2})");
             this.playSoundFunction?.GetWrapper()(0, bgmId, sound.Setting_1, sound.Setting_2);
         }
         else
         {
-            Log.Debug("PlaySound(0, {bgmId}, 0, 0)", bgmId);
+            Log.Debug($"PlaySound(0, {bgmId}, 0, 0)");
             this.playSoundFunction?.GetWrapper()(0, bgmId, 0, 0);
         }
     }
@@ -93,11 +92,11 @@ internal unsafe class SoundPatcher : BaseSound
         {
             if (soundCategory == 0)
             {
-                Log.Debug("Playing BGM ID: {id}", soundId);
+                Log.Debug($"Playing BGM ID: {soundId}");
             }
             else
             {
-                Log.Verbose("Playing Sound ID: {id}.");
+                Log.Verbose($"Playing Sound ID: {soundId}.");
             }
 
             return this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
@@ -121,7 +120,7 @@ internal unsafe class SoundPatcher : BaseSound
             this.SetWaveformAwbIndex(SONG_WAVEFORM_INDEX_2, (ushort)this.currentAwbIndex);
         }
 
-        Log.Debug("Playing AWB index {currentAwbIndex} using Cue ID {currentShellCueId}.", this.currentAwbIndex, this.currentShellCueId);
+        Log.Debug($"Playing AWB index {this.currentAwbIndex} using Cue ID {this.currentShellCueId}.");
         return this.playSoundHook.OriginalFunction(soundCategory, this.currentShellCueId, param3, param4);
     }
 
@@ -132,18 +131,18 @@ internal unsafe class SoundPatcher : BaseSound
     /// <param name="newAwbIndex">New AWB index to use.</param>
     unsafe private void SetWaveformAwbIndex(int waveformIndex, ushort newAwbIndex)
     {
-        Log.Debug("Setting Waveform AWB Index || Waveform Index: {waveIndex} || New AWB Index: {awbIndex}", waveformIndex, newAwbIndex);
+        Log.Debug($"Setting Waveform AWB Index || Waveform Index: {waveformIndex} || New AWB Index: {newAwbIndex}");
 
         // AWB index property uses big endian.
         var bigEndianAwbIndex = BitConverter.ToUInt16(BitConverter.GetBytes(newAwbIndex).Reverse().ToArray());
 
         // Change AWB index.
         var entryOffset = this.WaveformAddress + waveformIndex * WAVEFORM_ENTRY_SIZE;
-        Log.Debug("Entry Address: {address}", entryOffset);
+        Log.Debug($"Entry Address: {entryOffset}");
 
         ushort* entryAwbIndex = (ushort*)(entryOffset + 16);
         *entryAwbIndex = bigEndianAwbIndex;
-        Log.Debug("Set Waveform AWB Index || Waveform Index: {waveIndex} || New AWB Index: {awbIndex}", waveformIndex, newAwbIndex);
+        Log.Debug($"Set Waveform AWB Index || Waveform Index: {waveformIndex} || New AWB Index: {newAwbIndex}");
     }
 
     /// <summary>
@@ -173,6 +172,6 @@ internal unsafe class SoundPatcher : BaseSound
             this.currentShellCueId = SONG_CUE_ID_1;
         }
 
-        Log.Debug("Swapped Shell Cue ID to: {id}", this.currentShellCueId);
+        Log.Debug($"Swapped Shell Cue ID to: {this.currentShellCueId}");
     }
 }

@@ -3,7 +3,6 @@ using PersonaMusicScript.Library.Models;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 using System.Runtime.InteropServices;
 
 namespace BGME.Framework.P4G;
@@ -94,14 +93,14 @@ internal unsafe class EventBgm
         // Only check on first pass(?)
         if (pass == 1 && this.music.GetEventFrame(*this.currentMajorId, *this.currentMinorId) is EventFrame eventFrame)
         {
-            Log.Debug("Frame: {frame}", this.currentFrame);
+            Log.Debug($"Frame: {this.currentFrame}");
 
             // Current frame has music added from script.
             if (eventFrame.FrameMusic.TryGetValue(this.currentFrame, out var music))
             {
                 if (music != null)
                 {
-                    Log.Debug("Frame {frame} uses BGME.", this.currentFrame);
+                    Log.Debug($"Frame {this.currentFrame} uses BGME.");
                     this.sound.PlayMusic(music);
                 }
             }
@@ -124,7 +123,7 @@ internal unsafe class EventBgm
                 if (this.music.GetEventFrame(*this.currentMajorId, *this.currentMinorId) is EventFrame frame)
                 {
                     ushort* bgmId = (ushort*)(commandPtr + 0x12);
-                    Log.Debug("Command: {type} || Frame: {frame} || BGM ID: {id}", commandType, commandId, *bgmId);
+                    Log.Debug($"Command: {commandType} || Frame: {commandId} || BGM ID: {*bgmId}");
 
                     if (frame.FrameMusic.TryGetValue(this.currentFrame, out var frameMusic))
                     {

@@ -1,6 +1,4 @@
-﻿using Serilog;
-
-namespace BGME.Framework.Music;
+﻿namespace BGME.Framework.Music;
 
 internal abstract class BaseSound
 {
@@ -15,7 +13,7 @@ internal abstract class BaseSound
     {
         if (this.music.Global.TryGetValue(bgmId, out var newMusic))
         {
-            Log.Debug("Global BGM overwriting BGM ID: {id}", bgmId);
+            Log.Debug($"Global BGM overwriting BGM ID: {bgmId}");
             return Utilities.CalculateMusicId(newMusic);
         }
 

@@ -5,7 +5,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
-using Serilog;
 using System.Diagnostics;
 
 namespace BGME.Framework;
@@ -36,19 +35,16 @@ public class Mod : ModBase
         _owner = context.Owner;
         _modConfig = context.ModConfig;
 
+        Log.Logger = this._logger;
+
 #if DEBUG
         Debugger.Launch();
 #endif
 
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Sink(new BgmeLogger(this._logger))
-            .MinimumLevel.Debug()
-            .CreateLogger();
-
         var appId = this._modLoader.GetAppConfig().AppId;
         if (!Games.TryGetValue(appId, out var game))
         {
-            Log.Error("Unsupported app id {id}.", appId);
+            Log.Error($"Unsupported app id {appId}.");
             return;
         }
 
@@ -79,7 +75,7 @@ public class Mod : ModBase
                 this.bgme = new P5R.BgmeService(this._hooks, scanner, this.music);
                 break;
             default:
-                Log.Error("Missing BGME service for game {game}.", game);
+                Log.Error($"Missing BGME service for game {game}.");
                 break;
         }
     }

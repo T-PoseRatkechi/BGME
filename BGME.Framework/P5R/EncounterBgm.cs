@@ -4,7 +4,6 @@ using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P5R;
@@ -122,7 +121,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
         var encounterBgmPtr = (int*)(encounterPtr + 0x9ac);
         *encounterBgmPtr = battleMusicId;
 
-        Log.Debug("Encounter BGM ID written: {id}", battleMusicId);
+        Log.Debug($"Encounter BGM ID written: {battleMusicId}");
         return battleMusicId;
     }
 }

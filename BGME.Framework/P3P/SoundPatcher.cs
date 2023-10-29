@@ -3,7 +3,6 @@ using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using Serilog;
 using System.Runtime.InteropServices;
 using System.Text;
 using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
@@ -59,13 +58,13 @@ internal unsafe class SoundPatcher : BaseSound
         if (bgmString.Length > MAX_STRING_SIZE)
         {
             bgmString = "01.ADX\0";
-            Log.Error("BGM value too large. Value: {value}", bgmId);
+            Log.Error($"BGM value too large. Value: {bgmId}");
         }
 
         if (bgmId < 1)
         {
             bgmString = "01.ADX\0";
-            Log.Error("Negative BGM value, previous file probably does not exist.", bgmId);
+            Log.Error("Negative BGM value, previous file probably does not exist.");
         }
 
         var bgmStringBytes = Encoding.ASCII.GetBytes(bgmString);
@@ -74,7 +73,7 @@ internal unsafe class SoundPatcher : BaseSound
         NativeMemory.Copy((void*)handle.AddrOfPinnedObject(), this.bgmStringBuffer, (nuint)bgmStringBytes.Length);
         handle.Free();
 
-        Log.Debug("Playing BGM: {name}", bgmString.Trim('\0'));
+        Log.Debug($"Playing BGM: {bgmString.Trim('\0')}");
         return this.bgmStringBuffer;
     }
 }

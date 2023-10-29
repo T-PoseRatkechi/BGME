@@ -1,6 +1,4 @@
-﻿using Serilog;
-
-namespace BGME.Framework.Music;
+﻿namespace BGME.Framework.Music;
 
 internal abstract class BaseFloorBgm
 {
@@ -13,7 +11,7 @@ internal abstract class BaseFloorBgm
 
     protected int GetFloorBgm(int floorId)
     {
-        Log.Debug("Floor: {id}", floorId);
+        Log.Debug($"Floor: {floorId}");
         if (this.music.Floors.TryGetValue(floorId, out var floorMusic))
         {
             Log.Debug("Floor uses BGME");
