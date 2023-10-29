@@ -13,7 +13,7 @@ internal class BgmeService : IBgmeService
 
     public BgmeService(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
     {
-        this.soundPatcher = new(hooks, music);
+        this.soundPatcher = new(hooks, scanner, music);
         this.encounterPatcher = new(hooks, scanner, music);
         this.floorPatcher = new(hooks, scanner, music);
         this.eventBgm = new(hooks, scanner, this.soundPatcher, music);

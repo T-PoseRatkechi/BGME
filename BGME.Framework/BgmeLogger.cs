@@ -25,6 +25,7 @@ internal class BgmeLogger : ILogEventSink
             logEvent.Level == LogEventLevel.Error ? Color.Red :
             logEvent.Level == LogEventLevel.Debug ? Color.LightGreen :
             logEvent.Level == LogEventLevel.Warning ? Color.LightGoldenrodYellow :
+            logEvent.Level == LogEventLevel.Information ? Color.LightBlue :
             Color.White;
 
         this.log.Write(message.ToString(), color);
