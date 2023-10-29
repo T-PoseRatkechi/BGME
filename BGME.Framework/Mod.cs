@@ -36,6 +36,7 @@ public class Mod : ModBase
         _modConfig = context.ModConfig;
 
         Log.Logger = this._logger;
+        Log.LoggerLevel = LogLevel.Debug;
 
 #if DEBUG
         Debugger.Launch();

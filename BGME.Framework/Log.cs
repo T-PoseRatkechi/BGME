@@ -5,9 +5,9 @@ namespace BGME.Framework;
 
 public static class Log
 {
-    public static ILogger? Logger;
+    public static ILogger? Logger { get; set; }
 
-    public static LogLevel LoggerLevel = LogLevel.Debug;
+    public static LogLevel LoggerLevel { get; set; } = LogLevel.Information;
 
     public static void Debug(string message)
     {
@@ -28,7 +28,7 @@ public static class Log
     }
     public static void Error(Exception ex, string message)
     {
-        LogMessage(LogLevel.Verbose, $"{message}\n{ex.StackTrace}");
+        LogMessage(LogLevel.Error, $"{message}\n{ex.StackTrace}");
     }
 
     public static void Error(string message)
