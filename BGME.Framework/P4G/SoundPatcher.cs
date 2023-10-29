@@ -44,21 +44,21 @@ internal unsafe class SoundPatcher : BaseSound
     /// <summary>
     /// Gets address to waveform table in ACB.
     /// </summary>
-    private unsafe int WaveformAddress
+    private unsafe nint WaveformAddress
     {
         get
         {
             // Calculate address.
-            int* pointer = (int*)0x140BEAB30;
+            nint* pointer = (nint*)(Utilities.BaseAddress + 0xBEAB30);
             if (*pointer == 0)
             {
                 Log.Error("ACB address pointer is null.");
                 return 0;
             }
 
-            pointer = (int*)(*pointer + 0x18);
+            pointer = (nint*)(*pointer + 0x18);
             var tableAddress = *pointer + 0xAF77;
-            Log.Debug($"Waveform Table Address: {tableAddress}");
+            Log.Debug($"Waveform Table Address: {tableAddress:X}");
             return tableAddress;
         }
     }
@@ -138,7 +138,7 @@ internal unsafe class SoundPatcher : BaseSound
 
         // Change AWB index.
         var entryOffset = this.WaveformAddress + waveformIndex * WAVEFORM_ENTRY_SIZE;
-        Log.Debug($"Entry Address: {entryOffset}");
+        Log.Debug($"Entry Address: {entryOffset:X}");
 
         ushort* entryAwbIndex = (ushort*)(entryOffset + 16);
         *entryAwbIndex = bigEndianAwbIndex;
