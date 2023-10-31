@@ -4,3 +4,6 @@
 [submodule "submodules/CriFs.V2.Hook.ReloadedII"]
 	path = submodules/CriFs.V2.Hook.ReloadedII
 	url = https://github.com/Sewer56/CriFs.V2.Hook.ReloadedII.git
+[submodule "submodules/Libellus-Event-Tools"]
+	path = submodules/Libellus-Event-Tools
+	url = https://github.com/T-PoseRatkechi/Libellus-Event-Tools.git
