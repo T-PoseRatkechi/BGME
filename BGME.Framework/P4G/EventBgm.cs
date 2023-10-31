@@ -1,4 +1,5 @@
 ﻿using BGME.Framework.Music;
+using LibellusLibrary.Event.Types.Frame;
 using PersonaMusicScript.Library.Models;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
@@ -13,8 +14,9 @@ namespace BGME.Framework.P4G;
 internal unsafe class EventBgm
 {
     [Function(CallingConventions.Microsoft)]
-    private delegate void* RunCommandFunction(nint frameAddress);
+    private delegate void* RunCommandFunction(nint commandPtr, nint param2);
     private IHook<RunCommandFunction>? runCommandHook;
+    private IFunction<RunCommandFunction>? runCommandFunction;
 
     [Function(CallingConventions.Microsoft)]
     private delegate void RunEventCommandsFunction(int frame, nint param2, int pass, nint param4);
@@ -57,7 +59,8 @@ internal unsafe class EventBgm
             }
 
             nint address = Utilities.BaseAddress + result.Offset;
-            this.runCommandHook = hooks.CreateHook<RunCommandFunction>(this.RunCommand, address).Activate();
+            this.runCommandFunction = hooks.CreateFunction<RunCommandFunction>(address);
+            this.runCommandHook = this.runCommandFunction.Hook(this.RunCommand).Activate();
         });
 
         // Format event PM file path hook.
@@ -65,7 +68,7 @@ internal unsafe class EventBgm
         {
             if (!result.Found)
             {
-                throw new Exception("Could not find event PM file path pattern.");
+                throw new Exception("Could not find event PMD file path pattern.");
             }
 
             nint address = Utilities.BaseAddress + result.Offset;
@@ -89,116 +92,34 @@ internal unsafe class EventBgm
     {
         this.currentFrame = frame;
 
+        // Log current event IDs.
+        if (this.currentFrame == 0 && pass == 1)
+        {
+            Log.Debug($"Event || Major ID: {*this.currentMajorId} || Minor ID: {*this.currentMinorId}");
+        }
+
         // BGM added through script.
         // Only check on first pass(?)
-        if (pass == 1 && this.music.GetEventFrame(*this.currentMajorId, *this.currentMinorId) is EventFrame eventFrame)
+        if (pass == 1
+            && this.music.GetEventFrame(*this.currentMajorId, *this.currentMinorId, PmdType.PM3) != null)
         {
             Log.Debug($"Frame: {this.currentFrame}");
-
-            // Current frame has music added from script.
-            if (eventFrame.FrameMusic.TryGetValue(this.currentFrame, out var music))
-            {
-                if (music != null)
-                {
-                    Log.Debug($"Frame {this.currentFrame} uses BGME.");
-                    this.sound.PlayMusic(music);
-                }
-            }
         }
 
         this.runEventCommandsHook?.OriginalFunction(frame, param2, pass, param4);
     }
 
-    private void* RunCommand(nint commandPtr)
+    private void* RunCommand(nint commandPtr, nint param2)
     {
         int commandTypeId = *(int*)(commandPtr + 0x38);
-        CommandObjType commandType = (CommandObjType)commandTypeId;
+        PmdTargetTypeID commandType = (PmdTargetTypeID)commandTypeId;
 
         int commandId = *(ushort*)commandPtr;
         if (this.currentFrame == commandId)
         {
-            // Check if original frame bgm was disabled by script.
-            if (commandType == CommandObjType.BGM)
-            {
-                if (this.music.GetEventFrame(*this.currentMajorId, *this.currentMinorId) is EventFrame frame)
-                {
-                    ushort* bgmId = (ushort*)(commandPtr + 0x12);
-                    Log.Debug($"Command: {commandType} || Frame: {commandId} || BGM ID: {*bgmId}");
-
-                    if (frame.FrameMusic.TryGetValue(this.currentFrame, out var frameMusic))
-                    {
-                        if (frameMusic == null)
-                        {
-                            // *bgmId = 0;
-                            Log.Debug("Original frame BGM disabled.");
-                            return null;
-                        }
-                    }
-                }
-            }
+            Log.Verbose($"Frame: {commandId} || Command: {commandType} || Address: {commandPtr:X} || param2: {param2:X}");
         }
 
-        return this.runCommandHook!.OriginalFunction(commandPtr);
-    }
-
-    private enum CommandObjType
-    {
-        STAGE = 0,
-        UNIT = 1,
-        CAMERA = 2,
-        EFFECT = 3,
-        MESSAGE = 4,
-        SE = 5,
-        FADE = 6,
-        QUAKE = 7,
-        BLUR = 8,
-        LIGHT = 9,
-        SLIGHT = 10,
-        SFOG = 11,
-        SKY = 12,
-        BLUR2 = 13,
-        MBLUR = 14,
-        DBLUR = 15,
-        FILTER = 16,
-        MFILTER = 17,
-        BED = 18,
-        BGM = 19,
-        MG1 = 20,
-        MG2 = 21,
-        FB = 22,
-        RBLUR = 23,
-        TMX = 24,
-        EPL = 26,
-        HBLUR = 27,
-        PADACT = 28,
-        MOVIE = 29,
-        TIMEI = 30,
-        RENDERTEX = 31,
-        BISTA = 32,
-        CTLCAM = 33,
-        WAIT = 34,
-        B_UP = 35,
-        CUTIN = 36,
-        EVENT_EFFECT = 37,
-        JUMP = 38,
-        KEYFREE = 39,
-        RANDOMJUMP = 40,
-        CUSTOMEVENT = 41,
-        CONDJUMP = 42,
-        COND_ON = 43,
-        COMULVJUMP = 44,
-        COUNTJUMP = 45,
-        HOLYJUMP = 46,
-        FIELDOBJ = 47,
-        PACKMODEL = 48,
-        FIELDEFF = 49,
-        SPUSE = 50,
-        SCRIPT = 51,
-        BLURFILTER = 52,
-        FOG = 53,
-        ENV = 54,
-        FLDSKY = 55,
-        FLDNOISE = 56,
-        CAMERA_STATE = 57
+        return this.runCommandHook!.OriginalFunction(commandPtr, param2);
     }
 }
