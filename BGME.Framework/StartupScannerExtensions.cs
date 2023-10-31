@@ -44,7 +44,7 @@ internal static class StartupScannerExtensions
             }
 
             var address = Utilities.BaseAddress + result.Offset;
-            Log.Information($"{name} found at {address:X}");
+            Log.Information($"{name} found at: {address:X}");
             callback(address);
         });
     }
@@ -67,7 +67,7 @@ internal static class StartupScannerExtensions
             var address = Utilities.BaseAddress + result.Offset;
             var function = hooks.CreateFunction<T>(address);
 
-            Log.Debug($"{name} found at {address:X}");
+            Log.Debug($"{name} found at: {address:X}");
             callback(function);
         });
     }

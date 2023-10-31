@@ -9,7 +9,7 @@ internal unsafe static class AcbPointers
             var pointer = (nint*)(Utilities.BaseAddress + 0x26E05A0);
             if (*pointer == 0)
             {
-                Log.Warning("Attempted to ACB when no DLC BGM loaded.");
+                Log.Warning("Attempted to load ACB when no DLC BGM loaded.");
                 return null;
             }
 
@@ -25,7 +25,7 @@ internal unsafe static class AcbPointers
             var pointer = (nint*)(Utilities.BaseAddress + 0x26E05A0);
             if (*pointer == 0)
             {
-                Log.Warning("Attempted to ACB when no DLC BGM loaded.");
+                Log.Warning("Attempted to load ACB when no DLC BGM loaded.");
                 return null;
             }
 
