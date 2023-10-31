@@ -68,8 +68,8 @@ internal unsafe class SoundPatcher : BaseSound
         var bgmId = Utilities.CalculateMusicId(music);
         if (music is Sound sound)
         {
-            Log.Debug($"PlaySound(0, {bgmId}, {sound.Setting_1}, {sound.Setting_2})");
-            this.playSoundFunction?.GetWrapper()(0, bgmId, sound.Setting_1, sound.Setting_2);
+            Log.Debug($"PlaySound({sound.Setting_1}, {bgmId}, {sound.Setting_2}, {sound.Setting_3})");
+            this.playSoundFunction?.GetWrapper()(sound.Setting_1, bgmId, sound.Setting_2, sound.Setting_3);
         }
         else
         {
@@ -96,7 +96,7 @@ internal unsafe class SoundPatcher : BaseSound
             }
             else
             {
-                Log.Verbose($"Playing Sound ID: {soundId}.");
+                Log.Verbose($"Playing Sound ID: {soundId}");
             }
 
             return this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
