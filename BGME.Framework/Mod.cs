@@ -1,5 +1,6 @@
 ﻿using BGME.Framework.Music;
 using BGME.Framework.Template;
+using CriFs.V2.Hook.Interfaces;
 using PersonaMusicScript.Library;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
@@ -20,7 +21,7 @@ public class Mod : ModBase
 
     private readonly IModLoader _modLoader;
     private readonly IReloadedHooks _hooks;
-    private readonly Reloaded.Mod.Interfaces.ILogger _logger;
+    private readonly ILogger _logger;
     private readonly IMod _owner;
     private readonly IModConfig _modConfig;
 
@@ -61,7 +62,9 @@ public class Mod : ModBase
         var resourcesDir = Path.Join(modDir, "resources");
         var musicParser = new MusicParser(game, resourcesDir);
 
-        this.music = new(musicParser);
+        this._modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
+        this.music = new(criFsApi!, musicParser, modDir);
+
         this._modLoader.ModLoading += OnModLoading;
 
         switch (game)

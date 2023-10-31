@@ -17,6 +17,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Submodules\**" />
+    <EmbeddedResource Remove="Submodules\**" />
+    <None Remove="Submodules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ReloadedLinkRoots Include="BGME.Framework" />
     <!-- Add assemblies to be trimmed. You might need to add their dependencies too!  -->
     <!-- <ReloadedLinkAssemblies Include="Reloaded.Memory" /> -->
@@ -57,6 +63,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PersonaMusicScript\src\PersonaMusicScript.Library\PersonaMusicScript.Library.csproj" />
+    <ProjectReference Include="..\submodules\CriFs.V2.Hook.ReloadedII\Interfaces\CriFs.V2.Hook.Interfaces\CriFs.V2.Hook.Interfaces.csproj" />
+    <ProjectReference Include="..\submodules\Libellus-Event-Tools\Libellus Library\Libellus Library.csproj" />
   </ItemGroup>
 
   <ItemGroup>
