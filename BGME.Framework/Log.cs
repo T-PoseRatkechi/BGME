@@ -28,7 +28,7 @@ public static class Log
     }
     public static void Error(Exception ex, string message)
     {
-        LogMessage(LogLevel.Error, $"{message}\n{ex.StackTrace}");
+        LogMessage(LogLevel.Error, $"{message}\n{ex.Message}\n{ex.StackTrace}");
     }
 
     public static void Error(string message)
@@ -59,11 +59,11 @@ public static class Log
     private static string FormatMessage(LogLevel level, string message)
     {
         var levelStr =
-            level == LogLevel.Verbose ? "[VERBOSE]" :
-            level == LogLevel.Debug ? "[DEBUG]" :
-            level == LogLevel.Information ? "[INFO]" :
-            level == LogLevel.Warning ? "[WARN]" :
-            level == LogLevel.Error ? "[ERROR]" : string.Empty;
+            level == LogLevel.Verbose ? "[VRB]" :
+            level == LogLevel.Debug ? "[DBG]" :
+            level == LogLevel.Information ? "[INF]" :
+            level == LogLevel.Warning ? "[WRN]" :
+            level == LogLevel.Error ? "[ERR]" : string.Empty;
 
         return $"[BGME Framework] {levelStr} {message}";
     }
