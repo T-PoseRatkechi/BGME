@@ -43,13 +43,10 @@
     <Content Include="ModConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Update="P5REssentials\CPK\BASE.CPK\SOUND\BGM_42.acb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="P5REssentials\CPK\BASE.CPK\SOUND\BGM_42.awb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Preview.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\p5r-bgme-dlc.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -65,10 +62,6 @@
     <ProjectReference Include="..\PersonaMusicScript\src\PersonaMusicScript.Library\PersonaMusicScript.Library.csproj" />
     <ProjectReference Include="..\submodules\CriFs.V2.Hook.ReloadedII\Interfaces\CriFs.V2.Hook.Interfaces\CriFs.V2.Hook.Interfaces.csproj" />
     <ProjectReference Include="..\submodules\Libellus-Event-Tools\Libellus Library\Libellus Library.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="P5REssentials\CPK\BASE.CPK\SOUND\" />
   </ItemGroup>
 
 </Project>
