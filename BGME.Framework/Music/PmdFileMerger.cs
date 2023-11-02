@@ -4,57 +4,64 @@ using LibellusLibrary.Event.Types;
 using LibellusLibrary.Event;
 using PersonaMusicScript.Library.Models;
 using CriFsV2Lib.Definitions;
-using static CriFs.V2.Hook.Interfaces.ICriFsRedirectorApi;
 
 namespace BGME.Framework.Music;
 
-internal class EventFileMerger
+internal class PmdFileMerger : IFileBuilder
 {
     private readonly ICriFsRedirectorApi criFsApi;
     private readonly ICriFsLib criFsLib;
     private readonly PmdReader pmdReader;
     private readonly string bindDir;
-    private readonly MusicService music;
 
-    private bool initialBuild;
-
-    public EventFileMerger(ICriFsRedirectorApi criFsApi, string baseDirectory, MusicService music)
+    public PmdFileMerger(
+        ICriFsRedirectorApi criFsApi,
+        string baseDirectory)
     {
         this.criFsApi = criFsApi;
         this.criFsLib = criFsApi.GetCriFsLib();
-        this.music = music;
+
         this.pmdReader = new();
 
         // Setup binding folder.
-        this.bindDir = Path.Join(criFsApi.GenerateBindingDirectory(baseDirectory), "BGME");
+        this.bindDir = Path.Join(criFsApi.GenerateBindingDirectory(baseDirectory), "bgme");
         Directory.CreateDirectory(this.bindDir);
         var probingPath = Path.GetRelativePath(baseDirectory, this.bindDir);
         criFsApi.AddProbingPath(probingPath);
-
-        // Bind files callback.
-        this.criFsApi.AddBindCallback(this.BindFiles);
     }
 
-    public Dictionary<string, FrameTable> CurrentEvents
+    public void Build(MusicService music)
     {
-        get
+        Log.Information("Building files.");
+
+        // Build files.
+        // Persona 4 Golden.
+        var dataFile = "data.cpk";
+
+        using var dataStream = new FileStream(dataFile, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+        using var reader = this.criFsLib.CreateCpkReader(dataStream, false);
+        Task.WaitAll(this.CurrentEvents(music.Events).Select(x => this.BuildEventFile(reader, x.Key, x.Value)).ToArray());
+
+        Log.Information("Files built.");
+    }
+
+    private Dictionary<string, FrameTable> CurrentEvents(Dictionary<EventIds, FrameTable> events)
+    {
+        var eventFiles = new Dictionary<string, FrameTable>();
+        foreach (var eventEntry in events)
         {
-            var events = new Dictionary<string, FrameTable>();
-            foreach (var eventEntry in this.music.Events)
-            {
-                var eventIds = eventEntry.Key;
-                var musicFrameTable = eventEntry.Value;
+            var eventIds = eventEntry.Key;
+            var musicFrameTable = eventEntry.Value;
 
-                // Generate expected relative file path for event.
-                var folderId = eventIds.MajorId - (eventIds.MajorId % 10);
-                var eventFilePath = $@"event\e{folderId}\E{eventIds.MajorId:000}_{eventIds.MinorId:000}{this.GetEventExt(eventIds.PmdType)}";
+            // Generate expected relative file path for event.
+            var folderId = eventIds.MajorId - (eventIds.MajorId % 10);
+            var eventFilePath = $@"event\e{folderId}\E{eventIds.MajorId:000}_{eventIds.MinorId:000}{this.GetEventExt(eventIds.PmdType)}";
 
-                events[eventFilePath] = musicFrameTable;
-                Log.Debug($"Added event file to build: {eventFilePath}");
-            }
-
-            return events;
+            eventFiles[eventFilePath] = musicFrameTable;
+            Log.Debug($"Added event file to build: {eventFilePath}");
         }
+
+        return eventFiles;
     }
 
     private string GetEventExt(PmdType pmdType) => pmdType switch
@@ -147,30 +154,5 @@ internal class EventFileMerger
         pmd.SavePmd(outputFile);
 
         Log.Debug($"Event file built.\nFile: {eventFilePath}\nOutput: {outputFile}");
-    }
-
-    public void BuildFiles()
-    {
-        Log.Information("Building files.");
-
-        // Build files.
-        // Persona 4 Golden.
-        var dataFile = "data.cpk";
-
-        using var dataStream = new FileStream(dataFile, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-        using var reader = this.criFsLib.CreateCpkReader(dataStream, false);
-        Task.WaitAll(this.CurrentEvents.Select(x => this.BuildEventFile(reader, x.Key, x.Value)).ToArray());
-
-        Log.Information("Files built.");
-    }
-
-    private void BindFiles(BindContext context)
-    {
-        // Stop building on re-binds (hot reload).
-        if (!this.initialBuild)
-        {
-            this.BuildFiles();
-            this.initialBuild = true;
-        }
     }
 }

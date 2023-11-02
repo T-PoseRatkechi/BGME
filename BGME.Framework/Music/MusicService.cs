@@ -1,5 +1,4 @@
-﻿using CriFs.V2.Hook.Interfaces;
-using PersonaMusicScript.Library;
+﻿using PersonaMusicScript.Library;
 using PersonaMusicScript.Library.Models;
 using Reloaded.Mod.Loader.IO.Utility;
 
@@ -8,7 +7,8 @@ namespace BGME.Framework.Music;
 internal class MusicService
 {
     private readonly MusicParser parser;
-    private readonly EventFileMerger eventMerger;
+    private readonly IFileBuilder? fileBuilder;
+    private readonly bool hotReload;
     private readonly List<FileSystemWatcher> musicFolders = new();
     private readonly System.Timers.Timer musicReloadTimer = new(1000)
     {
@@ -17,10 +17,14 @@ internal class MusicService
 
     private MusicSource currentMusic;
 
-    public MusicService(ICriFsRedirectorApi criFsApi, MusicParser parser, string baseDirectory)
+    public MusicService(
+        MusicParser parser,
+        IFileBuilder? fileBuilder = null,
+        bool hotReload = false)
     {
         this.parser = parser;
-        this.eventMerger = new(criFsApi, baseDirectory, this);
+        this.fileBuilder = fileBuilder;
+        this.hotReload = hotReload;
 
         this.currentMusic = new();
         this.musicReloadTimer.Elapsed += (sender, args) => this.ReloadMusic();
@@ -71,7 +75,12 @@ internal class MusicService
             this.ProcessMusicFolder(folderPath);
         }
 
-        this.eventMerger.BuildFiles();
+        if (this.hotReload && this.fileBuilder != null)
+        {
+            this.fileBuilder.Build(this);
+            Log.Information("Rebuilt files.");
+        }
+
         Log.Information("Reloaded music scripts.");
     }
 
