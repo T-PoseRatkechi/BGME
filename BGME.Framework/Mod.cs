@@ -1,5 +1,6 @@
 ﻿using BGME.Framework.Music;
 using BGME.Framework.Template;
+using BGME.Framework.Template.Configuration;
 using CriFs.V2.Hook.Interfaces;
 using PersonaMusicScript.Library;
 using Reloaded.Hooks.ReloadedII.Interfaces;
@@ -19,59 +20,66 @@ public class Mod : ModBase
         ["p3p.exe"] = Game.P3P_PC,
     };
 
-    private readonly IModLoader _modLoader;
-    private readonly IReloadedHooks _hooks;
-    private readonly ILogger _logger;
-    private readonly IMod _owner;
-    private readonly IModConfig _modConfig;
+    private readonly IModLoader modLoader;
+    private readonly IReloadedHooks hooks;
+    private readonly ILogger logger;
+    private readonly IMod owner;
+    private readonly IModConfig modConfig;
+    private Config config;
 
     private readonly IBgmeService? bgme;
     private readonly MusicService? music;
 
     public Mod(ModContext context)
     {
-        _modLoader = context.ModLoader;
-        _hooks = context.Hooks ?? throw new Exception("ReloadedHooks is null.");
-        _logger = context.Logger;
-        _owner = context.Owner;
-        _modConfig = context.ModConfig;
+        modLoader = context.ModLoader;
+        hooks = context.Hooks!;
+        logger = context.Logger;
+        owner = context.Owner;
+        config = context.Configuration;
+        modConfig = context.ModConfig;
 
-        Log.Logger = this._logger;
-        Log.LoggerLevel = LogLevel.Debug;
+        Log.Logger = this.logger;
+        Log.LogLevel = this.config.LogLevel;
 
 #if DEBUG
         Debugger.Launch();
 #endif
 
-        var appId = this._modLoader.GetAppConfig().AppId;
+        var appId = this.modLoader.GetAppConfig().AppId;
         if (!Games.TryGetValue(appId, out var game))
         {
             Log.Error($"Unsupported app id {appId}.");
             return;
         }
 
-        this._modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
-        this._modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
+        this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
+        this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
 
-        var modDir = this._modLoader.GetDirectoryForModId(this._modConfig.ModId);
+        var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         Setup.Start(criFsApi!, modDir, game);
 
         var resourcesDir = Path.Join(modDir, "resources");
         var musicParser = new MusicParser(game, resourcesDir);
-        this.music = new(criFsApi!, musicParser, modDir);
+        var fileBuilder = GetGameBuilder(criFsApi!, modDir, game);
+        this.music = new(musicParser, fileBuilder, this.config.HotReload);
 
-        this._modLoader.ModLoading += OnModLoading;
+        this.modLoader.ModLoading += OnModLoading;
+        this.modLoader.OnModLoaderInitialized += () =>
+        {
+            fileBuilder?.Build(this.music);
+        };
 
         switch (game)
         {
             case Game.P4G_PC:
-                this.bgme = new P4G.BgmeService(this._hooks, scanner, this.music);
+                this.bgme = new P4G.BgmeService(this.hooks, scanner!, this.music);
                 break;
             case Game.P3P_PC:
-                this.bgme = new P3P.BgmeService(this._hooks, scanner, this.music);
+                this.bgme = new P3P.BgmeService(this.hooks, scanner!, this.music);
                 break;
             case Game.P5R_PC:
-                this.bgme = new P5R.BgmeService(this._hooks, scanner, this.music);
+                this.bgme = new P5R.BgmeService(this.hooks, scanner!, this.music);
                 break;
             default:
                 Log.Error($"Missing BGME service for game {game}.");
@@ -81,12 +89,12 @@ public class Mod : ModBase
 
     private void OnModLoading(IModV1 mod, IModConfigV1 config)
     {
-        if (!config.ModDependencies.Contains(this._modConfig.ModId))
+        if (!config.ModDependencies.Contains(this.modConfig.ModId))
         {
             return;
         }
 
-        var modDir = this._modLoader.GetDirectoryForModId(config.ModId);
+        var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
         var bgmeDir = Path.Join(modDir, "bgme");
         if (!Directory.Exists(bgmeDir))
         {
@@ -94,6 +102,15 @@ public class Mod : ModBase
         }
 
         this.music?.AddMusicFolder(bgmeDir);
+    }
+
+    private static IFileBuilder? GetGameBuilder(ICriFsRedirectorApi criFsApi, string modDir, string game)
+    {
+        return game switch
+        {
+            Game.P4G_PC => new PmdFileMerger(criFsApi, modDir),
+            _ => null
+        };
     }
 
     #region For Exports, Serialization etc.
