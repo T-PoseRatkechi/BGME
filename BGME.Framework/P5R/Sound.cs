@@ -3,6 +3,7 @@ using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
+using System.Runtime.InteropServices;
 
 namespace BGME.Framework.P5R;
 
@@ -27,18 +28,17 @@ internal unsafe class Sound : BaseSound
     private IAsmHook? customAcbHook;
     private IAsmHook? customAwbHook;
     private IAsmHook? persistentDlcBgmHook;
-
-    [Function(CallingConventions.Microsoft)]
-    private delegate int GetCostumeIdFunction();
-    private IHook<GetCostumeIdFunction>? getCostumeIdHook;
+    private IAsmHook? setCostumeIdHook;
 
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
-    private int currentCostumeId = 1;
+
+    private readonly int* currentCostumeId = (int*)NativeMemory.AllocZeroed(sizeof(int));
 
     public Sound(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
     {
+        *this.currentCostumeId = 1;
         scanner.AddMainModuleScan("E8 35 66 7C EA 44 0F B7 07", result =>
         {
             if (!result.Found)
@@ -93,15 +93,21 @@ internal unsafe class Sound : BaseSound
                 ?? throw new Exception("Failed to create persist dlc bgm hook.");
         });
 
-        scanner.AddMainModuleScan("48 8B 0D B6 2F 23 ED", result =>
+        scanner.Scan("Set Costume ID", "0F B7 07 48 8B 0D B6 2F 23 ED", result =>
         {
-            if (!result.Found)
+            if (result == null)
             {
-                throw new Exception("Failed to find always load dlc bgm pattern.");
+                return;
             }
 
-            var address = Utilities.BaseAddress + result.Offset;
-            this.getCostumeIdHook = hooks.CreateHook<GetCostumeIdFunction>(this.GetCostumeId, address);
+            var patch = new string[]
+            {
+                "use64",
+                $"mov rax, {(nint)this.currentCostumeId}",
+                "mov eax, [rax]"
+            };
+
+            this.setCostumeIdHook = hooks.CreateAsmHook(patch, (long)result, AsmHookBehaviour.ExecuteAfter).Activate();
         });
 
         scanner.Scan("Play BGM Function", "57 48 83 EC 30 80 7C", result =>
@@ -125,7 +131,7 @@ internal unsafe class Sound : BaseSound
         // the DLC BGM remains permanently disabled.
         if (bgmId == DEN_CUE_ID)
         {
-            this.currentCostumeId = this.currentCostumeId == 1 ? 2 : 1;
+            *this.currentCostumeId = *this.currentCostumeId == 1 ? 2 : 1;
             Log.Debug("BUGFIX: Assuming player entered Thieves Den, swapping costume ID.");
         }
 
@@ -174,11 +180,6 @@ internal unsafe class Sound : BaseSound
 
         Log.Debug($"Playing BGM ID: {currentBgmId}");
         this.playBgmHook?.OriginalFunction(param1, param2, currentBgmId, param4);
-    }
-
-    private int GetCostumeId()
-    {
-        return this.currentCostumeId;
     }
 
     /// <summary>
