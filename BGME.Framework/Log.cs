@@ -7,11 +7,19 @@ public static class Log
 {
     public static ILogger? Logger { get; set; }
 
-    public static LogLevel LoggerLevel { get; set; } = LogLevel.Information;
+    public static LogLevel LogLevel { get; set; } = LogLevel.Information;
+
+    public static void Verbose(string message)
+    {
+        if (LogLevel < LogLevel.Debug)
+        {
+            LogMessage(LogLevel.Verbose, message);
+        }
+    }
 
     public static void Debug(string message)
     {
-        if (LoggerLevel < LogLevel.Information)
+        if (LogLevel < LogLevel.Information)
         {
             LogMessage(LogLevel.Debug, message);
         }
@@ -19,12 +27,18 @@ public static class Log
 
     public static void Information(string message)
     {
-        LogMessage(LogLevel.Information, message);
+        if (LogLevel < LogLevel.Warning)
+        {
+            LogMessage(LogLevel.Information, message);
+        }
     }
 
     public static void Warning(string message)
     {
-        LogMessage(LogLevel.Warning, message);
+        if (LogLevel < LogLevel.Error)
+        {
+            LogMessage(LogLevel.Warning, message);
+        }
     }
     public static void Error(Exception ex, string message)
     {
@@ -34,14 +48,6 @@ public static class Log
     public static void Error(string message)
     {
         LogMessage(LogLevel.Error, message);
-    }
-
-    public static void Verbose(string message)
-    {
-        if (LoggerLevel < LogLevel.Debug)
-        {
-            LogMessage(LogLevel.Verbose, message);
-        }
     }
 
     private static void LogMessage(LogLevel level, string message)
