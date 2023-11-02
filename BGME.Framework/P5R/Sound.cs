@@ -22,7 +22,7 @@ internal unsafe class Sound : BaseSound
 
     [Function(CallingConventions.Microsoft)]
     private delegate void PlayBgmFunction(nint param1, nint param2, nint param3, nint param4);
-    private readonly IHook<PlayBgmFunction>? playBgmHook;
+    private IHook<PlayBgmFunction>? playBgmHook;
 
     private IAsmHook? customAcbHook;
     private IAsmHook? customAwbHook;
@@ -104,8 +104,16 @@ internal unsafe class Sound : BaseSound
             this.getCostumeIdHook = hooks.CreateHook<GetCostumeIdFunction>(this.GetCostumeId, address);
         });
 
-        this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, 0x155966B00).Activate()
-            ?? throw new Exception("Failed to create play bgm pattern.");
+        scanner.Scan("Play BGM Function", "57 48 83 EC 30 80 7C", result =>
+        {
+            if (result == null)
+            {
+                return;
+            }
+
+            var address = result - 10;
+            this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, (long)address).Activate();
+        });
     }
 
     private void PlayBgm(nint param1, nint param2, nint bgmId, nint param4)
@@ -133,7 +141,7 @@ internal unsafe class Sound : BaseSound
         if (currentBgmId >= EXTENDED_BGM_ID)
         {
             Log.Debug("Using Extended BGM");
-            if (this.WaveformTableAddress is nint address)
+            if (WaveformTableAddress is nint address)
             {
                 // AWB index to play.
                 var awbIndex = (ushort)(currentBgmId - EXTENDED_BGM_ID);
@@ -150,7 +158,7 @@ internal unsafe class Sound : BaseSound
 
                 // Pointer to AWB property of shell cue ID.
                 var entryAwbIndexPtr = (ushort*)(address + (WAVEFORM_ENTRY_SIZE * this.currentShellSong.WaveTableIndex));
-                Log.Debug($"Entry AWB Address: {(nint)entryAwbIndexPtr:X}");
+                Log.Verbose($"Entry AWB Address: {(nint)entryAwbIndexPtr:X}");
                 *entryAwbIndexPtr = bigEndianAwbIndex;
 
                 Log.Debug($"Playing AWB index {this.currentAwbIndex} using Cue ID {this.currentShellSong.CueId}.");
@@ -176,28 +184,28 @@ internal unsafe class Sound : BaseSound
     /// <summary>
     /// Gets ACB address of DLC BGM, null if not loaded.
     /// </summary>
-    private nint? AcbAddress
+    private static nint? AcbAddress
     {
         get
         {
             nint acbAddress;
             if (AcbPointers.AcbAddres_1 is nint address1)
             {
-                Log.Debug("Using ACB pointer 1.");
+                Log.Verbose("Using ACB pointer 1.");
                 acbAddress = address1;
             }
             else if (AcbPointers.AcbAddress_2 is nint address2)
             {
-                Log.Debug("Using ACB pointer 2.");
+                Log.Verbose("Using ACB pointer 2.");
                 acbAddress = address2;
             }
             else
             {
-                Log.Debug("Using ACB pointer 3.");
+                Log.Verbose("Using ACB pointer 3.");
                 acbAddress = AcbPointers.AcbAddress_3;
             }
 
-            Log.Debug($"ACB Address: {acbAddress:X}");
+            Log.Verbose($"ACB Address: {acbAddress:X}");
             return acbAddress;
         }
     }
@@ -205,14 +213,14 @@ internal unsafe class Sound : BaseSound
     /// <summary>
     /// Gets address of waveform table rows.
     /// </summary>
-    private nint? WaveformTableAddress
+    private static nint? WaveformTableAddress
     {
         get
         {
-            if (this.AcbAddress is nint address)
+            if (AcbAddress is nint address)
             {
                 var waveformTableAddress = address + 2146;
-                // Log.Debug("Waveform Table Address: {address}", waveformTableAddress.ToString("X"));
+                Log.Verbose($"Waveform Table Address: {waveformTableAddress:X}");
                 return waveformTableAddress;
             }
 

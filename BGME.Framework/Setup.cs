@@ -51,7 +51,7 @@ internal static class Setup
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed install P5R BGME DLC.");
+            Log.Error(ex, "Failed to install P5R BGME DLC.");
             Log.Information("Manually unzip P5R BGME DLC if this always fails.");
             Log.Information($"P5R BGME DLC Zip: {dlcBgmZip}");
             Log.Information($"Unzip To: {dlcBgmDir}");
