@@ -3,6 +3,7 @@
  * to make it easier to upgrade to newer versions of the template.
 */
 
+using BGME.Framework.Template.Configuration;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
@@ -30,6 +31,11 @@ namespace BGME.Framework.Template
         private IReloadedHooks? _hooks;
 
         /// <summary>
+        /// Stores the contents of your mod's configuration. Automatically updated by template.
+        /// </summary>
+        private Config _configuration = null!;
+
+        /// <summary>
         /// Configuration of the current mod.
         /// </summary>
         private IModConfig _modConfig = null!;
@@ -49,6 +55,13 @@ namespace BGME.Framework.Template
             _logger = (ILogger)_modLoader.GetLogger();
             _modLoader.GetController<IReloadedHooks>()?.TryGetTarget(out _hooks!);
 
+            // Your config file is in Config.json.
+            // Need a different name, format or more configurations? Modify the `Configurator`.
+            // If you do not want a config, remove Configuration folder and Config class.
+            var configurator = new Configurator(_modLoader.GetModConfigDirectory(_modConfig.ModId));
+            _configuration = configurator.GetConfiguration<Config>(0);
+            _configuration.ConfigurationUpdated += OnConfigurationUpdated;
+
             // Please put your mod code in the class below,
             // use this class for only interfacing with mod loader.
             _mod = new Mod(new ModContext()
@@ -57,9 +70,23 @@ namespace BGME.Framework.Template
                 Hooks = _hooks,
                 ModLoader = _modLoader,
                 ModConfig = _modConfig,
+                Configuration = _configuration,
                 Owner = this,
             });
         }
+
+        private void OnConfigurationUpdated(IConfigurable obj)
+        {
+            /*
+                This is executed when the configuration file gets 
+                updated by the user at runtime.
+            */
+
+            // Replace configuration with new.
+            _configuration = (Config)obj;
+            _mod.ConfigurationUpdated(_configuration);
+        }
+
         /* Mod loader actions. */
         public void Suspend() => _mod.Suspend();
         public void Resume() => _mod.Resume();

@@ -1,4 +1,6 @@
 ﻿
+using BGME.Framework.Template.Configuration;
+
 namespace BGME.Framework.Template
 {
     /// <summary>
@@ -61,5 +63,10 @@ namespace BGME.Framework.Template
             */
         }
 
+        public virtual void ConfigurationUpdated(Config configuration)
+        {
+            // Apply settings from configuration.
+            // ... your code here.
+        }
     }
 }
