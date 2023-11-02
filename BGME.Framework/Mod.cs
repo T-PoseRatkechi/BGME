@@ -50,19 +50,14 @@ public class Mod : ModBase
             return;
         }
 
-        var scannerController = this._modLoader.GetController<IStartupScanner>();
-        if (scannerController == null
-            || !scannerController.TryGetTarget(out var scanner))
-        {
-            Log.Error("Failed to get startup scanner.");
-            return;
-        }
+        this._modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
+        this._modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
 
         var modDir = this._modLoader.GetDirectoryForModId(this._modConfig.ModId);
+        Setup.Start(criFsApi!, modDir, game);
+
         var resourcesDir = Path.Join(modDir, "resources");
         var musicParser = new MusicParser(game, resourcesDir);
-
-        this._modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
         this.music = new(criFsApi!, musicParser, modDir);
 
         this._modLoader.ModLoading += OnModLoading;
