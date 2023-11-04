@@ -178,7 +178,7 @@ param (
     $GitHubFallbackPattern = "", # For migrating from legacy build script.
     $GitHubInheritVersionFromTag = $True, # Uses version determined from release tag as opposed to metadata file in latest release.
 
-    $GameBananaItemId = 333681, # From mod page URL.
+    $GameBananaItemId = 477399, # From mod page URL.
 
     $NuGetPackageId = "BGME.Framework",
     $NuGetFeedUrl = "http://packages.sewer56.moe:5000/v3/index.json",
