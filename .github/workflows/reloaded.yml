@@ -40,8 +40,6 @@ env:
 jobs:
   build:
     runs-on: windows-latest
-    env:
-        working-directory: ./BGME
     defaults:
       run:
         shell: pwsh
@@ -76,7 +74,7 @@ jobs:
         }
         
     - name: Build
-      run: ./Publish.ps1
+      run: ./BGME/Publish.ps1
       
     - name: Upload GitHub Release Artifact
       uses: actions/upload-artifact@v2.2.4
