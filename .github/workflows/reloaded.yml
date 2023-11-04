@@ -74,7 +74,7 @@ jobs:
         }
         
     - name: Build
-      run: ./BGME/Publish.ps1
+      run: ./BGME.Framework/Publish.ps1
       
     - name: Upload GitHub Release Artifact
       uses: actions/upload-artifact@v2.2.4
