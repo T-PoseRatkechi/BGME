@@ -40,6 +40,8 @@ env:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+        working-directory: ./BGME
     defaults:
       run:
         shell: pwsh
