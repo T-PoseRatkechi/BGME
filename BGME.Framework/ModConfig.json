@@ -2,7 +2,7 @@
   "ModId": "BGME.Framework",
   "ModName": "BGME Framework",
   "ModAuthor": "T-Pose Ratkechi",
-  "ModVersion": "1.0.7",
+  "ModVersion": "1.0.8",
   "ModDescription": "Extends BGM functionality in Persona games.",
   "ModDll": "BGME.Framework.dll",
   "ModIcon": "Preview.png",
