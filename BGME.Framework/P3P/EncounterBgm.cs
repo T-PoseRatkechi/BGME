@@ -28,14 +28,14 @@ internal class EncounterBgm : BaseEncounterBgm
         MusicService music)
         : base(music)
     {
-        scanner.AddMainModuleScan("0F B7 4C 02 16", (result) =>
+        scanner.Scan("Encounter BGM", "0F B7 4C 02 16", address =>
         {
-            if (!result.Found)
+            if (address == null)
             {
-                throw new Exception("Failed to find encounter bgm pattern.");
+                return;
             }
 
-            var address = Utilities.BaseAddress + result.Offset;
+
             var encounterPatch = new string[]
             {
                 "use64",
@@ -46,24 +46,21 @@ internal class EncounterBgm : BaseEncounterBgm
                 "cmp eax, -1",
                 "jng original",
                 "mov ecx, eax",
-                "mov r9, 0x1465B0855",
-                "jmp r9",
+                $"{hooks.Utilities.GetAbsoluteJumpMnemonics((nint)(address + 0x3e), true)}",
                 "label original",
                 "mov rax, r9",
             };
 
-            this.encounterBgmHook = hooks.CreateAsmHook(encounterPatch, address).Activate()
-                ?? throw new Exception("Failed to create encounter bgm hook.");
+            this.encounterBgmHook = hooks.CreateAsmHook(encounterPatch, (long)address).Activate();
         });
 
-        scanner.AddMainModuleScan("F6 40 0C 40 0F 84 ?? 00 00 00", result =>
+        scanner.Scan("Encounter Context", "F6 40 0C 40 0F 84 ?? 00 00 00", address =>
         {
-            if (!result.Found)
+            if (address == null)
             {
-                throw new Exception("Failed to find encounter context pattern.");
+                return;
             }
 
-            var address = Utilities.BaseAddress + result.Offset;
             var encounterContextPatch = new string[]
             {
                 "use64",
@@ -72,19 +69,18 @@ internal class EncounterBgm : BaseEncounterBgm
 
             this.encounterContextHook = hooks.CreateAsmHook(
                 encounterContextPatch,
-                address,
+                (long)address,
                 AsmHookBehaviour.ExecuteFirst)
-            .Activate() ?? throw new Exception("Failed to create encounter context hook.");
+            .Activate();
         });
 
-        scanner.AddMainModuleScan("E8 53 A5 22 FA", result =>
+        scanner.Scan("Victory BGM", "E8 53 A5 22 FA", address =>
         {
-            if (!result.Found)
+            if (address == null)
             {
-                throw new Exception("Failed to find victory bgm pattern.");
+                return;
             }
 
-            var address = Utilities.BaseAddress + result.Offset;
             var victoryBgmPatch = new string[]
             {
                 "use64",
@@ -96,9 +92,9 @@ internal class EncounterBgm : BaseEncounterBgm
 
             this.victoryBgmHook = hooks.CreateAsmHook(
                 victoryBgmPatch,
-                address,
+                (long)address,
                 AsmHookBehaviour.ExecuteFirst)
-            .Activate() ?? throw new Exception("Failed to create victory bgm hook.");
+            .Activate();
         });
     }
 
