@@ -17,14 +17,13 @@ internal class FloorBgm : BaseFloorBgm
     public FloorBgm(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
     {
-        scanner.AddMainModuleScan("83 3D 46 8A 7B 00 01", (result) =>
+        scanner.Scan("Floor BGM", "83 3D 46 8A 7B 00 01", address =>
         {
-            if (!result.Found)
+            if (address == null)
             {
-                throw new Exception("Failed to find floor bgm pattern.");
+                return;
             }
 
-            var address = Utilities.BaseAddress + result.Offset;
             var floorBgmPatch = new string[]
             {
                 "use64",
@@ -37,14 +36,12 @@ internal class FloorBgm : BaseFloorBgm
                 "mov ecx, eax",
                 "add rsp, 0x20",
                 "pop rbx",
-                "mov rax, 0x1403B5790",
-                "jmp rax",
+                $"{hooks.Utilities.GetAbsoluteJumpMnemonics(Utilities.BaseAddress + 0x3b5790, true)}",
                 "label original",
                 "mov rax, r9",
             };
 
-            this.floorBgmHook = hooks.CreateAsmHook(floorBgmPatch, address, AsmHookBehaviour.ExecuteFirst).Activate()
-                ?? throw new Exception("Failed to create encounter bgm hook.");
+            this.floorBgmHook = hooks.CreateAsmHook(floorBgmPatch, (long)address, AsmHookBehaviour.ExecuteFirst).Activate();
         });
     }
 }
