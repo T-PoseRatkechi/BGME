@@ -30,14 +30,14 @@ internal unsafe class SoundPatcher : BaseSound
         : base(music)
     {
         this.bgmStringBuffer = (byte*)NativeMemory.AllocZeroed(MAX_STRING_SIZE, sizeof(byte));
-        scanner.AddMainModuleScan("4E 8B 84 C3 28 4C 81 00", result =>
+
+        scanner.Scan("BGM Patch", "4E 8B 84 C3 28 4C 81 00", address =>
         {
-            if (!result.Found)
+            if (address == null)
             {
-                throw new Exception("Failed to find bgm function address.");
+                return;
             }
 
-            var address = Utilities.BaseAddress + result.Offset;
             var bgmPatch = new string[]
             {
                 "use64",
@@ -47,8 +47,7 @@ internal unsafe class SoundPatcher : BaseSound
                 $"mov r8, rax",
             };
 
-            this.bgmHook = hooks.CreateAsmHook(bgmPatch, address, AsmHookBehaviour.DoNotExecuteOriginal).Activate()
-                ?? throw new Exception("Failed to create bgm hook.");
+            this.bgmHook = hooks.CreateAsmHook(bgmPatch, (long)address, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
         });
     }
 
