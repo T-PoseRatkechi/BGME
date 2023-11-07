@@ -24,7 +24,7 @@ internal unsafe class EventBgm
 
     private IAsmHook? setCurrentEventHook;
 
-    private readonly SoundPatcher sound;
+    private readonly Sound sound;
     private readonly MusicService music;
 
     private readonly int* currentMajorId = (int*)NativeMemory.AllocZeroed(sizeof(int));
@@ -34,7 +34,7 @@ internal unsafe class EventBgm
     public EventBgm(
         IReloadedHooks hooks,
         IStartupScanner scanner,
-        SoundPatcher sound,
+        Sound sound,
         MusicService music)
     {
         this.sound = sound;

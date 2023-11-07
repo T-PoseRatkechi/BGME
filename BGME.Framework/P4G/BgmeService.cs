@@ -6,16 +6,16 @@ namespace BGME.Framework.P4G;
 
 internal class BgmeService : IBgmeService
 {
-    private readonly SoundPatcher soundPatcher;
+    private readonly Sound sound;
     private readonly EncounterBgm encounterPatcher;
     private readonly FloorBgm floorPatcher;
     private readonly EventBgm eventBgm;
 
     public BgmeService(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
     {
-        this.soundPatcher = new(hooks, scanner, music);
+        this.sound = new(hooks, scanner, music);
         this.encounterPatcher = new(hooks, scanner, music);
         this.floorPatcher = new(hooks, scanner, music);
-        this.eventBgm = new(hooks, scanner, this.soundPatcher, music);
+        this.eventBgm = new(hooks, scanner, this.sound, music);
     }
 }
