@@ -98,11 +98,14 @@ internal class MusicService
         {
             this.parser.ParseFile(file, this.currentMusic);
             Log.Information($"Parsed music script.\nFile: {file}");
+
+            var presetFile = Path.ChangeExtension(file, ".project");
+            this.parser.CreatePreset(file, presetFile);
+            Log.Debug($"Created project preset.\nFile: {presetFile}");
         }
         catch (Exception ex)
         {
             Log.Error(ex, $"Failed to parse music script.\nFile: {file}");
         }
     }
-
 }

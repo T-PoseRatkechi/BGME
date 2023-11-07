@@ -11,6 +11,7 @@ using System.Diagnostics;
 
 namespace BGME.Framework;
 
+#pragma warning disable IDE0052 // Remove unread private members
 public class Mod : ModBase
 {
     private static readonly Dictionary<string, string> Games = new(StringComparer.OrdinalIgnoreCase)
@@ -25,7 +26,7 @@ public class Mod : ModBase
     private readonly ILogger logger;
     private readonly IMod owner;
     private readonly IModConfig modConfig;
-    private Config config;
+    private readonly Config config;
 
     private readonly IBgmeService? bgme;
     private readonly MusicService? music;
