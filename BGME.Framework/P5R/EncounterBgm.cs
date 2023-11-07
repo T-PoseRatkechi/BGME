@@ -42,8 +42,8 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
                 $"{Utilities.PopCallerRegisters}",
                 "cmp eax, -1",
                 "jng original",
-                $"{hooks.Utilities.GetAbsoluteCallMnemonics(unchecked((nint) 0x140974A20), true)}",
-                $"{hooks.Utilities.GetAbsoluteJumpMnemonics(unchecked((nint) 0x1409786EB), true)}",
+                $"{hooks.Utilities.GetAbsoluteCallMnemonics(Utilities.BaseAddress + 0x974A20, true)}",
+                $"{hooks.Utilities.GetAbsoluteJumpMnemonics(Utilities.BaseAddress + 0x9786EB, true)}",
                 $"label original"
             };
 
