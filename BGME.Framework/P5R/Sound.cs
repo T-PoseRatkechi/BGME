@@ -1,4 +1,5 @@
-﻿using BGME.Framework.Music;
+﻿using BGME.Framework.Models;
+using BGME.Framework.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
@@ -159,13 +160,10 @@ internal unsafe class Sound : BaseSound
                     this.currentAwbIndex = awbIndex;
                 }
 
-                // AWB index property uses big endian.
-                var bigEndianAwbIndex = BitConverter.ToUInt16(BitConverter.GetBytes(awbIndex).Reverse().ToArray());
-
                 // Pointer to AWB property of shell cue ID.
                 var entryAwbIndexPtr = (ushort*)(address + (WAVEFORM_ENTRY_SIZE * this.currentShellSong.WaveTableIndex));
                 Log.Verbose($"Entry AWB Address: {(nint)entryAwbIndexPtr:X}");
-                *entryAwbIndexPtr = bigEndianAwbIndex;
+                *entryAwbIndexPtr = this.currentAwbIndex.ToBigEndian();
 
                 Log.Debug($"Playing AWB index {this.currentAwbIndex} using Cue ID {this.currentShellSong.CueId}.");
                 currentBgmId = this.currentShellSong.CueId;
@@ -233,11 +231,4 @@ internal unsafe class Sound : BaseSound
     {
         this.currentShellSong = (this.currentShellSong == SHELL_SONG_1) ? SHELL_SONG_2 : SHELL_SONG_1;
     }
-
-    /// <summary>
-    /// Shell cue properties.
-    /// </summary>
-    /// <param name="CueId">Cue ID.</param>
-    /// <param name="WaveTableIndex">Index in DLC BGM waveform table.</param>
-    private record ShellCue(int CueId, int WaveTableIndex);
 }

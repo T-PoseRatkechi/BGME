@@ -6,10 +6,15 @@ namespace BGME.Framework;
 
 internal static class Utilities
 {
-    public static Random Random = new();
     public static string PushCallerRegisters = "push rcx\npush rdx\npush r8\npush r9";
     public static string PopCallerRegisters = "pop r9\npop r8\npop rdx\npop rcx";
     public static nint BaseAddress = Process.GetCurrentProcess().MainModule?.BaseAddress ?? 0;
+
+    public static ushort ToBigEndian(this ushort value)
+    {
+        var bigEndianValue = BitConverter.ToUInt16(BitConverter.GetBytes(value).Reverse().ToArray());
+        return bigEndianValue;
+    }
 
     public static int CalculateMusicId(IMusic music)
     {
@@ -20,8 +25,18 @@ internal static class Utilities
         }
         else if (music is RandomSong randomSong)
         {
-            var randomId = Random.Next(randomSong.MinSongId, randomSong.MaxSongId);
-            Log.Debug($"Random Song ID from ({randomSong.MinSongId}, {randomSong.MaxSongId}): {randomId}");
+            var randomId = randomSong.GetRandomId();
+
+            // Random BGM from list or range log.
+            if (randomSong.BgmIds != null)
+            {
+                Log.Debug($"Random Song ID from [{string.Join(", ", randomSong.BgmIds.Select(x => x.ToString()))}]: {randomId}");
+            }
+            else
+            {
+                Log.Debug($"Random Song ID from ({randomSong.MinSongId}, {randomSong.MaxSongId}): {randomId}");
+            }
+
             return randomId;
         }
         else if (music is Sound sound)
