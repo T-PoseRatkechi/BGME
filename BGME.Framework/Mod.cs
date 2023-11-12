@@ -13,7 +13,7 @@ using System.Diagnostics;
 namespace BGME.Framework;
 
 #pragma warning disable IDE0052 // Remove unread private members
-public class Mod : ModBase
+public class Mod : ModBase, IExports
 {
     private static readonly Dictionary<string, string> Games = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -115,6 +115,8 @@ public class Mod : ModBase
             _ => null
         };
     }
+
+    public Type[] GetTypes() => new[] { typeof(IBgmeApi) };
 
     #region For Exports, Serialization etc.
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
