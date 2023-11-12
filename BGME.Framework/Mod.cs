@@ -1,4 +1,5 @@
-﻿using BGME.Framework.Music;
+﻿using BGME.Framework.Interfaces;
+using BGME.Framework.Music;
 using BGME.Framework.Template;
 using BGME.Framework.Template.Configuration;
 using CriFs.V2.Hook.Interfaces;
@@ -64,6 +65,7 @@ public class Mod : ModBase
         var musicParser = new MusicParser(game, resourcesDir);
         var fileBuilder = GetGameBuilder(criFsApi!, modDir, game);
         this.music = new(musicParser, fileBuilder, this.config.HotReload);
+        this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, this.music);
 
         this.modLoader.ModLoading += OnModLoading;
         this.modLoader.OnModLoaderInitialized += () =>
@@ -102,7 +104,7 @@ public class Mod : ModBase
             return;
         }
 
-        this.music?.AddMusicFolder(bgmeDir);
+        this.music?.AddFolder(bgmeDir);
     }
 
     private static IFileBuilder? GetGameBuilder(ICriFsRedirectorApi criFsApi, string modDir, string game)
