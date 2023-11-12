@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CriFs.V2.Hook.Interfaces", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Libellus Library", "submodules\Libellus-Event-Tools\Libellus Library\Libellus Library.csproj", "{DE23CD4B-0EFF-4791-8EE2-4E0B88C45350}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BGME.Framework.Interfaces", "BGME.Framework.Interfaces\BGME.Framework.Interfaces.csproj", "{D9DE902A-A681-4AA2-A2C3-704CCE3072DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DE23CD4B-0EFF-4791-8EE2-4E0B88C45350}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE23CD4B-0EFF-4791-8EE2-4E0B88C45350}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE23CD4B-0EFF-4791-8EE2-4E0B88C45350}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9DE902A-A681-4AA2-A2C3-704CCE3072DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9DE902A-A681-4AA2-A2C3-704CCE3072DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9DE902A-A681-4AA2-A2C3-704CCE3072DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9DE902A-A681-4AA2-A2C3-704CCE3072DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
