@@ -1,10 +1,11 @@
-﻿using PersonaMusicScript.Library;
+﻿using BGME.Framework.Interfaces;
+using PersonaMusicScript.Library;
 using PersonaMusicScript.Library.Models;
 using Reloaded.Mod.Loader.IO.Utility;
 
 namespace BGME.Framework.Music;
 
-internal class MusicService
+internal class MusicService : IBgmeApi
 {
     private readonly MusicParser parser;
     private readonly IFileBuilder? fileBuilder;
@@ -40,7 +41,22 @@ internal class MusicService
 
     public FrameTable? GetEventFrame(int majorId, int minorId, PmdType pmdType) => this.currentMusic.GetEventFrame(majorId, minorId, pmdType);
 
-    public void AddMusicFolder(string folder)
+    public void RemoveFolder(string folder)
+    {
+        if (this.musicFolders.FirstOrDefault(x => x.Path == folder) is FileSystemWatcher musicFolder)
+        {
+            musicFolder.Dispose();
+            this.musicFolders.Remove(musicFolder);
+            this.ReloadMusic();
+            Log.Debug($"Removed music folder.\nFolder: {folder}");
+        }
+        else
+        {
+            Log.Warning($"Could not find music folder to remove.\nFolder: {folder}");
+        }
+    }
+
+    public void AddFolder(string folder)
     {
         var watcher = FileSystemWatcherFactory.Create(
             folder,
