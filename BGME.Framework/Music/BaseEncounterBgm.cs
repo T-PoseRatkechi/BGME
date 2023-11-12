@@ -22,7 +22,6 @@ internal abstract class BaseEncounterBgm
             return musicId;
         }
 
-        currentEncounterMusic = null;
         return -1;
     }
 
@@ -41,6 +40,9 @@ internal abstract class BaseEncounterBgm
 
     private void SetCurrentEncounter(int encounterId, EncounterContext context)
     {
+        // Reset encounter music.
+        this.currentEncounterMusic = null;
+
         Log.Debug($"Encounter: {encounterId}");
         Log.Debug($"Context: {context}");
         if (music.Encounters.TryGetValue(encounterId, out var encounter))
