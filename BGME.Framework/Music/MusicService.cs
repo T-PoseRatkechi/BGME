@@ -28,7 +28,28 @@ internal class MusicService : IBgmeApi
         this.hotReload = hotReload;
 
         this.currentMusic = new();
-        this.musicReloadTimer.Elapsed += (sender, args) => this.ReloadMusic();
+        this.musicReloadTimer.Elapsed += (sender, args) =>
+        {
+            this.currentMusic = new();
+            foreach (var folder in this.musicFolders)
+            {
+                var folderPath = folder.Path;
+                if (!Directory.Exists(folderPath))
+                {
+                    continue;
+                }
+
+                this.ProcessMusicFolder(folderPath);
+            }
+
+            if (this.hotReload && this.fileBuilder != null)
+            {
+                this.fileBuilder.Build(this);
+                Log.Information("Rebuilt files.");
+            }
+
+            Log.Information("Reloaded music scripts.");
+        };
     }
 
     public Dictionary<int, Encounter> Encounters => this.currentMusic.Encounters;
@@ -62,8 +83,7 @@ internal class MusicService : IBgmeApi
             folder,
             (sender, args) =>
             {
-                this.musicReloadTimer.Stop();
-                this.musicReloadTimer.Start();
+                this.ReloadMusic();
             },
             null,
             FileSystemWatcherFactory.FileSystemWatcherEvents.Deleted
@@ -79,25 +99,8 @@ internal class MusicService : IBgmeApi
 
     private void ReloadMusic()
     {
-        this.currentMusic = new();
-        foreach (var folder in this.musicFolders)
-        {
-            var folderPath = folder.Path;
-            if (!Directory.Exists(folderPath))
-            {
-                continue;
-            }
-
-            this.ProcessMusicFolder(folderPath);
-        }
-
-        if (this.hotReload && this.fileBuilder != null)
-        {
-            this.fileBuilder.Build(this);
-            Log.Information("Rebuilt files.");
-        }
-
-        Log.Information("Reloaded music scripts.");
+        this.musicReloadTimer.Stop();
+        this.musicReloadTimer.Start();
     }
 
     private void ProcessMusicFolder(string folder)
