@@ -26,7 +26,7 @@ internal unsafe class Sound : BaseSound
     private static readonly ShellCue SHELL_SONG_2 = new(SONG_CUE_ID_2, SONG_WAVEFORM_INDEX_2);
 
     [Function(CallingConventions.Microsoft)]
-    private delegate void* PlaySoundFunction(int soundCategory, int soundId, nint param3, nint param4);
+    private delegate void PlaySoundFunction(int soundCategory, int soundId, nint param3, nint param4);
     private IFunction<PlaySoundFunction>? playSoundFunction;
 
     private IHook<PlaySoundFunction> playSoundHook;
@@ -76,15 +76,19 @@ internal unsafe class Sound : BaseSound
     public void PlayMusic(IMusic music)
     {
         var bgmId = Utilities.CalculateMusicId(music);
-        if (music is PersonaMusicScript.Library.Models.Sound sound)
+        if (bgmId == null)
+        {
+            return;
+        }
+        else if (music is PersonaMusicScript.Library.Models.Sound sound)
         {
             Log.Debug($"PlaySound({sound.Setting_1}, {bgmId}, {sound.Setting_2}, {sound.Setting_3})");
-            this.playSoundFunction?.GetWrapper()(sound.Setting_1, bgmId, sound.Setting_2, sound.Setting_3);
+            this.playSoundFunction?.GetWrapper()(sound.Setting_1, (int)bgmId, sound.Setting_2, sound.Setting_3);
         }
         else
         {
             Log.Debug($"PlaySound(0, {bgmId}, 0, 0)");
-            this.playSoundFunction?.GetWrapper()(0, bgmId, 0, 0);
+            this.playSoundFunction?.GetWrapper()(0, (int)bgmId, 0, 0);
         }
     }
 
@@ -96,15 +100,20 @@ internal unsafe class Sound : BaseSound
     /// <param name="param3">Unknown param.</param>
     /// <param name="param4">Unknown param.</param>
     /// <returns></returns>
-    private unsafe void* PlaySoundImpl(int soundCategory, int soundId, nint param3, nint param4)
+    private void PlaySoundImpl(int soundCategory, int soundId, nint param3, nint param4)
     {
         if (soundCategory != 0)
         {
             Log.Verbose($"Playing Sound ID: {soundId}");
-            return this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
+            this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
         }
 
         var currentBgmId = this.GetGlobalBgmId(soundId);
+        if (currentBgmId == null)
+        {
+            return;
+        }
+
         if (currentBgmId == SHELL_SONG_1.CueId || currentBgmId == SHELL_SONG_2.CueId)
         {
             this.ResetShellSongs();
@@ -129,7 +138,7 @@ internal unsafe class Sound : BaseSound
         }
 
         Log.Debug($"Playing BGM ID: {currentBgmId}");
-        return this.playSoundHook.OriginalFunction(soundCategory, currentBgmId, param3, param4);
+        this.playSoundHook.OriginalFunction(soundCategory, (int)currentBgmId, param3, param4);
     }
 
     /// <summary>

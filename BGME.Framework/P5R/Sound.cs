@@ -137,6 +137,10 @@ internal unsafe class Sound : BaseSound
         }
 
         var currentBgmId = this.GetGlobalBgmId((int)bgmId);
+        if (currentBgmId == null)
+        {
+            return;
+        }
 
         if (bgmId == SHELL_SONG_1.CueId || bgmId == SHELL_SONG_2.CueId)
         {
@@ -177,7 +181,7 @@ internal unsafe class Sound : BaseSound
         }
 
         Log.Debug($"Playing BGM ID: {currentBgmId}");
-        this.playBgmHook?.OriginalFunction(param1, param2, currentBgmId, param4);
+        this.playBgmHook?.OriginalFunction(param1, param2, (int)currentBgmId, param4);
     }
 
     /// <summary>

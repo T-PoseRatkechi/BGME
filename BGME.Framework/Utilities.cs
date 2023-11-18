@@ -16,7 +16,12 @@ internal static class Utilities
         return bigEndianValue;
     }
 
-    public static int CalculateMusicId(IMusic music)
+    /// <summary>
+    /// Calculate the BGM ID to play given <paramref name="music"/>.
+    /// </summary>
+    /// <param name="music">Music to play.</param>
+    /// <returns>BGM ID to play, or null if music is disabled.</returns>
+    public static int? CalculateMusicId(IMusic music)
     {
         if (music is Song song)
         {
@@ -43,10 +48,21 @@ internal static class Utilities
         {
             return CalculateMusicId(sound.Music);
         }
+        else if (music is DisableMusic)
+        {
+            Log.Debug("Music is disabled.");
+            return null;
+        }
 
         return -1;
     }
 
+    /// <summary>
+    /// Calculate the Encounter BGM ID to play given <paramref name="music"/> and the <paramref name="context"/>.
+    /// </summary>
+    /// <param name="music">Music to play.</param>
+    /// <param name="context">Encounter context.</param>
+    /// <returns>BGM ID to play, -1 if none set or disabled.</returns>
     public static int CalculateMusicId(IMusic music, EncounterContext context)
     {
         if (music is BattleBgm battleBgm)
@@ -55,24 +71,24 @@ internal static class Utilities
             if (context == EncounterContext.Normal
                 && battleBgm.NormalMusic != null)
             {
-                return CalculateMusicId(battleBgm.NormalMusic);
+                return CalculateMusicId(battleBgm.NormalMusic) ?? -1;
             }
 
             if (context == EncounterContext.Advantage
                 && battleBgm.AdvantageMusic != null)
             {
-                return CalculateMusicId(battleBgm.AdvantageMusic);
+                return CalculateMusicId(battleBgm.AdvantageMusic) ?? -1;
             }
 
             if (context == EncounterContext.Disadvantage
                 && battleBgm.DisadvantageMusic != null)
             {
-                return CalculateMusicId(battleBgm.DisadvantageMusic);
+                return CalculateMusicId(battleBgm.DisadvantageMusic) ?? -1;
             }
 
             return -1;
         }
 
-        return CalculateMusicId(music);
+        return CalculateMusicId(music) ?? -1;
     }
 }

@@ -7,14 +7,14 @@ internal abstract class BaseSound
     private readonly MusicService music;
 
     private int prevOriginalBgmId;
-    private int newBgmId;
+    private int? currentBgmId;
 
     public BaseSound(MusicService music)
     {
         this.music = music;
     }
 
-    protected int GetGlobalBgmId(int originalBgmId)
+    protected int? GetGlobalBgmId(int originalBgmId)
     {
         if (this.music.Global.TryGetValue(originalBgmId, out var newMusic))
         {
@@ -22,13 +22,17 @@ internal abstract class BaseSound
             if (this.prevOriginalBgmId == originalBgmId && newMusic.Type == MusicType.RandomSong)
             {
                 Log.Debug("Reusing previous random song.");
-                return this.newBgmId;
+                return this.currentBgmId;
             }
 
             this.prevOriginalBgmId = originalBgmId;
-            this.newBgmId = Utilities.CalculateMusicId(newMusic);
+            this.currentBgmId = Utilities.CalculateMusicId(newMusic);
+            if (this.currentBgmId == null)
+            {
+                Log.Debug($"BGM ID: {originalBgmId} is disabled.");
+            }
 
-            return this.newBgmId;
+            return this.currentBgmId;
         }
 
         this.prevOriginalBgmId = originalBgmId;
