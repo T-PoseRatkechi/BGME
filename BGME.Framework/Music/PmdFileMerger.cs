@@ -2,8 +2,8 @@
 using LibellusLibrary.Event.Types.Frame;
 using LibellusLibrary.Event.Types;
 using LibellusLibrary.Event;
-using PersonaMusicScript.Library.Models;
 using CriFsV2Lib.Definitions;
+using PersonaMusicScript.Types.Music;
 
 namespace BGME.Framework.Music;
 
@@ -36,11 +36,11 @@ internal class PmdFileMerger : IFileBuilder
 
         // Build files.
         // Persona 4 Golden.
-        var dataFile = "data.cpk";
+        var dataFile = this.criFsApi.GetCpkFilesInGameDir().First(x => Path.GetFileNameWithoutExtension(x) == "data");
 
         using var dataStream = new FileStream(dataFile, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         using var reader = this.criFsLib.CreateCpkReader(dataStream, false);
-        Task.WaitAll(this.CurrentEvents(music.Events).Select(x => this.BuildEventFile(reader, x.Key, x.Value)).ToArray());
+        Task.WaitAll(this.CurrentEvents(music.Events).Select(x => this.BuildEventFile(reader, dataFile, x.Key, x.Value)).ToArray());
 
         Log.Information("Files built.");
     }
@@ -55,7 +55,7 @@ internal class PmdFileMerger : IFileBuilder
 
             // Generate expected relative file path for event.
             var folderId = eventIds.MajorId - (eventIds.MajorId % 10);
-            var eventFilePath = $@"event\e{folderId}\E{eventIds.MajorId:000}_{eventIds.MinorId:000}{this.GetEventExt(eventIds.PmdType)}";
+            var eventFilePath = $@"event\e{folderId}\E{eventIds.MajorId:000}_{eventIds.MinorId:000}{GetEventExt(eventIds.PmdType)}";
 
             eventFiles[eventFilePath] = musicFrameTable;
             Log.Debug($"Added event file to build: {eventFilePath}");
@@ -64,18 +64,15 @@ internal class PmdFileMerger : IFileBuilder
         return eventFiles;
     }
 
-    private string GetEventExt(PmdType pmdType) => pmdType switch
+    private static string GetEventExt(PmdType pmdType) => pmdType switch
     {
         PmdType.PM1 => ".pm1",
         PmdType.PM2 => ".pm2",
         _ => ".pm3"
     };
 
-    private MemoryStream? GetFile(ICpkReader reader, string relativePath)
+    private MemoryStream? GetFile(ICpkReader reader, string dataFile, string relativePath)
     {
-        // Persona 4 Golden.
-        var dataFile = "data.cpk";
-
         Log.Debug($"Getting game file: {relativePath}");
         var cachedFile = this.criFsApi.GetCpkFilesCached(dataFile);
         if (cachedFile.FilesByPath.TryGetValue(relativePath, out var index))
@@ -89,9 +86,9 @@ internal class PmdFileMerger : IFileBuilder
         return null;
     }
 
-    private async Task BuildEventFile(ICpkReader reader, string eventFilePath, FrameTable musicFrameTable)
+    private async Task BuildEventFile(ICpkReader reader, string dataFile, string eventFilePath, FrameTable musicFrameTable)
     {
-        using var eventFileStream = this.GetFile(reader, eventFilePath);
+        using var eventFileStream = this.GetFile(reader, dataFile, eventFilePath);
         if (eventFileStream == null)
         {
             return;
@@ -99,8 +96,7 @@ internal class PmdFileMerger : IFileBuilder
 
         // Get (or add) frame table.
         var pmd = await this.pmdReader.ReadPmd(eventFileStream);
-        var frameTable = pmd.PmdDataTypes.FirstOrDefault(x => x.Type == PmdTypeID.FrameTable) as PmdData_FrameTable;
-        if (frameTable == null)
+        if (pmd.PmdDataTypes.FirstOrDefault(x => x.Type == PmdTypeID.FrameTable) is not PmdData_FrameTable frameTable)
         {
             frameTable = new();
             pmd.PmdDataTypes.Add(frameTable);
@@ -129,8 +125,8 @@ internal class PmdFileMerger : IFileBuilder
                 var frameBgmObj = new PmdTarget_Bgm()
                 {
                     StartFrame = (ushort)frameId,
-                    BgmId = (ushort)bgmId,
-                    BgmType = frameBgm.BgmType,
+                    BgmId = (ushort)(bgmId ?? 0),
+                    BgmType = (LibellusLibrary.Event.Types.Frame.PmdBgmType)frameBgm.BgmType,
                 };
 
                 frameTable.Frames.Add(frameBgmObj);
@@ -141,7 +137,7 @@ internal class PmdFileMerger : IFileBuilder
                 var frameBgmObj = new PmdTarget_Bgm()
                 {
                     StartFrame = (ushort)frameId,
-                    BgmId = (ushort)bgmId,
+                    BgmId = (ushort)(bgmId ?? 0),
                     BgmType = default,
                 };
 
