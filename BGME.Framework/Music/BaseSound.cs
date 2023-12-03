@@ -1,4 +1,4 @@
-﻿using PersonaMusicScript.Library.Models;
+﻿using PersonaMusicScript.Types.Music;
 
 namespace BGME.Framework.Music;
 
@@ -13,6 +13,13 @@ internal abstract class BaseSound
     {
         this.music = music;
     }
+
+    public void RefreshBgm()
+    {
+        this.PlayBgm(this.prevOriginalBgmId);
+    }
+
+    protected abstract void PlayBgm(int bgmId);
 
     protected int? GetGlobalBgmId(int originalBgmId)
     {
