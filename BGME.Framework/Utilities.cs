@@ -1,5 +1,5 @@
 ﻿using BGME.Framework.Models;
-using PersonaMusicScript.Library.Models;
+using PersonaMusicScript.Types.Music;
 using System.Diagnostics;
 
 namespace BGME.Framework;

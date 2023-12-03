@@ -1,5 +1,5 @@
 ﻿using BGME.Framework.Models;
-using PersonaMusicScript.Library.Models;
+using PersonaMusicScript.Types.MusicCollections.Entries;
 
 namespace BGME.Framework.Music;
 
@@ -52,5 +52,5 @@ internal abstract class BaseEncounterBgm
         }
     }
 
-    protected record EncounterMusic(Encounter Encounter, EncounterContext Context);
+    protected record EncounterMusic(EncounterEntry Encounter, EncounterContext Context);
 }

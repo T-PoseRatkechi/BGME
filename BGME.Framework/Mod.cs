@@ -3,7 +3,8 @@ using BGME.Framework.Music;
 using BGME.Framework.Template;
 using BGME.Framework.Template.Configuration;
 using CriFs.V2.Hook.Interfaces;
-using PersonaMusicScript.Library;
+using PersonaModdingMetadata.Shared.Games;
+using PersonaMusicScript.Types;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
@@ -12,10 +13,9 @@ using System.Diagnostics;
 
 namespace BGME.Framework;
 
-#pragma warning disable IDE0052 // Remove unread private members
 public class Mod : ModBase, IExports
 {
-    private static readonly Dictionary<string, string> Games = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, Game> Games = new(StringComparer.OrdinalIgnoreCase)
     {
         ["p4g.exe"] = Game.P4G_PC,
         ["p5r.exe"] = Game.P5R_PC,
@@ -61,10 +61,10 @@ public class Mod : ModBase, IExports
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         Setup.Start(criFsApi!, modDir, game);
 
-        var resourcesDir = Path.Join(modDir, "resources");
-        var musicParser = new MusicParser(game, resourcesDir);
+        var musicResources = new MusicResources(game, modDir);
         var fileBuilder = GetGameBuilder(criFsApi!, modDir, game);
-        this.music = new(musicParser, fileBuilder, this.config.HotReload);
+
+        this.music = new(musicResources, fileBuilder, this.config.HotReload);
         this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, this.music);
 
         this.modLoader.ModLoading += OnModLoading;
@@ -107,7 +107,7 @@ public class Mod : ModBase, IExports
         this.music?.AddFolder(bgmeDir);
     }
 
-    private static IFileBuilder? GetGameBuilder(ICriFsRedirectorApi criFsApi, string modDir, string game)
+    private static IFileBuilder? GetGameBuilder(ICriFsRedirectorApi criFsApi, string modDir, Game game)
     {
         return game switch
         {

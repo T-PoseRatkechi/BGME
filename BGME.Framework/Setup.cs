@@ -1,5 +1,5 @@
 ﻿using CriFs.V2.Hook.Interfaces;
-using PersonaMusicScript.Library;
+using PersonaModdingMetadata.Shared.Games;
 using System.IO.Compression;
 using static CriFs.V2.Hook.Interfaces.ICriFsRedirectorApi;
 
@@ -7,7 +7,7 @@ namespace BGME.Framework;
 
 internal static class Setup
 {
-    public static void Start(ICriFsRedirectorApi criFsApi, string modDir, string game)
+    public static void Start(ICriFsRedirectorApi criFsApi, string modDir, Game game)
     {
         if (game == Game.P5R_PC)
         {
