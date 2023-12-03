@@ -12,6 +12,7 @@ namespace BGME.Framework.P3P;
 /// <summary>
 /// Patch BGM function to play any BGM audio file.
 /// </summary>
+#pragma warning disable IDE0052 // Remove unread private members
 internal unsafe class SoundPatcher : BaseSound
 {
     private const int MAX_STRING_SIZE = 16;
@@ -49,6 +50,11 @@ internal unsafe class SoundPatcher : BaseSound
 
             this.bgmHook = hooks.CreateAsmHook(bgmPatch, (long)address, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
         });
+    }
+
+    protected override void PlayBgm(int bgmId)
+    {
+        Log.Debug("Play BGM not supported.");
     }
 
     private byte* GetBgmStringImpl(int bgmId)

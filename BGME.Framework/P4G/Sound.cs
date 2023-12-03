@@ -1,6 +1,6 @@
 ﻿using BGME.Framework.Models;
 using BGME.Framework.Music;
-using PersonaMusicScript.Library.Models;
+using PersonaMusicScript.Types.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
@@ -73,6 +73,11 @@ internal unsafe class Sound : BaseSound
         }
     }
 
+    protected override void PlayBgm(int bgmId)
+    {
+        this.playSoundFunction?.GetWrapper()(0, bgmId, 0, 0);
+    }
+
     public void PlayMusic(IMusic music)
     {
         var bgmId = Utilities.CalculateMusicId(music);
@@ -80,7 +85,7 @@ internal unsafe class Sound : BaseSound
         {
             return;
         }
-        else if (music is PersonaMusicScript.Library.Models.Sound sound)
+        else if (music is PersonaMusicScript.Types.Music.Sound sound)
         {
             Log.Debug($"PlaySound({sound.Setting_1}, {bgmId}, {sound.Setting_2}, {sound.Setting_3})");
             this.playSoundFunction?.GetWrapper()(sound.Setting_1, (int)bgmId, sound.Setting_2, sound.Setting_3);

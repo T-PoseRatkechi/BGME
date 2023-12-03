@@ -23,7 +23,7 @@ internal unsafe class Sound : BaseSound
     private static readonly ShellCue SHELL_SONG_2 = new(201, 1);
 
     [Function(CallingConventions.Microsoft)]
-    private delegate void PlayBgmFunction(nint param1, nint param2, nint param3, nint param4);
+    private delegate void PlayBgmFunction(nint param1, nint param2, int bgmId, nint param4);
     private IHook<PlayBgmFunction>? playBgmHook;
 
     private IAsmHook? customAcbHook;
@@ -123,20 +123,15 @@ internal unsafe class Sound : BaseSound
         });
     }
 
-    private void PlayBgm(nint param1, nint param2, nint bgmId, nint param4)
+    protected override void PlayBgm(int bgmId)
     {
-        // BUGFIX:
-        // Entering Thieves Den disables DLC BGM and
-        // DLC BGM only reloads if the costume ID changes.
-        // If the costume ID does not change after leaving the Thieves Den
-        // the DLC BGM remains permanently disabled.
-        if (bgmId == DEN_CUE_ID)
-        {
-            *this.currentCostumeId = *this.currentCostumeId == 1 ? 2 : 1;
-            Log.Debug("BUGFIX: Assuming player entered Thieves Den, swapping costume ID.");
-        }
+        //this.PlayBgm(0, 0, bgmId, 0);
+    }
 
-        var currentBgmId = this.GetGlobalBgmId((int)bgmId);
+    private void PlayBgm(nint param1, nint param2, int bgmId, nint param4)
+    {
+        Log.Debug($"{param1:X} || {param2:X} || {bgmId:X} || {param4:X}");
+        var currentBgmId = this.GetGlobalBgmId(bgmId);
         if (currentBgmId == null)
         {
             return;
