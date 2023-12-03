@@ -7,3 +7,6 @@
 [submodule "submodules/Libellus-Event-Tools"]
 	path = submodules/Libellus-Event-Tools
 	url = https://github.com/T-PoseRatkechi/Libellus-Event-Tools.git
+[submodule "submodules/PersonaModdingMetadata"]
+	path = submodules/PersonaModdingMetadata
+	url = https://github.com/T-PoseRatkechi/PersonaModdingMetadata.git
