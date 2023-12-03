@@ -1,6 +1,9 @@
 ﻿using BGME.Framework.Interfaces;
 using PersonaMusicScript.Library;
-using PersonaMusicScript.Library.Models;
+using PersonaMusicScript.Types;
+using PersonaMusicScript.Types.Music;
+using PersonaMusicScript.Types.MusicCollections;
+using PersonaMusicScript.Types.MusicCollections.Entries;
 using Reloaded.Mod.Loader.IO.Utility;
 
 namespace BGME.Framework.Music;
@@ -19,18 +22,18 @@ internal class MusicService : IBgmeApi
     private MusicSource currentMusic;
 
     public MusicService(
-        MusicParser parser,
+        MusicResources resources,
         IFileBuilder? fileBuilder = null,
         bool hotReload = false)
     {
-        this.parser = parser;
+        this.parser = new(resources);
         this.fileBuilder = fileBuilder;
         this.hotReload = hotReload;
 
-        this.currentMusic = new();
+        this.currentMusic = new(resources);
         this.musicReloadTimer.Elapsed += (sender, args) =>
         {
-            this.currentMusic = new();
+            this.currentMusic = new(resources);
             foreach (var folder in this.musicFolders)
             {
                 var folderPath = folder.Path;
@@ -40,6 +43,14 @@ internal class MusicService : IBgmeApi
                 }
 
                 this.ProcessMusicFolder(folderPath);
+            }
+
+            foreach(var callback in this.apiEntries)
+            {
+                if (callback.Invoke() is BaseEntry newEntry)
+                {
+                    this.currentMusic.AddEntry(newEntry);
+                }
             }
 
             if (this.hotReload && this.fileBuilder != null)
@@ -52,15 +63,15 @@ internal class MusicService : IBgmeApi
         };
     }
 
-    public Dictionary<int, Encounter> Encounters => this.currentMusic.Encounters;
+    public EncounterMusic Encounters => this.currentMusic.Encounters;
 
-    public Dictionary<int, IMusic> Floors => this.currentMusic.Floors;
+    public FloorMusic Floors => this.currentMusic.Floors;
 
-    public Dictionary<int, IMusic> Global => this.currentMusic.Global;
+    public GlobalMusic Global => this.currentMusic.Global;
 
-    public Dictionary<EventIds, FrameTable> Events => this.currentMusic.Events;
+    public EventMusic Events => this.currentMusic.Events;
 
-    public FrameTable? GetEventFrame(int majorId, int minorId, PmdType pmdType) => this.currentMusic.GetEventFrame(majorId, minorId, pmdType);
+    public FrameTable? GetEventFrame(int majorId, int minorId, PmdType pmdType) => this.Events.GetEventFrame(majorId, minorId, pmdType);
 
     public void RemoveFolder(string folder)
     {
@@ -125,6 +136,26 @@ internal class MusicService : IBgmeApi
         catch (Exception ex)
         {
             Log.Error(ex, $"Failed to parse music script.\nFile: {file}");
+        }
+    }
+
+    private readonly List<Func<object>> apiEntries = new();
+
+    public void AddEntry(Func<object> callback)
+    {
+        this.apiEntries.Add(callback);
+        this.ReloadMusic();
+    }
+
+    public void RemoveEntry(Func<object> callback)
+    {
+        if (this.apiEntries.Remove(callback))
+        {
+            this.ReloadMusic();
+        }
+        else
+        {
+            Log.Warning("Music entry was not found and could not be removed.");
         }
     }
 }
