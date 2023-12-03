@@ -1,6 +1,6 @@
 ﻿using BGME.Framework.Music;
 using LibellusLibrary.Event.Types.Frame;
-using PersonaMusicScript.Library.Models;
+using PersonaMusicScript.Types.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
