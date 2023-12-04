@@ -99,25 +99,12 @@ jobs:
         # A file, directory or wildcard pattern that describes what to upload
         path: |
           ${{ env.PUBLISH_GAMEBANANA_PATH }}/*
-        
-    - name: Upload NuGet Release Artifact
-      uses: actions/upload-artifact@v2.2.4
-      with:
-        # Artifact name
-        name: NuGet Release
-        # A file, directory or wildcard pattern that describes what to upload
-        path: |
-          ${{ env.PUBLISH_NUGET_PATH }}/*
-        
-    - name: Upload Changelog Artifact
-      uses: actions/upload-artifact@v2.2.4
-      with:
-        # Artifact name
-        name: Changelog
-        # A file, directory or wildcard pattern that describes what to upload
-        path: ${{ env.PUBLISH_CHANGELOG_PATH }}
-        retention-days: 0
-    
+
+  github_release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
     - name: Upload to GitHub Releases (on Tag)
       uses: softprops/action-gh-release@v0.1.14
       if: env.IS_RELEASE == 'true'
@@ -127,21 +114,3 @@ jobs:
         # Newline-delimited list of path globs for asset files to upload
         files: |
           ${{ env.PUBLISH_GITHUB_PATH }}/*
-        
-    - name: Push to NuGet (on Tag)
-      env: 
-        NUGET_KEY: ${{ secrets.RELOADED_NUGET_KEY }}
-      if: env.IS_RELEASE == 'true'
-      run: |
-        if ([string]::IsNullOrEmpty("$env:NUGET_KEY"))
-        {
-            Write-Host "NuGet Repository Key (GitHub Secrets -> RELOADED_NUGET_KEY) Not Specified. Skipping."
-            return
-        }
-        
-        $items = Get-ChildItem -Path "$env:PUBLISH_NUGET_PATH/*.nupkg"
-        Foreach ($item in $items)
-        {
-            Write-Host "Pushing $item"
-            dotnet nuget push "$item" -k "$env:NUGET_KEY" -s "$env:NUGET_URL" --skip-duplicate
-        }
