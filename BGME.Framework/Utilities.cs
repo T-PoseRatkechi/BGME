@@ -53,6 +53,12 @@ internal static class Utilities
             Log.Debug("Music is disabled.");
             return null;
         }
+        else if (music is RandomMusic randomMusic)
+        {
+            var selectedMusic = randomMusic.GetRandomMusic();
+            Log.Debug($"Random Music Selected: {selectedMusic.Type}");
+            return CalculateMusicId(selectedMusic);
+        }
 
         return -1;
     }
