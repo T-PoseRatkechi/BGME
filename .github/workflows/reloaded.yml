@@ -100,6 +100,15 @@ jobs:
         path: |
           ${{ env.PUBLISH_GAMEBANANA_PATH }}/*
 
+    - name: Upload Changelog Artifact
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        # Artifact name
+        name: Changelog
+        # A file, directory or wildcard pattern that describes what to upload
+        path: ${{ env.PUBLISH_CHANGELOG_PATH }}
+        retention-days: 0
+
   github_release:
     needs: build
     runs-on: windows-latest
