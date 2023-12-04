@@ -111,6 +111,7 @@ internal unsafe class Sound : BaseSound
         {
             Log.Verbose($"Playing Sound ID: {soundId}");
             this.playSoundHook.OriginalFunction(soundCategory, soundId, param3, param4);
+            return;
         }
 
         var currentBgmId = this.GetGlobalBgmId(soundId);
