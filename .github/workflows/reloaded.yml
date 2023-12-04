@@ -101,6 +101,7 @@ jobs:
           ${{ env.PUBLISH_GAMEBANANA_PATH }}/*
 
   github_release:
+    needs: build
     runs-on: windows-latest
     permissions:
       contents: write
