@@ -47,9 +47,14 @@ internal class MusicService : IBgmeApi
 
             foreach(var callback in this.apiEntries)
             {
-                if (callback.Invoke() is BaseEntry newEntry)
+                if (callback() is BaseEntry encounter)
                 {
-                    this.currentMusic.AddEntry(newEntry);
+                    this.currentMusic.AddEntry(encounter);
+                    Log.Information("Added music entry from API callback.");
+                }
+                else
+                {
+                    Log.Error("Failed to add music entry from API callback.");
                 }
             }
 
@@ -144,6 +149,7 @@ internal class MusicService : IBgmeApi
     public void AddEntry(Func<object> callback)
     {
         this.apiEntries.Add(callback);
+        Log.Debug("Added API music entry callback.");
         this.ReloadMusic();
     }
 
@@ -151,6 +157,7 @@ internal class MusicService : IBgmeApi
     {
         if (this.apiEntries.Remove(callback))
         {
+            Log.Debug("Removed API music entry callback.");
             this.ReloadMusic();
         }
         else
