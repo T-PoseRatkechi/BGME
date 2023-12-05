@@ -15,14 +15,14 @@ public interface IBgmeApi
     void RemoveFolder(string folder);
 
     /// <summary>
-    /// Add a music entry.
+    /// Add a music script entry.
     /// </summary>
-    /// <param name="callback">Callback that returns a new music entry.</param>
-    void AddEntry(Func<object> callback);
+    /// <param name="callback">Callback that returns a new music script entry.</param>
+    void AddMusicScript(Func<string> callback);
 
     /// <summary>
-    /// Remove an existing music entry.
+    /// Remove an existing music script entry.
     /// </summary>
     /// <param name="callback">Previously added callback to remove.</param>
-    void RemoveEntry(Func<object> callback);
+    void RemoveMusicScript(Func<string> callback);
 }

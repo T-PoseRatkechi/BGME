@@ -3,7 +3,6 @@ using PersonaMusicScript.Library;
 using PersonaMusicScript.Types;
 using PersonaMusicScript.Types.Music;
 using PersonaMusicScript.Types.MusicCollections;
-using PersonaMusicScript.Types.MusicCollections.Entries;
 using Reloaded.Mod.Loader.IO.Utility;
 
 namespace BGME.Framework.Music;
@@ -47,14 +46,15 @@ internal class MusicService : IBgmeApi
 
             foreach(var callback in this.apiEntries)
             {
-                if (callback() is BaseEntry encounter)
+                try
                 {
-                    this.currentMusic.AddEntry(encounter);
+                    var entryMusicScript = callback();
+                    this.parser.Parse(entryMusicScript, this.currentMusic);
                     Log.Information("Added music entry from API callback.");
                 }
-                else
+                catch (Exception ex)
                 {
-                    Log.Error("Failed to add music entry from API callback.");
+                    Log.Error(ex, "Failed to add music entry from API callback.");
                 }
             }
 
@@ -144,16 +144,16 @@ internal class MusicService : IBgmeApi
         }
     }
 
-    private readonly List<Func<object>> apiEntries = new();
+    private readonly List<Func<string>> apiEntries = new();
 
-    public void AddEntry(Func<object> callback)
+    public void AddMusicScript(Func<string> callback)
     {
         this.apiEntries.Add(callback);
         Log.Debug("Added API music entry callback.");
         this.ReloadMusic();
     }
 
-    public void RemoveEntry(Func<object> callback)
+    public void RemoveMusicScript(Func<string> callback)
     {
         if (this.apiEntries.Remove(callback))
         {
