@@ -40,58 +40,37 @@ internal unsafe class Sound : BaseSound
         : base(music)
     {
         *this.currentCostumeId = 1;
-        scanner.AddMainModuleScan("E8 35 66 7C EA 44 0F B7 07", result =>
+        scanner.Scan("Costume ACB", "E8 35 66 7C EA 44 0F B7 07", result =>
         {
-            if (!result.Found)
-            {
-                throw new Exception("Failed to find acb pattern.");
-            }
-
-            var address = Utilities.BaseAddress + result.Offset;
             var patch = new string[]
             {
                 "use64",
                 $"mov r8, {CUSTOM_BGM_ID}"
             };
 
-            this.customAcbHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
-                ?? throw new Exception("Failed to create custom acb hook.");
+            this.customAcbHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
 
-        scanner.AddMainModuleScan("E8 20 66 7C EA 02 05 E9 FB F4 F5", result =>
+        scanner.Scan("Costume AWB", "E8 20 66 7C EA 02 05 E9 FB F4 F5", result =>
         {
-            if (!result.Found)
-            {
-                throw new Exception("Failed to find awb pattern.");
-            }
-
-            var address = Utilities.BaseAddress + result.Offset;
             var patch = new string[]
             {
                 "use64",
                 $"mov r8, {CUSTOM_BGM_ID}"
             };
 
-            this.customAwbHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
-                ?? throw new Exception("Failed to create custom awb hook.");
+            this.customAwbHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
 
-        scanner.AddMainModuleScan("77 07 E8 01 D8 5D 00", result =>
+        scanner.Scan("Persist DLC BGM", "77 07 E8 01 D8 5D 00", result =>
         {
-            if (!result.Found)
-            {
-                throw new Exception("Failed to find persist dlc bgm pattern.");
-            }
-
-            var address = Utilities.BaseAddress + result.Offset;
             var patch = new string[]
             {
                 "use64",
                 $"stc"
             };
 
-            this.persistentDlcBgmHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
-                ?? throw new Exception("Failed to create persist dlc bgm hook.");
+            this.persistentDlcBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
 
         scanner.Scan("Set Costume ID", "0F B7 07 48 8B 0D B6 2F 23 ED", result =>
@@ -103,13 +82,12 @@ internal unsafe class Sound : BaseSound
                 "mov eax, [rax]"
             };
 
-            this.setCostumeIdHook = hooks.CreateAsmHook(patch, (long)result, AsmHookBehaviour.ExecuteAfter).Activate();
+            this.setCostumeIdHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteAfter).Activate();
         });
 
-        scanner.Scan("Play BGM Function", "57 48 83 EC 30 80 7C", result =>
+        scanner.Scan("Play BGM Function", "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 80 7C 24 ?? 00", result =>
         {
-            var address = result - 10;
-            this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, (long)address).Activate();
+            this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, result).Activate();
         });
     }
 
