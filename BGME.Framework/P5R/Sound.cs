@@ -5,6 +5,8 @@ using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using System.Runtime.InteropServices;
+using System.Text;
+using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P5R;
 
@@ -26,6 +28,11 @@ internal unsafe class Sound : BaseSound
     private delegate void PlayBgmFunction(nint param1, nint param2, int bgmId, nint param4);
     private IHook<PlayBgmFunction>? playBgmHook;
 
+    [Function(new Register[] { Register.rbx, Register.rax }, Register.rax, true)]
+    private delegate void AcbLoadedFunction(byte* fileName, nint acbPtr);
+    private IReverseWrapper<AcbLoadedFunction>? acbLoadedReverseWrapper;
+    private IAsmHook? acbLoadedHook;
+
     private IAsmHook? customAcbHook;
     private IAsmHook? customAwbHook;
     private IAsmHook? persistentDlcBgmHook;
@@ -35,12 +42,13 @@ internal unsafe class Sound : BaseSound
     private ushort currentAwbIndex = 0;
 
     private readonly int* currentCostumeId = (int*)NativeMemory.AllocZeroed(sizeof(int));
+    private static nint? acbAddress;
 
     public Sound(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
     {
         *this.currentCostumeId = 1;
-        scanner.Scan("Costume ACB", "E8 35 66 7C EA 44 0F B7 07", result =>
+        scanner.Scan("Costume ACB", "E8 ?? ?? ?? ?? 44 0F B7 07 48 8D 15", result =>
         {
             var patch = new string[]
             {
@@ -51,7 +59,7 @@ internal unsafe class Sound : BaseSound
             this.customAcbHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
 
-        scanner.Scan("Costume AWB", "E8 20 66 7C EA 02 05 E9 FB F4 F5", result =>
+        scanner.Scan("Costume AWB", "E8 ?? ?? ?? ?? 02 05 ?? ?? ?? ?? 48 89 D9", result =>
         {
             var patch = new string[]
             {
@@ -89,6 +97,56 @@ internal unsafe class Sound : BaseSound
         {
             this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, result).Activate();
         });
+
+        scanner.Scan("Get Costume ACB Pointer", "48 89 83 ?? ?? ?? ?? 48 8B 8B ?? ?? ?? ?? BA 01 00 00 00", result =>
+        {
+            var patch = new string[]
+            {
+                "use64",
+                $"{Utilities.PushCallerRegisters}",
+                $"{hooks.Utilities.GetAbsoluteCallMnemonics(this.AcbLoaded, out this.acbLoadedReverseWrapper)}",
+                $"{Utilities.PopCallerRegisters}",
+            };
+
+            this.acbLoadedHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteAfter).Activate();
+        });
+    }
+
+    private void AcbLoaded(byte* fileName, nint acbPointer)
+    {
+        if (acbAddress != null)
+        {
+            return;
+        }
+
+        var stringBytes = new List<byte>();
+        for (int i = 0; i < 16; i++)
+        {
+            var value = *(fileName + 4 + i);
+            if (value != 0)
+            {
+                stringBytes.Add(value);
+            }
+            else
+            {
+                stringBytes.Add(0);
+                break;
+            }
+        }
+
+        var fileNameString = Encoding.ASCII.GetString(stringBytes.ToArray());
+        Log.Verbose($"ACB File: {fileNameString}");
+        if (fileNameString == "SOUND/BGM_42.ACB")
+        {
+            // Save pointer.
+            acbAddress = *(nint*)(acbPointer + 0x18);
+            Log.Debug($"Costume ACB Pointer: {acbPointer:X}");
+            Log.Information($"Costume ACB Address: {acbAddress:X}");
+        }
+        else
+        {
+            Log.Verbose($"ACB Pointer: {acbPointer:X}");
+        }
     }
 
     protected override void PlayBgm(int bgmId)
@@ -148,42 +206,13 @@ internal unsafe class Sound : BaseSound
     }
 
     /// <summary>
-    /// Gets ACB address of DLC BGM, null if not loaded.
-    /// </summary>
-    private static nint? AcbAddress
-    {
-        get
-        {
-            nint acbAddress;
-            if (AcbPointers.AcbAddres_1 is nint address1)
-            {
-                Log.Verbose("Using ACB pointer 1.");
-                acbAddress = address1;
-            }
-            else if (AcbPointers.AcbAddress_2 is nint address2)
-            {
-                Log.Verbose("Using ACB pointer 2.");
-                acbAddress = address2;
-            }
-            else
-            {
-                Log.Verbose("Using ACB pointer 3.");
-                acbAddress = AcbPointers.AcbAddress_3;
-            }
-
-            Log.Verbose($"ACB Address: {acbAddress:X}");
-            return acbAddress;
-        }
-    }
-
-    /// <summary>
     /// Gets address of waveform table rows.
     /// </summary>
     private static nint? WaveformTableAddress
     {
         get
         {
-            if (AcbAddress is nint address)
+            if (acbAddress is nint address)
             {
                 var waveformTableAddress = address + 2146;
                 Log.Verbose($"Waveform Table Address: {waveformTableAddress:X}");
