@@ -30,12 +30,6 @@ internal class EncounterBgm : BaseEncounterBgm
     {
         scanner.Scan("Encounter BGM", "0F B7 4C 02 16", address =>
         {
-            if (address == null)
-            {
-                return;
-            }
-
-
             var encounterPatch = new string[]
             {
                 "use64",
@@ -56,11 +50,6 @@ internal class EncounterBgm : BaseEncounterBgm
 
         scanner.Scan("Encounter Context", "F6 40 0C 40 0F 84 ?? 00 00 00", address =>
         {
-            if (address == null)
-            {
-                return;
-            }
-
             var encounterContextPatch = new string[]
             {
                 "use64",
@@ -76,11 +65,6 @@ internal class EncounterBgm : BaseEncounterBgm
 
         scanner.Scan("Victory BGM", "E8 53 A5 22 FA", address =>
         {
-            if (address == null)
-            {
-                return;
-            }
-
             var victoryBgmPatch = new string[]
             {
                 "use64",

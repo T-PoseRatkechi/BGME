@@ -96,11 +96,6 @@ internal unsafe class Sound : BaseSound
 
         scanner.Scan("Set Costume ID", "0F B7 07 48 8B 0D B6 2F 23 ED", result =>
         {
-            if (result == null)
-            {
-                return;
-            }
-
             var patch = new string[]
             {
                 "use64",
@@ -113,11 +108,6 @@ internal unsafe class Sound : BaseSound
 
         scanner.Scan("Play BGM Function", "57 48 83 EC 30 80 7C", result =>
         {
-            if (result == null)
-            {
-                return;
-            }
-
             var address = result - 10;
             this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, (long)address).Activate();
         });

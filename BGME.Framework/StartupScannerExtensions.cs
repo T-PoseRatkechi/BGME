@@ -32,14 +32,13 @@ internal static class StartupScannerExtensions
         this IStartupScanner scanner,
         string name,
         string pattern,
-        Action<nint?> callback)
+        Action<nint> callback)
     {
         scanner.AddMainModuleScan(pattern, result =>
         {
             if (!result.Found)
             {
                 Log.Error($"Failed to find pattern for {name}. Pattern: {pattern}");
-                callback(null);
                 return;
             }
 

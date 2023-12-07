@@ -39,11 +39,6 @@ internal unsafe class Sound : BaseSound
     {
         scanner.Scan("Play Sound Function", "48 63 E9 89 D6", result =>
         {
-            if (result == null)
-            {
-                return;
-            }
-
             this.playSoundFunction = hooks.CreateFunction<PlaySoundFunction>((nint)result - 30);
             this.playSoundHook = this.playSoundFunction.Hook(this.PlaySoundImpl).Activate();
         });

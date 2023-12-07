@@ -19,11 +19,6 @@ internal class FloorBgm : BaseFloorBgm
     {
         scanner.Scan("Floor BGM", "83 3D 46 8A 7B 00 01", address =>
         {
-            if (address == null)
-            {
-                return;
-            }
-
             var floorBgmPatch = new string[]
             {
                 "use64",

@@ -34,11 +34,6 @@ internal unsafe class SoundPatcher : BaseSound
 
         scanner.Scan("BGM Patch", "4E 8B 84 C3 28 4C 81 00", address =>
         {
-            if (address == null)
-            {
-                return;
-            }
-
             var bgmPatch = new string[]
             {
                 "use64",
