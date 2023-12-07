@@ -10,8 +10,8 @@ namespace BGME.Framework.P5R;
 
 internal unsafe class EncounterBgm : BaseEncounterBgm
 {
-    [Function(new[] { Register.rbx, Register.rdx }, Register.rax, true)]
-    private delegate int GetEncounterBgmId(nint encounterPtr, int encounterId);
+    [Function(Register.rbx, Register.rax, true)]
+    private delegate void GetEncounterBgmId(nint encounterPtr);
     private IReverseWrapper<GetEncounterBgmId>? getEncounterBgmWrapper;
     private IAsmHook? getEncounterBgmHook;
 
@@ -28,8 +28,9 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
         : base(music)
     {
         this.sound = sound;
+        var victoryBgmCall = hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper);
 
-        scanner.Scan("Encounter BGM", "E8 33 C4 FF FF", result =>
+        scanner.Scan("Encounter BGM", "8B 83 ?? ?? ?? ?? 3D 81 02 00 00", result =>
         {
             var patch = new string[]
             {
@@ -37,11 +38,6 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
                 $"{Utilities.PushCallerRegisters}",
                 $"{hooks.Utilities.GetAbsoluteCallMnemonics(this.GetEncounterBgmIdImpl, out this.getEncounterBgmWrapper)}",
                 $"{Utilities.PopCallerRegisters}",
-                "cmp eax, -1",
-                "jng original",
-                $"{hooks.Utilities.GetAbsoluteCallMnemonics(Utilities.BaseAddress + 0x974A20, true)}",
-                $"{hooks.Utilities.GetAbsoluteJumpMnemonics(Utilities.BaseAddress + 0x9786EB, true)}",
-                $"label original"
             };
 
             try
@@ -55,13 +51,13 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
             }
         });
 
-        scanner.Scan("Victory BGM", "48 8B CE E8 8B 23 FF FF", result =>
+        scanner.Scan("Victory BGM", "BA 54 01 00 00 48 8B CE E8 ?? ?? ?? ?? 45 33 C9", result =>
         {
             var patch = new string[]
             {
                 "use64",
                 $"{Utilities.PushCallerRegisters}",
-                $"{hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper)}",
+                $"{victoryBgmCall}",
                 $"{Utilities.PopCallerRegisters}",
                 "cmp eax, -1",
                 "jng original",
@@ -71,7 +67,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
 
             try
             {
-                this.victoryBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate()
+                this.victoryBgmHook = hooks.CreateAsmHook(patch, result + 5, AsmHookBehaviour.ExecuteFirst).Activate()
                     ?? throw new Exception("Failed to create victory bgm hook.");
             }
             catch (Exception ex)
@@ -86,7 +82,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
             {
                 "use64",
                 $"{Utilities.PushCallerRegisters}",
-                $"{hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper)}",
+                $"{victoryBgmCall}",
                 $"{Utilities.PopCallerRegisters}",
                 "cmp eax, -1",
                 "jng original",
@@ -117,8 +113,9 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
         return defaultBgmId;
     }
 
-    private int GetEncounterBgmIdImpl(nint encounterPtr, int encounterId)
+    private void GetEncounterBgmIdImpl(nint encounterPtr)
     {
+        var encounterId = (int*)(encounterPtr + 0x278);
         var context = (EncounterContext) (*(int*)(encounterPtr + 0x28c));
 
         // P5R swaps encounter context values.
@@ -131,13 +128,16 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
             context = EncounterContext.Advantage;
         }
 
-        var battleMusicId = this.GetBattleMusic(encounterId, context);
+        var battleMusicId = this.GetBattleMusic(*encounterId, context);
+        if (battleMusicId == -1)
+        {
+            return;
+        }
 
         // Write bgm id to encounter bgm var.
         var encounterBgmPtr = (int*)(encounterPtr + 0x9ac);
         *encounterBgmPtr = battleMusicId;
 
         Log.Debug($"Encounter BGM ID written: {battleMusicId}");
-        return battleMusicId;
     }
 }
