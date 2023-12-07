@@ -18,7 +18,9 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
     [Function(Register.rdx, Register.rax, true)]
     private delegate int GetVictoryBgmFunction(int defaultBgmId);
     private IReverseWrapper<GetVictoryBgmFunction>? victoryBgmWrapper;
+
     private IAsmHook? victoryBgmHook;
+    private IAsmHook? victoryBgmHook2;
 
     private readonly Sound sound;
 
@@ -26,14 +28,9 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
         : base(music)
     {
         this.sound = sound;
-        scanner.AddMainModuleScan("E8 33 C4 FF FF", result =>
-        {
-            if (!result.Found)
-            {
-                throw new Exception("Failed to find get encounter bgm pattern.");
-            }
 
-            var address = Utilities.BaseAddress + result.Offset;
+        scanner.Scan("Encounter BGM", "E8 33 C4 FF FF", result =>
+        {
             var patch = new string[]
             {
                 "use64",
@@ -49,7 +46,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
 
             try
             {
-                this.getEncounterBgmHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
+                this.getEncounterBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate()
                     ?? throw new Exception("Failed to create get encounter bgm hook.");
             }
             catch (Exception ex)
@@ -58,14 +55,8 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
             }
         });
 
-        scanner.AddMainModuleScan("48 8B CE E8 8B 23 FF FF", result =>
+        scanner.Scan("Victory BGM", "48 8B CE E8 8B 23 FF FF", result =>
         {
-            if (!result.Found)
-            {
-                throw new Exception("Failed to find victory bgm pattern.");
-            }
-
-            var address = Utilities.BaseAddress + result.Offset;
             var patch = new string[]
             {
                 "use64",
@@ -80,7 +71,32 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
 
             try
             {
-                this.victoryBgmHook = hooks.CreateAsmHook(patch, address, AsmHookBehaviour.ExecuteFirst).Activate()
+                this.victoryBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate()
+                    ?? throw new Exception("Failed to create victory bgm hook.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, string.Join('\n', patch));
+            }
+        });
+
+        scanner.Scan("Victory BGM on Victory", "BA 54 01 00 00 48 8B CE E8 ?? ?? ?? ?? 33 D2", result =>
+        {
+            var patch = new string[]
+            {
+                "use64",
+                $"{Utilities.PushCallerRegisters}",
+                $"{hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper)}",
+                $"{Utilities.PopCallerRegisters}",
+                "cmp eax, -1",
+                "jng original",
+                "mov edx, eax",
+                "label original",
+            };
+            
+            try
+            {
+                this.victoryBgmHook2 = hooks.CreateAsmHook(patch, result + 5, AsmHookBehaviour.ExecuteFirst).Activate()
                     ?? throw new Exception("Failed to create victory bgm hook.");
             }
             catch (Exception ex)
