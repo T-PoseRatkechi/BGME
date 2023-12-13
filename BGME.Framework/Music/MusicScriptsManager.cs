@@ -17,8 +17,8 @@ internal class MusicScriptsManager : IBgmeApi
 
     public MusicScriptsManager()
     {
-        this.musicPaths.CollectionChanged += this.OnMusicChanged;
-        this.apiCallbacks.CollectionChanged += this.OnMusicChanged;
+        this.musicPaths.CollectionChanged += this.OnMusicCollectionChanged;
+        this.apiCallbacks.CollectionChanged += this.OnMusicCollectionChanged;
         this.musicReloadTimer.Elapsed += (sender, args) => this.OnMusicScriptsChanged();
     }
 
@@ -30,7 +30,7 @@ internal class MusicScriptsManager : IBgmeApi
         {
             var musicPath = new MusicPath(path);
             this.musicPaths.Add(musicPath);
-            var watcher = Utilities.CreateWatch(path, (sender, arg) => this.OnMusicScriptsChanged(), musicPath.IsFile ? null : "*.pme");
+            var watcher = Utilities.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), musicPath.IsFile ? null : "*.pme");
             this.watchers.Add(watcher);
         }
     }
@@ -125,7 +125,7 @@ internal class MusicScriptsManager : IBgmeApi
         }
     }
 
-    private void OnMusicChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnMusicCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
@@ -136,6 +136,11 @@ internal class MusicScriptsManager : IBgmeApi
             Log.Information(sender == this.musicPaths ? "Music path removed." : "Music callback removed.");
         }
 
+        this.OnMusicChanged();
+    }
+
+    private void OnMusicChanged()
+    {
         this.musicReloadTimer.Stop();
         this.musicReloadTimer.Start();
     }
