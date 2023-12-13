@@ -37,6 +37,7 @@ internal unsafe class Sound : BaseSound
     private IAsmHook? customAwbHook;
     private IAsmHook? persistentDlcBgmHook;
     private IAsmHook? setCostumeIdHook;
+    private IAsmHook? thievesBgmDisableHook;
 
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
@@ -109,6 +110,16 @@ internal unsafe class Sound : BaseSound
             };
 
             this.acbLoadedHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteAfter).Activate();
+        });
+
+        scanner.Scan("Thieves Den BGM Disable", "E8 ?? ?? ?? ?? 83 F8 01 75 ?? C7 03 00 00 00 00", result =>
+        {
+            var patch = new string[]
+            {
+                "use64",
+            };
+
+            this.thievesBgmDisableHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
         });
     }
 
