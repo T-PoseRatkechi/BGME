@@ -3,6 +3,18 @@
 public interface IBgmeApi
 {
     /// <summary>
+    /// Add a path to load music script(s) from. Can be a file or folder.
+    /// </summary>
+    /// <param name="path">Path to add.</param>
+    void AddPath(string path);
+
+    /// <summary>
+    /// Remove an added path.
+    /// </summary>
+    /// <param name="path">Path to remove.</param>
+    void RemovePath(string path);
+
+    /// <summary>
     /// Add a folder to load music scripts from.
     /// </summary>
     /// <param name="folder">Folder path.</param>
