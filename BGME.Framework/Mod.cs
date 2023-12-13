@@ -9,7 +9,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
-using System.Diagnostics;
 
 namespace BGME.Framework;
 
@@ -31,15 +30,16 @@ public class Mod : ModBase, IExports
 
     private readonly IBgmeService? bgme;
     private readonly MusicService? music;
+    private readonly MusicScriptsManager musicScripts = new();
 
     public Mod(ModContext context)
     {
-        modLoader = context.ModLoader;
-        hooks = context.Hooks!;
-        logger = context.Logger;
-        owner = context.Owner;
-        config = context.Configuration;
-        modConfig = context.ModConfig;
+        this.modLoader = context.ModLoader;
+        this.hooks = context.Hooks!;
+        this.logger = context.Logger;
+        this.owner = context.Owner;
+        this.config = context.Configuration;
+        this.modConfig = context.ModConfig;
 
         Log.Logger = this.logger;
         Log.LogLevel = this.config.LogLevel;
@@ -64,10 +64,10 @@ public class Mod : ModBase, IExports
         var musicResources = new MusicResources(game, modDir);
         var fileBuilder = GetGameBuilder(criFsApi!, modDir, game);
 
-        this.music = new(musicResources, fileBuilder, this.config.HotReload);
-        this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, this.music);
+        this.music = new(musicResources, this.musicScripts, fileBuilder, this.config.HotReload);
+        this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, musicScripts);
 
-        this.modLoader.ModLoading += OnModLoading;
+        this.modLoader.ModLoading += this.OnModLoading;
         this.modLoader.OnModLoaderInitialized += () =>
         {
             fileBuilder?.Build(this.music);
@@ -104,7 +104,7 @@ public class Mod : ModBase, IExports
             return;
         }
 
-        this.music?.AddFolder(bgmeDir);
+        this.musicScripts.AddPath(bgmeDir);
     }
 
     private static IFileBuilder? GetGameBuilder(ICriFsRedirectorApi criFsApi, string modDir, Game game)
