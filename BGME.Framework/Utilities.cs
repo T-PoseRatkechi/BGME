@@ -1,5 +1,6 @@
 ﻿using BGME.Framework.Models;
 using PersonaMusicScript.Types.Music;
+using Reloaded.Mod.Loader.IO.Utility;
 using System.Diagnostics;
 
 namespace BGME.Framework;
@@ -96,5 +97,27 @@ internal static class Utilities
         }
 
         return CalculateMusicId(music) ?? -1;
+    }
+
+    public static FileSystemWatcher CreateWatch(string path, FileSystemEventHandler handler, string? filter = null)
+    {
+        var isFile = File.Exists(path);
+
+        // Use file name as filter for paths that are files.
+        var folder = isFile ? Path.GetDirectoryName(path)! : path;
+        var fileName = isFile ? Path.GetFileName(path) : null;
+
+        var watcher = FileSystemWatcherFactory.Create(
+            folder,
+            handler,
+            null,
+            FileSystemWatcherFactory.FileSystemWatcherEvents.Deleted
+            | FileSystemWatcherFactory.FileSystemWatcherEvents.Created
+            | FileSystemWatcherFactory.FileSystemWatcherEvents.Changed,
+            !isFile,
+            isFile ? fileName : filter,
+            false);
+
+        return watcher;
     }
 }
