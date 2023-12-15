@@ -21,6 +21,7 @@ internal unsafe class SoundPatcher : BaseSound
     private delegate byte* GetBgmString(int bgmId);
     private IReverseWrapper<GetBgmString>? bgmReverseWrapper;
     private IAsmHook? bgmHook;
+    private IAsmHook? fixBgmCrashHook;
 
     private readonly byte* bgmStringBuffer;
 
@@ -45,6 +46,14 @@ internal unsafe class SoundPatcher : BaseSound
 
             this.bgmHook = hooks.CreateAsmHook(bgmPatch, (long)address, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
         });
+
+        scanner.Scan(
+            "Fix BGM Crashes",
+            "8B 0D ?? ?? ?? ?? BB 01 00 00 00 89 DA E8 ?? ?? ?? ?? 66 44 8B 05",
+            result =>
+            {
+                this.fixBgmCrashHook = hooks.CreateAsmHook(new[] { "use64", "xor ecx, ecx" }, result + 0x7C, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
+            });
     }
 
     protected override void PlayBgm(int bgmId)
