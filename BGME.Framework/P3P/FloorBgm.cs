@@ -17,7 +17,7 @@ internal class FloorBgm : BaseFloorBgm
     public FloorBgm(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
     {
-        scanner.Scan("Floor BGM", "83 3D 46 8A 7B 00 01", address =>
+        scanner.Scan("Floor BGM", "83 3D ?? ?? ?? ?? 01 8B D8 0F 84 ?? ?? ?? ?? 85 C0 0F 8E", address =>
         {
             var floorBgmPatch = new string[]
             {

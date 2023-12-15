@@ -28,7 +28,7 @@ internal class EncounterBgm : BaseEncounterBgm
         MusicService music)
         : base(music)
     {
-        scanner.Scan("Encounter BGM", "0F B7 4C 02 16", address =>
+        scanner.Scan("Encounter BGM", "0F B7 4C ?? ?? 83 E9 02", address =>
         {
             var encounterPatch = new string[]
             {
@@ -40,15 +40,15 @@ internal class EncounterBgm : BaseEncounterBgm
                 "cmp eax, -1",
                 "jng original",
                 "mov ecx, eax",
-                $"{hooks.Utilities.GetAbsoluteJumpMnemonics((nint)(address + 0x3e), true)}",
+                $"{hooks.Utilities.GetAbsoluteJumpMnemonics(address + 0x3e, true)}",
                 "label original",
                 "mov rax, r9",
             };
 
-            this.encounterBgmHook = hooks.CreateAsmHook(encounterPatch, (long)address).Activate();
+            this.encounterBgmHook = hooks.CreateAsmHook(encounterPatch, address).Activate();
         });
 
-        scanner.Scan("Encounter Context", "F6 40 0C 40 0F 84 ?? 00 00 00", address =>
+        scanner.Scan("Encounter Context", "F6 40 ?? 40 0F 84 ?? ?? ?? ?? 48 8B 80", address =>
         {
             var encounterContextPatch = new string[]
             {
@@ -58,12 +58,12 @@ internal class EncounterBgm : BaseEncounterBgm
 
             this.encounterContextHook = hooks.CreateAsmHook(
                 encounterContextPatch,
-                (long)address,
+                address,
                 AsmHookBehaviour.ExecuteFirst)
             .Activate();
         });
 
-        scanner.Scan("Victory BGM", "E8 53 A5 22 FA", address =>
+        scanner.Scan("Victory BGM", "E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? 48 8B 89 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 08 01", address =>
         {
             var victoryBgmPatch = new string[]
             {
@@ -76,7 +76,7 @@ internal class EncounterBgm : BaseEncounterBgm
 
             this.victoryBgmHook = hooks.CreateAsmHook(
                 victoryBgmPatch,
-                (long)address,
+                address,
                 AsmHookBehaviour.ExecuteFirst)
             .Activate();
         });

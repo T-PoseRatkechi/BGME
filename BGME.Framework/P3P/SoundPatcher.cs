@@ -33,7 +33,7 @@ internal unsafe class SoundPatcher : BaseSound
     {
         this.bgmStringBuffer = (byte*)NativeMemory.AllocZeroed(MAX_STRING_SIZE, sizeof(byte));
 
-        scanner.Scan("BGM Patch", "4E 8B 84 C3 28 4C 81 00", address =>
+        scanner.Scan("BGM Patch", "4E 8B 84 ?? ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 0D", address =>
         {
             var bgmPatch = new string[]
             {
