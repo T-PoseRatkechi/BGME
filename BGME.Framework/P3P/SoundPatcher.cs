@@ -44,7 +44,7 @@ internal unsafe class SoundPatcher : BaseSound
                 $"mov r8, rax",
             };
 
-            this.bgmHook = hooks.CreateAsmHook(bgmPatch, (long)address, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
+            this.bgmHook = hooks.CreateAsmHook(bgmPatch, address, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
         });
 
         scanner.Scan(
