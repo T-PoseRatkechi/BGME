@@ -9,6 +9,8 @@ internal unsafe class DlcBgmHook
 {
     private IAsmHook? dlcBgmHook;
     private IAsmHook? dlcBgmBitCheckHook;
+    private IAsmHook? persistsDlcBgmHook1;
+    private IAsmHook? persistsDlcBgmHook2;
 
     public DlcBgmHook(IStartupScanner scanner, IReloadedHooks hooks)
     {
@@ -34,6 +36,22 @@ internal unsafe class DlcBgmHook
             };
 
             this.dlcBgmBitCheckHook = hooks.CreateAsmHook(patch2, result + 0xC, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
+        });
+
+        var persistsDlcBgmPatch = new string[]
+        {
+            "use64",
+            $"stc"
+        };
+
+        scanner.Scan("Persist DLC BGM 1", "77 ?? E8 ?? ?? ?? ?? EB ?? B9 06 00 00 00", result =>
+        {
+            this.persistsDlcBgmHook1 = hooks.CreateAsmHook(persistsDlcBgmPatch, result, AsmHookBehaviour.ExecuteFirst).Activate();
+        });
+
+        scanner.Scan("Persist DLC BGM 2", "77 ?? E8 ?? ?? ?? ?? B8 07 00 00 00", result =>
+        {
+            this.persistsDlcBgmHook2 = hooks.CreateAsmHook(persistsDlcBgmPatch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
     }
 

@@ -35,8 +35,6 @@ internal unsafe class Sound : BaseSound
 
     private IAsmHook? customAcbHook;
     private IAsmHook? customAwbHook;
-    private IAsmHook? persistentDlcBgmHook;
-    private IAsmHook? setCostumeIdHook;
     private IAsmHook? thievesBgmDisableHook;
 
     private ShellCue currentShellSong = SHELL_SONG_1;
@@ -50,17 +48,6 @@ internal unsafe class Sound : BaseSound
         : base(music)
     {
         this.dlcBgmHook = new(scanner, hooks);
-
-        scanner.Scan("Persist DLC BGM", "77 07 E8 01 D8 5D 00", result =>
-        {
-            var patch = new string[]
-            {
-                "use64",
-                $"stc"
-            };
-
-            this.persistentDlcBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
-        });
 
         scanner.Scan("Play BGM Function", "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 80 7C 24 ?? 00", result =>
         {
