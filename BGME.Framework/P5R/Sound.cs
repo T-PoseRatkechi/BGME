@@ -42,34 +42,14 @@ internal unsafe class Sound : BaseSound
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
 
-    private readonly int* currentCostumeId = (int*)NativeMemory.AllocZeroed(sizeof(int));
     private static nint? acbAddress;
+
+    private DlcBgmHook dlcBgmHook;
 
     public Sound(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
     {
-        *this.currentCostumeId = 1;
-        scanner.Scan("Costume ACB", "E8 ?? ?? ?? ?? 44 0F B7 07 48 8D 15", result =>
-        {
-            var patch = new string[]
-            {
-                "use64",
-                $"mov r8, {CUSTOM_BGM_ID}"
-            };
-
-            this.customAcbHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
-        });
-
-        scanner.Scan("Costume AWB", "E8 ?? ?? ?? ?? 02 05 ?? ?? ?? ?? 48 89 D9", result =>
-        {
-            var patch = new string[]
-            {
-                "use64",
-                $"mov r8, {CUSTOM_BGM_ID}"
-            };
-
-            this.customAwbHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
-        });
+        this.dlcBgmHook = new(scanner, hooks);
 
         scanner.Scan("Persist DLC BGM", "77 07 E8 01 D8 5D 00", result =>
         {
@@ -80,18 +60,6 @@ internal unsafe class Sound : BaseSound
             };
 
             this.persistentDlcBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
-        });
-
-        scanner.Scan("Set Costume ID", "0F B7 07 48 8B 0D B6 2F 23 ED", result =>
-        {
-            var patch = new string[]
-            {
-                "use64",
-                $"mov rax, {(nint)this.currentCostumeId}",
-                "mov eax, [rax]"
-            };
-
-            this.setCostumeIdHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteAfter).Activate();
         });
 
         scanner.Scan("Play BGM Function", "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 80 7C 24 ?? 00", result =>
@@ -125,28 +93,8 @@ internal unsafe class Sound : BaseSound
 
     private void AcbLoaded(byte* fileName, nint acbPointer)
     {
-        if (acbAddress != null)
-        {
-            return;
-        }
+        var fileNameString = Marshal.PtrToStringAnsi((nint)fileName + 4);
 
-        var stringBytes = new List<byte>();
-        for (int i = 0; i < 16; i++)
-        {
-            var value = *(fileName + 4 + i);
-            if (value != 0)
-            {
-                stringBytes.Add(value);
-            }
-            else
-            {
-                stringBytes.Add(0);
-                break;
-            }
-        }
-
-        var fileNameString = Encoding.ASCII.GetString(stringBytes.ToArray());
-        Log.Verbose($"ACB File: {fileNameString}");
         if (fileNameString == "SOUND/BGM_42.ACB")
         {
             // Save pointer.
@@ -156,6 +104,7 @@ internal unsafe class Sound : BaseSound
         }
         else
         {
+            Log.Verbose($"ACB loaded: {fileNameString}");
             Log.Verbose($"ACB Pointer: {acbPointer:X}");
         }
     }
