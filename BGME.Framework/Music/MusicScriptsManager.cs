@@ -1,4 +1,5 @@
 ﻿using BGME.Framework.Interfaces;
+using BGME.Framework.Music.MusicScripts;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Timer = System.Timers.Timer;
@@ -7,8 +8,7 @@ namespace BGME.Framework.Music;
 
 internal class MusicScriptsManager : IBgmeApi
 {
-    private readonly ObservableCollection<MusicPath> musicPaths = new();
-    private readonly ObservableCollection<Func<string>> apiCallbacks = new();
+    private readonly ObservableCollection<IMusicScript> musicScripts = new();
     private readonly List<FileSystemWatcher> watchers = new();
     private readonly Timer musicReloadTimer = new(1000)
     {
@@ -17,8 +17,7 @@ internal class MusicScriptsManager : IBgmeApi
 
     public MusicScriptsManager()
     {
-        this.musicPaths.CollectionChanged += this.OnMusicCollectionChanged;
-        this.apiCallbacks.CollectionChanged += this.OnMusicCollectionChanged;
+        this.musicScripts.CollectionChanged += this.OnMusicCollectionChanged;
         this.musicReloadTimer.Elapsed += (sender, args) => this.OnMusicScriptsChanged();
     }
 
@@ -26,23 +25,21 @@ internal class MusicScriptsManager : IBgmeApi
 
     public void AddPath(string path)
     {
-        if (!this.musicPaths.Any(x => x.Path == path))
+        if (!this.musicScripts.Any(x => x.MusicSource.Equals(path)))
         {
-            var musicPath = new MusicPath(path);
-            this.musicPaths.Add(musicPath);
-            var watcher = Utilities.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), musicPath.IsFile ? null : "*.pme");
+            var pathMusicScript = new PathMusicScript(path);
+            var watcher = Utilities.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), pathMusicScript.IsFile ? null : "*.pme");
             this.watchers.Add(watcher);
         }
     }
 
     public void RemovePath(string path)
     {
-        var item = this.musicPaths.FirstOrDefault(x => x.Path == path);
-        if (item != null)
+        if (this.musicScripts.FirstOrDefault(x => x.MusicSource.Equals(path)) is PathMusicScript item)
         {
-            this.musicPaths.Remove(item);
-            var watcherPath = item.IsFile ? Path.GetDirectoryName(item.Path)! : item.Path;
+            this.musicScripts.Remove(item);
 
+            var watcherPath = item.IsFile ? Path.GetDirectoryName(item.MusicPath)! : item.MusicPath;
             var pathWatcher = this.watchers.FirstOrDefault(x => x.Path == watcherPath);
             if (pathWatcher != null)
             {
@@ -61,10 +58,16 @@ internal class MusicScriptsManager : IBgmeApi
     }
 
     public void AddMusicScript(Func<string> callback)
-        => this.apiCallbacks.Add(callback);
+        => this.musicScripts.Add(new CallbackMusicScript(callback));
 
     public void RemoveMusicScript(Func<string> callback)
-        => this.apiCallbacks.Remove(callback);
+    {
+        var item = this.musicScripts.FirstOrDefault(x => x.MusicSource.Equals(callback));
+        if (item != null)
+        {
+            this.musicScripts.Remove(item);
+        }
+    }
 
     public void AddFolder(string folder)
         => this.AddPath(folder);
@@ -76,64 +79,31 @@ internal class MusicScriptsManager : IBgmeApi
     {
         var musicScripts = new List<string>();
 
-        // Add from files/folders.
-        foreach (var musicPath in this.musicPaths)
+        // Reload music scripts.
+        foreach (var musicScript in this.musicScripts)
         {
-            if (musicPath.IsFile)
+            try
             {
-                AddMusicFromFile(musicScripts, musicPath.Path);
+                musicScript.AddMusic(musicScripts);
             }
-            else
+            catch (Exception ex)
             {
-                foreach (var file in Directory.EnumerateFiles(musicPath.Path, "*.pme", SearchOption.AllDirectories))
-                {
-                    AddMusicFromFile(musicScripts, file);
-                }
+                Log.Error(ex, "Failed to add music script from source.");
             }
-        }
-
-        // Add from callbacks.
-        foreach (var callback in this.apiCallbacks)
-        {
-            AddMusicFromCallback(musicScripts, callback);
         }
 
         this.MusicScriptsChanged?.Invoke(musicScripts.ToArray());
-    }
-
-    private static void AddMusicFromFile(List<string> musicScripts, string file)
-    {
-        try
-        {
-            musicScripts.Add(File.ReadAllText(file));
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to add music script from file.\nFile: {file}");
-        }
-    }
-
-    private static void AddMusicFromCallback(List<string> musicScripts, Func<string> callback)
-    {
-        try
-        {
-            musicScripts.Add(callback());
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to add music script from callback.");
-        }
     }
 
     private void OnMusicCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            Log.Information(sender == this.musicPaths ? "Music path added." : "Music callback added.");
+            Log.Information("Music script added.");
         }
         else if (e.Action == NotifyCollectionChangedAction.Remove)
         {
-            Log.Information(sender == this.musicPaths ? "Music path removed." : "Music callback removed.");
+            Log.Information("Music script removed.");
         }
 
         this.OnMusicChanged();
@@ -144,9 +114,4 @@ internal class MusicScriptsManager : IBgmeApi
         this.musicReloadTimer.Stop();
         this.musicReloadTimer.Start();
     }
-}
-
-internal record MusicPath(string Path)
-{
-    public bool IsFile { get; } = File.Exists(Path);
 }
