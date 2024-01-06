@@ -19,14 +19,14 @@ internal class PathMusicScript : IMusicScript
         if (this.IsFile)
         {
             musicScripts.Add(File.ReadAllText(this.MusicPath));
-            Log.Debug($"Add music script from file.\nFile: {this.MusicPath}");
+            Log.Debug($"Added music script from file.\nFile: {this.MusicPath}");
         }
         else
         {
             foreach (var file in Directory.EnumerateFiles(this.MusicPath, "*.pme", SearchOption.AllDirectories))
             {
                 musicScripts.Add(File.ReadAllText(file));
-                Log.Debug($"Add music script from file.\nFile: {this.MusicPath}");
+                Log.Debug($"Added music script from file.\nFile: {this.MusicPath}");
             }
         }
     }

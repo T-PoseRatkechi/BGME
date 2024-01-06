@@ -15,6 +15,6 @@ internal class CallbackMusicScript : IMusicScript
     public void AddMusic(List<string> musicScripts)
     {
         musicScripts.Add(this.musicScript);
-        Log.Debug("Add music script from callback.");
+        Log.Debug("Added music script from callback.");
     }
 }
