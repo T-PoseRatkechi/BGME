@@ -9,6 +9,7 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
+using System.Diagnostics;
 
 namespace BGME.Framework;
 

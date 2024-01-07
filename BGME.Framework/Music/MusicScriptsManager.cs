@@ -28,6 +28,7 @@ internal class MusicScriptsManager : IBgmeApi
         if (!this.musicScripts.Any(x => x.MusicSource.Equals(path)))
         {
             var pathMusicScript = new PathMusicScript(path);
+            this.musicScripts.Add(pathMusicScript);
             var watcher = Utilities.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), pathMusicScript.IsFile ? null : "*.pme");
             this.watchers.Add(watcher);
         }
