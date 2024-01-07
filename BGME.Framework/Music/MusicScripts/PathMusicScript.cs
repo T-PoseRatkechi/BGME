@@ -23,7 +23,10 @@ internal class PathMusicScript : IMusicScript
         }
         else
         {
-            foreach (var file in Directory.EnumerateFiles(this.MusicPath, "*.pme", SearchOption.AllDirectories))
+            var files = Directory.GetFiles(this.MusicPath, "*.pme", SearchOption.AllDirectories)
+                .Order().ToArray();
+
+            foreach (var file in files)
             {
                 musicScripts.Add(File.ReadAllText(file));
                 Log.Debug($"Added music script from file.\nFile: {this.MusicPath}");
