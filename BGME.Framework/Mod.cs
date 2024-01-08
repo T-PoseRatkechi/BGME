@@ -15,13 +15,6 @@ namespace BGME.Framework;
 
 public class Mod : ModBase, IExports
 {
-    private static readonly Dictionary<string, Game> Games = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["p4g.exe"] = Game.P4G_PC,
-        ["p5r.exe"] = Game.P5R_PC,
-        ["p3p.exe"] = Game.P3P_PC,
-    };
-
     private readonly IModLoader modLoader;
     private readonly IReloadedHooks hooks;
     private readonly ILogger logger;
@@ -50,11 +43,7 @@ public class Mod : ModBase, IExports
 #endif
 
         var appId = this.modLoader.GetAppConfig().AppId;
-        if (!Games.TryGetValue(appId, out var game))
-        {
-            Log.Error($"Unsupported app id {appId}.");
-            return;
-        }
+        var game = GetGame(this.modLoader.GetAppConfig().AppId);
 
         this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
         this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
@@ -106,6 +95,22 @@ public class Mod : ModBase, IExports
         }
 
         this.musicScripts.AddPath(bgmeDir);
+    }
+
+    private static Game GetGame(string appId)
+    {
+        if (appId.Contains("p5r", StringComparison.OrdinalIgnoreCase))
+        {
+            return Game.P5R_PC;
+        }
+        else if (appId.Contains("p4g", StringComparison.OrdinalIgnoreCase))
+        {
+            return Game.P4G_PC;
+        }
+        else
+        {
+            return Game.P3P_PC;
+        }
     }
 
     private static IFileBuilder? GetGameBuilder(ICriFsRedirectorApi criFsApi, string modDir, Game game)
