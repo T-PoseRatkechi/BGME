@@ -115,10 +115,12 @@ internal unsafe class Sound : BaseSound
             return;
         }
 
-        if (currentBgmId == SHELL_SONG_1.CueId || currentBgmId == SHELL_SONG_2.CueId)
-        {
-            this.ResetShellSongs();
-        }
+        // Issues with S-Link scenes replaying the last Cue ID, in BGME songs case
+        // it'll trigger an incorrect reset.
+        //if (currentBgmId == SHELL_SONG_1.CueId || currentBgmId == SHELL_SONG_2.CueId)
+        //{
+        //    this.ResetShellSongs();
+        //}
 
         if (currentBgmId >= EXTENDED_BGM_ID)
         {
