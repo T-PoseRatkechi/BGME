@@ -4,6 +4,8 @@ using PersonaMusicScript.Types.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
+using System.Runtime.InteropServices;
+using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P4G;
 
@@ -31,6 +33,12 @@ internal unsafe class Sound : BaseSound
 
     private IHook<PlaySoundFunction> playSoundHook;
 
+    [Function(new Register[] { Register.rbx, Register.rax }, Register.rax, true)]
+    private delegate void GetBgmAcbPtr(nint acbStrPtr, nint acbHndlPtr);
+    private IReverseWrapper<GetBgmAcbPtr> bgmAcbWrapper;
+    private IAsmHook bgmAcbHook;
+    private nint acbAddress;
+
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
 
@@ -43,7 +51,39 @@ internal unsafe class Sound : BaseSound
             this.playSoundHook = this.playSoundFunction.Hook(this.PlaySoundImpl).Activate();
         });
 
+        scanner.Scan(
+            "Get BGM.ACB Pointer Hook",
+            "48 85 C0 41 0F 44 FF 48 89 83 ?? ?? ?? ?? 48 8B 8B ?? ?? ?? ?? 45 33 C0 41 8B D7 FF 15 ?? ?? ?? ?? 85 FF 75 ?? C7 43 ?? 03 00 00 00 48 81 C6 38 02 00 00 48 81 C3 38 02 00 00 48 83 ED 01 0F 85 ?? ?? ?? ?? 33 D2",
+            result =>
+        {
+            var patch = new string[]
+            {
+                "use64",
+                Utilities.PushCallerRegisters,
+                "push rax",
+                "sub rsp, 8",
+                hooks.Utilities.GetAbsoluteCallMnemonics(this.GetBgmAcbPtrImpl, out this.bgmAcbWrapper),
+                "add rsp, 8",
+                "pop rax",
+                Utilities.PopCallerRegisters,
+            };
+
+            this.bgmAcbHook = hooks.CreateAsmHook(patch, result).Activate();
+        });
+
         this.playSoundHook = default!;
+    }
+
+    private void GetBgmAcbPtrImpl(nint acbStrPtr, nint acbHndlPtr)
+    {
+        var acbString = Marshal.PtrToStringAnsi(acbStrPtr + 4);
+        if (acbString == "app0:/data/sound/adx2/bgm/snd00_bgm.acb")
+        {
+            this.acbAddress = *(nint*)(acbHndlPtr + sizeof(nint) * 3);
+            this.bgmAcbHook.Disable();
+            Log.Debug($"ACB Handle: {acbHndlPtr:X}");
+            Log.Debug($"BGM.ACB found at: {this.acbAddress:X}");
+        }
     }
 
     /// <summary>
@@ -53,16 +93,7 @@ internal unsafe class Sound : BaseSound
     {
         get
         {
-            // Calculate address.
-            nint* pointer = (nint*)(Utilities.BaseAddress + 0xBEAB30);
-            if (*pointer == 0)
-            {
-                Log.Error("ACB address pointer is null.");
-                return 0;
-            }
-
-            pointer = (nint*)(*pointer + 0x18);
-            var tableAddress = *pointer + 0xAF77;
+            var tableAddress = this.acbAddress + 0xAF77;
             Log.Debug($"Waveform Table Address: {tableAddress:X}");
             return tableAddress;
         }
