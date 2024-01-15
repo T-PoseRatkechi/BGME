@@ -61,6 +61,21 @@ internal class MusicScriptsManager : IBgmeApi
     public void AddMusicScript(Func<string> callback)
         => this.musicScripts.Add(new CallbackMusicScript(callback));
 
+    public void AddMusicScript(Func<string> callback, Func<string> originalCallback)
+    {
+        var existingItem = this.musicScripts.FirstOrDefault(x => x.MusicSource.Equals(originalCallback));
+        if (existingItem != null)
+        {
+            var existingIndex = this.musicScripts.IndexOf(existingItem);
+            this.musicScripts[existingIndex] = new CallbackMusicScript(callback);
+            Log.Information("Replaced existing music script callback.");
+        }
+        else
+        {
+            this.AddMusicScript(callback);
+        }
+    }
+
     public void RemoveMusicScript(Func<string> callback)
     {
         var item = this.musicScripts.FirstOrDefault(x => x.MusicSource.Equals(callback));

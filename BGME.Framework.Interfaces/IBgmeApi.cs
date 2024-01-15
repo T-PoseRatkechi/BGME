@@ -37,4 +37,11 @@ public interface IBgmeApi
     /// </summary>
     /// <param name="callback">Previously added callback to remove.</param>
     void RemoveMusicScript(Func<string> callback);
+
+    /// <summary>
+    /// Adds or replaces a music script callback.
+    /// </summary>
+    /// <param name="callback">Callback to add.</param>
+    /// <param name="originalCallback">Callback to replace.</param>
+    void AddMusicScript(Func<string> callback, Func<string> originalCallback);
 }
