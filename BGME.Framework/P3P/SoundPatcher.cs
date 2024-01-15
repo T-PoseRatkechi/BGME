@@ -18,7 +18,7 @@ internal unsafe class SoundPatcher : BaseSound
     private const int MAX_STRING_SIZE = 16;
 
     [Function(Register.rax, Register.rax, true)]
-    private delegate byte* GetBgmString(ushort bgmId);
+    private delegate byte* GetBgmString(int bgmId);
     private IReverseWrapper<GetBgmString>? bgmReverseWrapper;
     private IAsmHook? bgmHook;
     private IAsmHook? fixBgmCrashHook;
@@ -61,9 +61,13 @@ internal unsafe class SoundPatcher : BaseSound
         Log.Debug("Play BGM not supported.");
     }
 
-    private byte* GetBgmStringImpl(ushort bgmId)
+    private byte* GetBgmStringImpl(int bgmId)
     {
-        var currentBgmId = this.GetGlobalBgmId(bgmId);
+        // Handle Mass Destruction being played
+        // through ID 2 for some reason.
+        int? currentBgmId = bgmId == 2 ? 26 : bgmId;
+        currentBgmId = this.GetGlobalBgmId((int)currentBgmId);
+
         if (currentBgmId == null)
         {
             Log.Warning("Music disabling not supported.");
