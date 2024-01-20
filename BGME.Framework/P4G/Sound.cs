@@ -35,8 +35,8 @@ internal unsafe class Sound : BaseSound
 
     [Function(new Register[] { Register.rbx, Register.rax }, Register.rax, true)]
     private delegate void GetBgmAcbPtr(nint acbStrPtr, nint acbHndlPtr);
-    private IReverseWrapper<GetBgmAcbPtr> bgmAcbWrapper;
-    private IAsmHook bgmAcbHook;
+    private IReverseWrapper<GetBgmAcbPtr>? bgmAcbWrapper;
+    private IAsmHook? bgmAcbHook;
     private nint acbAddress;
 
     private ShellCue currentShellSong = SHELL_SONG_1;
@@ -80,7 +80,7 @@ internal unsafe class Sound : BaseSound
         if (acbString == "app0:/data/sound/adx2/bgm/snd00_bgm.acb")
         {
             this.acbAddress = *(nint*)(acbHndlPtr + sizeof(nint) * 3);
-            this.bgmAcbHook.Disable();
+            this.bgmAcbHook!.Disable();
             Log.Debug($"ACB Handle: {acbHndlPtr:X}");
             Log.Debug($"BGM.ACB found at: {this.acbAddress:X}");
         }

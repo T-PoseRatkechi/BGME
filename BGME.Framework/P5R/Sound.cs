@@ -5,8 +5,8 @@ using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using System.Runtime.InteropServices;
-using System.Text;
 using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
+using Timer = System.Timers.Timer;
 
 namespace BGME.Framework.P5R;
 
@@ -33,16 +33,17 @@ internal unsafe class Sound : BaseSound
     private IReverseWrapper<AcbLoadedFunction>? acbLoadedReverseWrapper;
     private IAsmHook? acbLoadedHook;
 
-    private IAsmHook? customAcbHook;
-    private IAsmHook? customAwbHook;
-    private IAsmHook? thievesBgmDisableHook;
+    [Function(CallingConventions.Microsoft)]
+    private delegate void LoadDlcBgm();
+    private LoadDlcBgm? loadDlcBgmWrapper;
+
+    private readonly DlcBgmHook dlcBgmHook;
+    private readonly Timer mainMenuTimer = new(100);
 
     private ShellCue currentShellSong = SHELL_SONG_1;
     private ushort currentAwbIndex = 0;
 
-    private static nint? acbAddress;
-
-    private DlcBgmHook dlcBgmHook;
+    private nint? acbAddress;
 
     public Sound(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
         : base(music)
@@ -67,15 +68,13 @@ internal unsafe class Sound : BaseSound
             this.acbLoadedHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteAfter).Activate();
         });
 
-        scanner.Scan("Thieves Den BGM Disable", "E8 ?? ?? ?? ?? 83 F8 01 75 ?? C7 03 00 00 00 00", result =>
-        {
-            var patch = new string[]
+        scanner.Scan(
+            "Load DLC BGM Function",
+            "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 81 EC D0 02 00 00 0F B7 2D",
+            result =>
             {
-                "use64",
-            };
-
-            this.thievesBgmDisableHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
-        });
+                this.loadDlcBgmWrapper = hooks.CreateWrapper<LoadDlcBgm>(result, out _);
+            });
     }
 
     private void AcbLoaded(byte* fileName, nint acbPointer)
@@ -85,9 +84,9 @@ internal unsafe class Sound : BaseSound
         if (fileNameString == "SOUND/BGM_42.ACB")
         {
             // Save pointer.
-            acbAddress = *(nint*)(acbPointer + 0x18);
+            this.acbAddress = *(nint*)(acbPointer + 0x18);
             Log.Debug($"Costume ACB Pointer: {acbPointer:X}");
-            Log.Information($"Costume ACB Address: {acbAddress:X}");
+            Log.Information($"Costume ACB Address: {this.acbAddress:X}");
         }
         else
         {
@@ -103,6 +102,24 @@ internal unsafe class Sound : BaseSound
 
     private void PlayBgm(nint param1, nint param2, int bgmId, nint param4)
     {
+        // Delay main menu BGM playback until DLC BGM
+        // is loaded to support new BGM in main menu.
+        if (this.acbAddress == null)
+        {
+            this.loadDlcBgmWrapper!();
+            this.mainMenuTimer.Elapsed += (sender, args) =>
+            {
+                if (this.acbAddress != null)
+                {
+                    this.PlayBgm(param1, param2, bgmId, param4);
+                    this.mainMenuTimer.Dispose();
+                }
+            };
+
+            this.mainMenuTimer.Start();
+            return;
+        }
+
         Log.Debug($"{param1:X} || {param2:X} || {bgmId:X} || {param4:X}");
         var currentBgmId = this.GetGlobalBgmId(bgmId);
         if (currentBgmId == null)
@@ -120,7 +137,7 @@ internal unsafe class Sound : BaseSound
         if (currentBgmId >= EXTENDED_BGM_ID)
         {
             Log.Debug("Using Extended BGM");
-            if (WaveformTableAddress is nint address)
+            if (this.WaveformTableAddress is nint address)
             {
                 // AWB index to play.
                 var awbIndex = (ushort)(currentBgmId - EXTENDED_BGM_ID);
@@ -155,11 +172,11 @@ internal unsafe class Sound : BaseSound
     /// <summary>
     /// Gets address of waveform table rows.
     /// </summary>
-    private static nint? WaveformTableAddress
+    private nint? WaveformTableAddress
     {
         get
         {
-            if (acbAddress is nint address)
+            if (this.acbAddress is nint address)
             {
                 var waveformTableAddress = address + 2146;
                 Log.Verbose($"Waveform Table Address: {waveformTableAddress:X}");

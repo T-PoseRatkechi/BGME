@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace BGME.Framework.P5R;
 
+#pragma warning disable IDE0052 // Remove unread private members
 internal unsafe class DlcBgmHook
 {
     private IAsmHook? dlcBgmHook;
