@@ -99,17 +99,27 @@ public class Mod : ModBase, IExports
         if (this.game == Game.P5R_PC)
         {
             Log.Debug("Binding BGM_42.AWB files.");
+
             var awbDir = Path.Join(modDir, "FEmulator", "AWB", "BGM_42.AWB");
-            if (!Directory.Exists(awbDir))
+            if (Directory.Exists(awbDir))
             {
-                return;
+                foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
+                {
+                    var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
+                    var bindPath = $"FEmulator/AWB/BGM_42.AWB/{fileNameIndex}.adx";
+                    this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
+                }
             }
 
-            foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
+            var awbDir2 = Path.Join(modDir, "bgme", "music");
+            if (Directory.Exists(awbDir2))
             {
-                var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                var bindPath = $"FEmulator/AWB/BGM_42.AWB/{fileNameIndex}.adx";
-                this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
+                foreach (var file in Directory.EnumerateFiles(awbDir2, "*.adx"))
+                {
+                    var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
+                    var bindPath = $"FEmulator/AWB/BGM_42.AWB/{fileNameIndex}.adx";
+                    this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
+                }
             }
         }
     }
