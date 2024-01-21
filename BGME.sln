@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonaMusicScript.Types", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonaModdingMetadata.Shared", "submodules\PersonaModdingMetadata\PersonaModdingMetadata.Shared\PersonaModdingMetadata.Shared.csproj", "{8D16F6CD-A9B4-478E-B80A-CC8ACC3388C6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Project.Utils", "submodules\Project.Utils\Project.Utils.csproj", "{9FF720A9-8A63-40D5-BE0B-3195B66B230A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{8D16F6CD-A9B4-478E-B80A-CC8ACC3388C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D16F6CD-A9B4-478E-B80A-CC8ACC3388C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D16F6CD-A9B4-478E-B80A-CC8ACC3388C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FF720A9-8A63-40D5-BE0B-3195B66B230A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FF720A9-8A63-40D5-BE0B-3195B66B230A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FF720A9-8A63-40D5-BE0B-3195B66B230A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FF720A9-8A63-40D5-BE0B-3195B66B230A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

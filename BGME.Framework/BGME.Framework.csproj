@@ -65,6 +65,7 @@
     <ProjectReference Include="..\submodules\CriFs.V2.Hook.ReloadedII\Interfaces\CriFs.V2.Hook.Interfaces\CriFs.V2.Hook.Interfaces.csproj" />
     <ProjectReference Include="..\submodules\Libellus-Event-Tools\Libellus Library\Libellus Library.csproj" />
     <ProjectReference Include="..\submodules\PersonaModdingMetadata\PersonaModdingMetadata.Shared\PersonaModdingMetadata.Shared.csproj" />
+    <ProjectReference Include="..\submodules\Project.Utils\Project.Utils.csproj" />
   </ItemGroup>
 
 </Project>
