@@ -9,7 +9,6 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
-using System.Diagnostics;
 
 namespace BGME.Framework;
 
@@ -108,7 +107,8 @@ public class Mod : ModBase, IExports
 
             foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
             {
-                var bindPath = Path.GetRelativePath(modDir, file);
+                var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
+                var bindPath = $"FEmulator/AWB/BGM_42.AWB/{fileNameIndex}.adx";
                 this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
             }
         }
