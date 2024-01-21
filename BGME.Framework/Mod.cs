@@ -22,7 +22,9 @@ public class Mod : ModBase, IExports
     private readonly IModConfig modConfig;
     private readonly Config config;
 
+    private readonly ICriFsRedirectorApi criFsApi;
     private readonly IBgmeService? bgme;
+    private readonly Game game;
     private readonly MusicService? music;
     private readonly MusicScriptsManager musicScripts = new();
 
@@ -43,16 +45,16 @@ public class Mod : ModBase, IExports
 #endif
 
         var appId = this.modLoader.GetAppConfig().AppId;
-        var game = GetGame(this.modLoader.GetAppConfig().AppId);
+        this.game = GetGame(this.modLoader.GetAppConfig().AppId);
 
         this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
-        this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFsApi);
+        this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
-        Setup.Start(criFsApi!, modDir, game);
+        Setup.Start(this.criFsApi, modDir, game);
 
         var musicResources = new MusicResources(game, modDir);
-        var fileBuilder = GetGameBuilder(criFsApi!, modDir, game);
+        var fileBuilder = GetGameBuilder(this.criFsApi, modDir, game);
 
         this.music = new(musicResources, this.musicScripts, fileBuilder, this.config.HotReload);
         this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, musicScripts);
@@ -82,19 +84,34 @@ public class Mod : ModBase, IExports
 
     private void OnModLoading(IModV1 mod, IModConfigV1 config)
     {
-        if (!config.ModDependencies.Contains(this.modConfig.ModId))
-        {
-            return;
-        }
+        //if (!config.ModDependencies.Contains(this.modConfig.ModId))
+        //{
+        //    return;
+        //}
 
         var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
         var bgmeDir = Path.Join(modDir, "bgme");
-        if (!Directory.Exists(bgmeDir))
+        if (Directory.Exists(bgmeDir))
         {
-            return;
+            this.musicScripts.AddPath(bgmeDir);
         }
 
-        this.musicScripts.AddPath(bgmeDir);
+        // Bind FEmulator/AWB with CriFs.
+        if (this.game == Game.P5R_PC)
+        {
+            Log.Debug("Binding BGM_42.AWB files.");
+            var awbDir = Path.Join(modDir, "FEmulator", "AWB", "BGM_42.AWB");
+            if (!Directory.Exists(awbDir))
+            {
+                return;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
+            {
+                var bindPath = Path.GetRelativePath(modDir, file);
+                this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
+            }
+        }
     }
 
     private static Game GetGame(string appId)
@@ -129,4 +146,29 @@ public class Mod : ModBase, IExports
     public Mod() { }
 #pragma warning restore CS8618
     #endregion
+}
+
+internal static class ICriFsRedirectorApiExtensions
+{
+    public static void AddBind(
+        this ICriFsRedirectorApi api,
+        string file,
+        string bindPath,
+        string modId)
+    {
+        api.AddBindCallback(context =>
+        {
+            context.RelativePathToFileMap[$@"R2\{bindPath}"] = new()
+            {
+                new()
+                {
+                    FullPath = file,
+                    LastWriteTime = DateTime.UtcNow,
+                    ModId = modId,
+                },
+            };
+
+            Log.Debug($"Bind: {bindPath}\nFile: {file}");
+        });
+    }
 }

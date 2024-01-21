@@ -287,7 +287,7 @@ internal unsafe class SoundPlayback : BaseSound
         if (acbHn == this.bgmAcbHn && cueId >= EXTENDED_BGM_ID)
         {
             Log.Debug($"{nameof(criAtomExPlayer_SetCueId)}|BGME: {player:X} || {(nint)acbHn:X} || {cueId}");
-            var bgmFile = $"FEmulator/AWB/BGME_42.AWB/{cueId - EXTENDED_BGM_ID}.adx";
+            var bgmFile = $"FEmulator/AWB/BGM_42.AWB/{cueId - EXTENDED_BGM_ID}.adx";
             if (!this.stringCache.TryGetValue(bgmFile, out var ptr))
             {
                 var strPtr = Marshal.StringToHGlobalAnsi(bgmFile);
