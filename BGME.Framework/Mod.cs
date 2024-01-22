@@ -10,6 +10,7 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
+using System.Drawing;
 
 namespace BGME.Framework;
 
@@ -37,7 +38,7 @@ public class Mod : ModBase, IExports
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
 
-        Log.Initialize("BGME Framework", this.logger);
+        Log.Initialize("BGME Framework", this.logger, Color.AliceBlue);
         Log.LogLevel = this.config.LogLevel;
 
 #if DEBUG
@@ -77,6 +78,7 @@ public class Mod : ModBase, IExports
                 var criAtomEx = new CriAtomEx(game);
                 criAtomEx.Initialize(scanner!, this.hooks);
                 this.bgme = new P5R.BgmeService(criAtomEx, this.music);
+                this.bgme.Initialize(scanner!, hooks);
                 break;
             default:
                 Log.Error($"Missing BGME service for game {game}.");
@@ -109,18 +111,18 @@ public class Mod : ModBase, IExports
                 foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
                 {
                     var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                    var bindPath = $"FEmulator/AWB/BGM_42.AWB/{fileNameIndex}.adx";
+                    var bindPath = $"BGME/P5R/BGM_42/{fileNameIndex}.adx";
                     this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
                 }
             }
 
-            var awbDir2 = Path.Join(modDir, "bgme", "music");
+            var awbDir2 = Path.Join(modDir, "bgme", "p5r");
             if (Directory.Exists(awbDir2))
             {
                 foreach (var file in Directory.EnumerateFiles(awbDir2, "*.adx"))
                 {
                     var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                    var bindPath = $"FEmulator/AWB/BGM_42.AWB/{fileNameIndex}.adx";
+                    var bindPath = Path.GetRelativePath(modDir, file);
                     this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
                 }
             }
