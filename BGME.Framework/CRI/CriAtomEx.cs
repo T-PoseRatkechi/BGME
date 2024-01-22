@@ -4,113 +4,147 @@ using System.Runtime.InteropServices;
 using BGME.Framework.CRI.Types;
 using PersonaModdingMetadata.Shared.Games;
 using Reloaded.Hooks.Definitions;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BGME.Framework.CRI;
 
-#pragma warning disable IDE1006 // Naming Styles
-internal unsafe class CriAtomEx : IGameHook
+internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
 {
-    private const int EXTENDED_BGM_ID = 10000;
-
-    private IHook<criAtomExPlayer_GetNumPlayedSamples>? getNumPlayedSamplesHook;
-    private IHook<criAtomExAcb_LoadAcbFile>? loadAcbFileHook;
-    private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
-    private IHook<criAtomExPlayer_Start>? startHook;
-    private IHook<criAtomExPlayer_SetFile>? setFileHook;
-    private IHook<criAtomExPlayer_SetFormat>? setFormatHook;
-    private IHook<criAtomExPlayer_SetSamplingRate>? setSamplingRateHook;
-    private IHook<criAtomExPlayer_SetNumChannels>? setNumChannelsHook;
-    private IHook<criAtomExCategory_GetVolumeById>? getVolumeByIdHook;
-    private IHook<criAtomExPlayer_SetVolume>? setVolumeHook;
-    private IHook<criAtomExPlayer_SetCategoryById>? setCategoryByIdHook;
-    private IHook<criAtomExPlayer_SetStartTime>? setStartTimeHook;
-    private IHook<criAtomExPlayback_GetTimeSyncedWithAudio>? getTimeSyncedWithAudioHook;
-    private IHook<criAtomExPlayer_Create>? createHook;
-
     private readonly Game game;
     private readonly CriAtomExPatterns patterns;
 
-    private Dictionary<int, CriAtomExPlayerConfigTag> playerConfigs = new();
+    private readonly List<ScanHook> scans = new();
+    private readonly Dictionary<int, CriAtomExPlayerConfigTag> playerConfigs = new();
     private readonly List<PlayerConfig> players = new();
     private readonly List<AcbConfig> acbs = new();
+
+    private IFunction<criAtomExPlayer_Create>? create;
+    private IFunction<criAtomExPlayer_SetStartTime>? setStartTime;
+    private IFunction<criAtomExPlayback_GetTimeSyncedWithAudio>? getTimeSyncedWithAudio;
+    private IFunction<criAtomExPlayer_GetNumPlayedSamples>? getNumPlayedSamples;
+    private IFunction<criAtomExAcb_LoadAcbFile>? loadAcbFile;
+    private IFunction<criAtomExPlayer_Start>? start;
+    private IFunction<criAtomExPlayer_SetFile>? setFile;
+    private IFunction<criAtomExPlayer_SetFormat>? setFormat;
+    private IFunction<criAtomExPlayer_SetSamplingRate>? setSamplingRate;
+    private IFunction<criAtomExPlayer_SetNumChannels>? setNumChannels;
+    private IFunction<criAtomExCategory_GetVolumeById>? getVolumeById;
+    private IFunction<criAtomExPlayer_SetVolume>? setVolume;
+    private IFunction<criAtomExPlayer_SetCategoryById>? setCategoryById;
+    private IFunction<criAtomExPlayer_GetLastPlaybackId>? getLastPlaybackId;
+
+    [ObservableProperty]
+    private IFunction<criAtomExPlayer_SetCueId>? setCueId;
+
+    private IHook<criAtomExPlayer_Create>? createHook;
+    private IHook<criAtomExAcb_LoadAcbFile>? loadAcbFileHook;
+    private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
 
     public CriAtomEx(Game game)
     {
         this.game = game;
         this.patterns = CriAtomExGames.GetGamePatterns(game);
+
+        this.AddHookScan(
+            nameof(criAtomExPlayer_Create),
+            this.patterns.CriAtomExPlayer_Create,
+            (hooks, result) =>
+            {
+                this.create = hooks.CreateFunction<criAtomExPlayer_Create>(result);
+                this.createHook = this.create.Hook(this.Player_Create).Activate();
+            });
+
+        this.AddHookScan(
+            nameof(criAtomExAcb_LoadAcbFile),
+            this.patterns.CriAtomExAcb_LoadAcbFile,
+            (hooks, result) =>
+            {
+                this.loadAcbFile = hooks.CreateFunction<criAtomExAcb_LoadAcbFile>(result);
+                this.loadAcbFileHook = this.loadAcbFile.Hook(this.Acb_LoadAcbFile).Activate();
+            });
+
+        this.AddHookScan(
+            nameof(CriAtomExFunctions.criAtomExPlayer_SetCueId),
+            this.patterns.CriAtomExPlayer_SetCueId,
+            (hooks, result) =>
+            {
+                this.SetCueId = hooks.CreateFunction<criAtomExPlayer_SetCueId>(result);
+                this.setCueIdHook = this.SetCueId.Hook(this.Player_SetCueId).Activate();
+            });
+
+        this.AddHookScan(
+            nameof(CriAtomExFunctions.criAtomExPlayer_SetStartTime),
+            this.patterns.CriAtomExPlayer_SetStartTime,
+            (hooks, result) => this.setStartTime = hooks.CreateFunction<criAtomExPlayer_SetStartTime>(result));
+
+        this.AddHookScan(
+            nameof(CriAtomExFunctions.criAtomExPlayback_GetTimeSyncedWithAudio),
+            this.patterns.CriAtomExPlayback_GetTimeSyncedWithAudio,
+            (hooks, result) => this.getTimeSyncedWithAudio = hooks.CreateFunction<criAtomExPlayback_GetTimeSyncedWithAudio>(result));
+
+        this.AddHookScan(
+            nameof(criAtomExPlayer_GetNumPlayedSamples),
+            this.patterns.CriAtomExPlayer_GetNumPlayedSamples,
+            (hooks, result) => this.getNumPlayedSamples = hooks.CreateFunction<criAtomExPlayer_GetNumPlayedSamples>(result));
+
+        this.AddHookScan(
+            nameof(CriAtomExFunctions.criAtomExPlayer_Start),
+            this.patterns.CriAtomExPlayer_Start,
+            (hooks, result) => this.start = hooks.CreateFunction<criAtomExPlayer_Start>(result));
+
+        this.AddHookScan(
+            nameof(Player_SetFile),
+            this.patterns.CriAtomExPlayer_SetFile,
+            (hooks, result) => this.setFile = hooks.CreateFunction<criAtomExPlayer_SetFile>(result));
+
+        this.AddHookScan(
+            nameof(Player_SetFormat),
+            this.patterns.CriAtomExPlayer_SetFormat,
+            (hooks, result) => this.setFormat = hooks.CreateFunction<criAtomExPlayer_SetFormat>(result));
+
+        this.AddHookScan(
+            nameof(Player_SetSamplingRate),
+            this.patterns.CriAtomExPlayer_SetSamplingRate,
+            (hooks, result) => this.setSamplingRate = hooks.CreateFunction<criAtomExPlayer_SetSamplingRate>(result));
+
+        this.AddHookScan(
+            nameof(Player_SetNumChannels),
+            this.patterns.CriAtomExPlayer_SetNumChannels,
+            (hooks, result) => this.setNumChannels = hooks.CreateFunction<criAtomExPlayer_SetNumChannels>(result));
+
+        this.AddHookScan(
+            nameof(criAtomExCategory_GetVolumeById),
+            this.patterns.CriAtomExCategory_GetVolumeById,
+            (hooks, result) => this.getVolumeById = hooks.CreateFunction<criAtomExCategory_GetVolumeById>(result));
+
+        this.AddHookScan(
+            nameof(criAtomExPlayer_SetVolume),
+            this.patterns.CriAtomExPlayer_SetVolume,
+            (hooks, result) => this.setVolume = hooks.CreateFunction<criAtomExPlayer_SetVolume>(result));
+
+        this.AddHookScan(
+            nameof(Player_SetCategoryById),
+            this.patterns.CriAtomExPlayer_SetCategoryById,
+            (hooks, result) => this.setCategoryById = hooks.CreateFunction<criAtomExPlayer_SetCategoryById>(result));
+
+        this.AddHookScan(
+            nameof(Player_GetLastPlaybackId),
+            this.patterns.CriAtomExPlayer_GetLastPlaybackId,
+            (hooks, result) => this.getLastPlaybackId = hooks.CreateFunction<criAtomExPlayer_GetLastPlaybackId>(result));
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
-        scanner.Scan(nameof(criAtomExPlayer_Create), this.patterns.CriAtomExPlayer_Create, result =>
+        foreach (var scan in this.scans)
         {
-            this.createHook = hooks.CreateHook<criAtomExPlayer_Create>(this.criAtomExPlayer_CreateImpl, result).Activate();
-        });
+            if (string.IsNullOrEmpty(scan.Pattern))
+            {
+                Log.Verbose($"{scan.Name}: No pattern given.");
+                continue;
+            }
 
-        scanner.Scan(nameof(criAtomExPlayer_SetStartTime), this.patterns.CriAtomExPlayer_SetStartTime, result =>
-        {
-            this.setStartTimeHook = hooks.CreateHook<criAtomExPlayer_SetStartTime>(this.criAtomExPlayer_SetStartTimeImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayback_GetTimeSyncedWithAudio), this.patterns.CriAtomExPlayback_GetTimeSyncedWithAudio, result =>
-        {
-            this.getTimeSyncedWithAudioHook = hooks.CreateHook<criAtomExPlayback_GetTimeSyncedWithAudio>(this.criAtomExPlayback_GetTimeSyncedWithAudioImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_GetNumPlayedSamples), this.patterns.CriAtomExPlayer_GetNumPlayedSamples, result =>
-        {
-            this.getNumPlayedSamplesHook = hooks.CreateHook<criAtomExPlayer_GetNumPlayedSamples>(this.criAtomExPlayer_GetNumPlayedSamplesImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExAcb_LoadAcbFile), this.patterns.CriAtomExAcb_LoadAcbFile, result =>
-        {
-            this.loadAcbFileHook = hooks.CreateHook<criAtomExAcb_LoadAcbFile>(this.criAtomExAcb_LoadAcbFileImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetCueId), this.patterns.CriAtomExPlayer_SetCueId, result =>
-        {
-            this.setCueIdHook = hooks.CreateHook<criAtomExPlayer_SetCueId>(this.criAtomExPlayer_SetCueIdImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_Start), this.patterns.CriAtomExPlayer_Start, result =>
-        {
-            this.startHook = hooks.CreateHook<criAtomExPlayer_Start>(this.criAtomExPlayer_StartImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetFile), this.patterns.CriAtomExPlayer_SetFile, result =>
-        {
-            this.setFileHook = hooks.CreateHook<criAtomExPlayer_SetFile>(this.criAtomExPlayer_SetFileImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetFormat), this.patterns.CriAtomExPlayer_SetFormat, result =>
-        {
-            this.setFormatHook = hooks.CreateHook<criAtomExPlayer_SetFormat>(this.criAtomExPlayer_SetFormatImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetSamplingRate), this.patterns.CriAtomExPlayer_SetSamplingRate, result =>
-        {
-            this.setSamplingRateHook = hooks.CreateHook<criAtomExPlayer_SetSamplingRate>(this.criAtomExPlayer_SetSamplingRateImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetNumChannels), this.patterns.CriAtomExPlayer_SetNumChannels, result =>
-        {
-            this.setNumChannelsHook = hooks.CreateHook<criAtomExPlayer_SetNumChannels>(this.criAtomExPlayer_SetNumChannelsImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExCategory_GetVolumeById), this.patterns.CriAtomExCategory_GetVolumeById, result =>
-        {
-            this.getVolumeByIdHook = hooks.CreateHook<criAtomExCategory_GetVolumeById>(this.criAtomExCategory_GetVolumeByIdImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetVolume), this.patterns.CriAtomExPlayer_SetVolume, result =>
-        {
-            this.setVolumeHook = hooks.CreateHook<criAtomExPlayer_SetVolume>(this.criAtomExPlayer_SetVolumeImpl, result).Activate();
-        });
-
-        scanner.Scan(nameof(criAtomExPlayer_SetCategoryById), this.patterns.CriAtomExPlayer_SetCategoryById, result =>
-        {
-            this.setCategoryByIdHook = hooks.CreateHook<criAtomExPlayer_SetCategoryById>(this.criAtomExPlayer_SetCategoryByIdImpl, result).Activate();
-        });
+            scanner.Scan(scan.Name, scan.Pattern, result => scan.Success(hooks, result));
+        }
     }
 
     public PlayerConfig? GetPlayerByAcbPath(string acbPath)
@@ -119,17 +153,58 @@ internal unsafe class CriAtomEx : IGameHook
     public void SetPlayerConfigById(int id, CriAtomExPlayerConfigTag config)
         => this.playerConfigs[id] = config;
 
-    public nint criAtomExPlayer_CreateImpl(CriAtomExPlayerConfigTag* config, void* work, int workSize)
+    public int Playback_GetTimeSyncedWithAudio(uint playbackId)
+        => this.getTimeSyncedWithAudio!.GetWrapper()(playbackId);
+
+    public uint Player_Start(nint playerHn)
+        => this.start!.GetWrapper()(playerHn);
+
+    public void Player_SetStartTime(nint playerHn, int currentBgmTime)
+        => this.setStartTime!.GetWrapper()(playerHn, currentBgmTime);
+
+    public void Player_SetFile(nint playerHn, nint criBinderHn, byte* path)
+        => this.setFile!.GetWrapper()(playerHn, criBinderHn, path);
+
+    public void Player_SetFormat(nint playerHn, CRIATOM_FORMAT format)
+        => this.setFormat!.GetWrapper()(playerHn, format);
+
+    public void Player_SetNumChannels(nint playerHn, int numChannels)
+        => this.setNumChannels!.GetWrapper()(playerHn, numChannels);
+
+    public void Player_SetCategoryById(nint playerHn, uint id)
+        => this.setCategoryById!.GetWrapper()(playerHn, id);
+
+    public void Player_SetSamplingRate(nint playerHn, int samplingRate)
+        => this.setSamplingRate!.GetWrapper()(playerHn, samplingRate);
+    public uint Player_GetLastPlaybackId(nint playerHn)
+        => this.getLastPlaybackId!.GetWrapper()(playerHn);
+
+    public void Player_SetCueId(nint playerHn, nint acbHn, int cueId)
+    {
+        // Update player ACB.
+        var player = this.players.First(x => x.PlayerHn == playerHn);
+        var acb = this.acbs.First(x => x.AcbHn == acbHn);
+        player.Acb = acb;
+
+        this.setCueIdHook!.OriginalFunction(playerHn, acbHn, cueId);
+    }
+
+    private nint Player_Create(CriAtomExPlayerConfigTag* config, void* work, int workSize)
     {
         Log.Verbose($"Create || Config: {(nint)config:X} || Work: {(nint)work:X} || WorkSize: {workSize}");
 
         var playerId = this.players.Count;
-        var currentConfigPtr = config;
+
+        CriAtomExPlayerConfigTag* currentConfigPtr;
         if (this.playerConfigs.TryGetValue(playerId, out var newConfig))
         {
-            var newConfigPtr = Marshal.AllocHGlobal(sizeof(CriAtomExPlayerConfigTag));
-            Marshal.StructureToPtr(newConfig, newConfigPtr, false);
+            currentConfigPtr = (CriAtomExPlayerConfigTag*)Marshal.AllocHGlobal(sizeof(CriAtomExPlayerConfigTag));
+            Marshal.StructureToPtr(newConfig, (nint)currentConfigPtr, false);
             Log.Information($"Using custom player config for: {playerId}");
+        }
+        else
+        {
+            currentConfigPtr = config;
         }
 
         var playerHn = this.createHook!.OriginalFunction(currentConfigPtr, work, workSize);
@@ -138,49 +213,15 @@ internal unsafe class CriAtomEx : IGameHook
             PlayerHn = playerHn,
         });
 
-        Log.Debug($"Player: {playerHn:X} || Config: {(nint)config:X} || ID: {playerId}");
+        if (this.playerConfigs.ContainsKey(playerId))
+        {
+            Log.Information($"Player: {playerHn:X} || Config: {(nint)config:X} || ID: {playerId}");
+        }
+
         return playerHn;
     }
 
-    public uint criAtomExPlayback_GetTimeSyncedWithAudioImpl(uint playbackId)
-    {
-        var result = this.getTimeSyncedWithAudioHook!.OriginalFunction(playbackId);
-        Log.Debug($"GetTimeSyncedWithAudio || Playback ID: {playbackId} || Time: {result}ms");
-        return result;
-    }
-
-    public void criAtomExPlayer_SetStartTimeImpl(nint player, uint startTimeMs)
-    {
-        this.setStartTimeHook!.OriginalFunction(player, startTimeMs);
-    }
-
-    public uint criAtomExPlayer_StartImpl(nint playerHn)
-    {
-        return this.startHook!.OriginalFunction(playerHn);
-    }
-
-    public void criAtomExPlayer_SetCategoryByIdImpl(nint player, uint id)
-    {
-        this.setCategoryByIdHook!.OriginalFunction(player, id);
-    }
-
-    public void criAtomExPlayer_SetVolumeImpl(nint player, float volume)
-    {
-        this.setVolumeHook!.OriginalFunction(player, volume);
-    }
-
-    public float criAtomExCategory_GetVolumeByIdImpl(uint categoryId)
-    {
-        return this.getVolumeByIdHook!.OriginalFunction(categoryId);
-    }
-
-    public CriBool criAtomExPlayer_GetNumPlayedSamplesImpl(uint playbackId, ulong* numSamples, uint* samplingRate)
-    {
-        Log.Information($"{playbackId} || {*numSamples} || {*samplingRate}");
-        return this.getNumPlayedSamplesHook!.OriginalFunction(playbackId, numSamples, samplingRate);
-    }
-
-    public nint criAtomExAcb_LoadAcbFileImpl(nint acbBinder, byte* acbPathStr, nint awbBinder, byte* awbPathStr, void* work, int workSize)
+    private nint Acb_LoadAcbFile(nint acbBinder, byte* acbPathStr, nint awbBinder, byte* awbPathStr, void* work, int workSize)
     {
         var acbHn = this.loadAcbFileHook!.OriginalFunction(acbBinder, acbPathStr, awbBinder, awbPathStr, work, workSize);
         var acbPath = Marshal.PtrToStringAnsi((nint)acbPathStr)!;
@@ -195,57 +236,8 @@ internal unsafe class CriAtomEx : IGameHook
         return acbHn;
     }
 
-    public void criAtomExPlayer_SetCueIdImpl(nint playerHn, nint acbHn, int cueId)
-    {
-        // Update player ACB.
-        var player = this.players.First(x => x.PlayerHn == playerHn);
-        var acb = this.acbs.First(x => x.AcbHn == acbHn);
-        player.Acb = acb;
-
-        this.setCueIdHook!.OriginalFunction(playerHn, acbHn, cueId);
-
-        //if (this.playerHn == null && acbHn == this.bgmAcbHn)
-        //{
-        //    this.playerHn = (void*)playerHn;
-        //}
-
-        //if (acbHn == this.bgmAcbHn && cueId >= EXTENDED_BGM_ID)
-        //{
-        //    Log.Debug($"{nameof(criAtomExPlayer_SetCueId)}|BGME: {playerHn:X} || {(nint)acbHn:X} || {cueId}");
-        //    var bgmFile = $"FEmulator/AWB/BGM_42.AWB/{cueId - EXTENDED_BGM_ID}.adx";
-        //    var ptr = StringsCache.GetStringPtr(bgmFile);
-
-        //    this.criAtomExPlayer_SetFileImpl(playerHn, IntPtr.Zero, (byte*)ptr);
-        //    this.criAtomExPlayer_SetFormatImpl(playerHn, CRIATOM_FORMAT.ADX);
-        //    this.criAtomExPlayer_SetNumChannelsImpl(playerHn, 2);
-        //    this.criAtomExPlayer_SetSamplingRateImpl(playerHn, 48000);
-        //    this.criAtomExPlayer_SetCategoryByIdImpl(playerHn, 1);
-        //}
-        //else
-        //{
-        //    this.setCueIdHook!.OriginalFunction(playerHn, acbHn, cueId);
-        //}
-    }
-
-    public void criAtomExPlayer_SetFileImpl(nint player, nint criBinderHn, byte* path)
-    {
-        this.setFileHook!.OriginalFunction(player, criBinderHn, path);
-    }
-
-    public void criAtomExPlayer_SetFormatImpl(nint player, CRIATOM_FORMAT format)
-    {
-        this.setFormatHook!.OriginalFunction(player, format);
-    }
-
-    public void criAtomExPlayer_SetSamplingRateImpl(nint player, int samplingRate)
-    {
-        this.setSamplingRateHook!.OriginalFunction(player, samplingRate);
-    }
-
-    public void criAtomExPlayer_SetNumChannelsImpl(nint player, int numChannels)
-    {
-        this.setNumChannelsHook!.OriginalFunction(player, numChannels);
-    }
+    private void AddHookScan(string name, string? pattern, Action<IReloadedHooks, nint> success)
+        => this.scans.Add(new(name, pattern, success));
 }
 
 internal class PlayerConfig
@@ -261,3 +253,19 @@ internal class AcbConfig
 
     public string AcbPath { get; set; } = string.Empty;
 }
+
+internal class ScanHook
+{
+    public ScanHook(string name, string? pattern, Action<IReloadedHooks, nint> success)
+    {
+        this.Name = name;
+        this.Pattern = pattern;
+        this.Success = success;
+    }
+
+    public string Name { get; }
+
+    public string? Pattern { get; }
+
+    public Action<IReloadedHooks, nint> Success { get; }
+};
