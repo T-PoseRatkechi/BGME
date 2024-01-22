@@ -1,18 +1,18 @@
-﻿using BGME.Framework.P5R;
+﻿using BGME.Framework.CRI.Types;
 using Reloaded.Hooks.Definitions.X64;
 
 namespace BGME.Framework.CRI;
 
-internal unsafe static class CriAdx
+internal unsafe static class CriAtomExFunctions
 {
     [Function(CallingConventions.Microsoft)]
     public delegate CriBool criAtomExPlayer_GetNumPlayedSamples(uint playbackId, ulong* numSamples, uint* samplingRate);
 
     [Function(CallingConventions.Microsoft)]
-    public delegate void* criAtomExAcb_LoadAcbFile(nint acbBinder, byte* acbPathStr, nint awbBinder, byte* awbPathStr, void* work, int workSize);
+    public delegate nint criAtomExAcb_LoadAcbFile(nint acbBinder, byte* acbPathStr, nint awbBinder, byte* awbPathStr, void* work, int workSize);
 
     [Function(CallingConventions.Microsoft)]
-    public delegate void criAtomExPlayer_SetCueId(nint player, void* acbHn, int cueId);
+    public delegate void criAtomExPlayer_SetCueId(nint player, nint acbHn, int cueId);
 
     [Function(CallingConventions.Microsoft)]
     public delegate uint criAtomExPlayer_Start(nint player);
