@@ -106,7 +106,7 @@ internal unsafe class Sound : BaseSound
 
     public void PlayMusic(IMusic music)
     {
-        var bgmId = Utilities.CalculateMusicId(music);
+        var bgmId = MusicUtils.CalculateMusicId(music);
         if (bgmId == null)
         {
             return;

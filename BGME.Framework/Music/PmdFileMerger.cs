@@ -121,7 +121,7 @@ internal class PmdFileMerger : IFileBuilder
             var frameId = frame.Key;
             if (frame.Value is FrameBgm frameBgm)
             {
-                var bgmId = Utilities.CalculateMusicId(frameBgm.Music!);
+                var bgmId = MusicUtils.CalculateMusicId(frameBgm.Music!);
                 var frameBgmObj = new PmdTarget_Bgm()
                 {
                     StartFrame = (ushort)frameId,
@@ -133,7 +133,7 @@ internal class PmdFileMerger : IFileBuilder
             }
             else
             {
-                var bgmId = Utilities.CalculateMusicId(frame.Value);
+                var bgmId = MusicUtils.CalculateMusicId(frame.Value);
                 var frameBgmObj = new PmdTarget_Bgm()
                 {
                     StartFrame = (ushort)frameId,

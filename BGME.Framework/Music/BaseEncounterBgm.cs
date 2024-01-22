@@ -18,7 +18,7 @@ internal abstract class BaseEncounterBgm
         if (currentEncounterMusic?.Encounter.VictoryMusic != null)
         {
             Log.Debug("Victory Music uses BGME");
-            var musicId = Utilities.CalculateMusicId(currentEncounterMusic.Encounter.VictoryMusic, currentEncounterMusic.Context);
+            var musicId = MusicUtils.CalculateMusicId(currentEncounterMusic.Encounter.VictoryMusic, currentEncounterMusic.Context);
             return musicId;
         }
 
@@ -31,7 +31,7 @@ internal abstract class BaseEncounterBgm
         if (this.currentEncounterMusic?.Encounter.BattleMusic != null)
         {
             Log.Debug("Battle Music uses BGME");
-            var musicId = Utilities.CalculateMusicId(this.currentEncounterMusic.Encounter.BattleMusic, context);
+            var musicId = MusicUtils.CalculateMusicId(this.currentEncounterMusic.Encounter.BattleMusic, context);
             return musicId;
         }
 

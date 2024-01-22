@@ -29,7 +29,7 @@ internal class MusicScriptsManager : IBgmeApi
         {
             var pathMusicScript = new PathMusicScript(path);
             this.musicScripts.Add(pathMusicScript);
-            var watcher = Utilities.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), pathMusicScript.IsFile ? null : "*.pme");
+            var watcher = MusicUtils.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), pathMusicScript.IsFile ? null : "*.pme");
             this.watchers.Add(watcher);
         }
     }

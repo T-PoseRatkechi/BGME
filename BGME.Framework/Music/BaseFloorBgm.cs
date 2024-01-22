@@ -15,7 +15,7 @@ internal abstract class BaseFloorBgm
         if (this.music.Floors.TryGetValue(floorId, out var floorMusic))
         {
             Log.Debug("Floor uses BGME");
-            return Utilities.CalculateMusicId(floorMusic) ?? -1;
+            return MusicUtils.CalculateMusicId(floorMusic) ?? -1;
         }
 
         return -1;

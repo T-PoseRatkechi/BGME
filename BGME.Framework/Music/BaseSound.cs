@@ -33,7 +33,7 @@ internal abstract class BaseSound
             }
 
             this.prevOriginalBgmId = originalBgmId;
-            this.currentBgmId = Utilities.CalculateMusicId(newMusic);
+            this.currentBgmId = MusicUtils.CalculateMusicId(newMusic);
             if (this.currentBgmId == null)
             {
                 Log.Debug($"BGM ID: {originalBgmId} is disabled.");
