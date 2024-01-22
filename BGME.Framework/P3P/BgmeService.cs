@@ -16,4 +16,8 @@ internal class BgmeService : IBgmeService
         this.encounterPatcher = new(hooks, scanner, music);
         this.floorBgm = new(hooks, scanner, music);
     }
+
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
+    {
+    }
 }

@@ -1,24 +1,75 @@
 ﻿using BGME.Framework.CRI;
+using BGME.Framework.CRI.Types;
 using BGME.Framework.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
+using System;
+using static BGME.Framework.CRI.CriAtomExFunctions;
 
 namespace BGME.Framework.P5R;
 
-internal class BgmeService : IBgmeService, IGameHook
+internal class BgmeService : IBgmeService
 {
+    private const int EXTENDED_BGM_ID = 10000;
+
+    private readonly CriAtomEx criAtomEx;
     private readonly SoundPlayback sound;
     private readonly EncounterBgm encounterBgm;
+    private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
+    private PlayerConfig? bgmPlayer;
 
     public BgmeService(CriAtomEx criAtomEx, MusicService music)
     {
+        this.criAtomEx = criAtomEx;
         this.sound = new(criAtomEx, music);
         this.encounterBgm = new(music);
+
+        criAtomEx.PropertyChanged += (sender, args) =>
+        {
+            if (args.PropertyName == nameof(criAtomEx.SetCueId))
+            {
+                this.setCueIdHook = criAtomEx.SetCueId!.Hook(this.CriAtomExPlayer_SetCueId).Activate();
+            }
+        };
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
         this.sound.Initialize(scanner, hooks);
         this.encounterBgm.Initialize(scanner, hooks);
+    }
+
+    private unsafe void CriAtomExPlayer_SetCueId(nint player, nint acbHn, int cueId)
+    {
+        this.bgmPlayer ??= this.criAtomEx.GetPlayerByAcbPath("SOUND/BGM.ACB");
+
+        if (player == this.bgmPlayer?.PlayerHn && cueId >= 1000)
+        {
+            Log.Debug($"{nameof(CriAtomExPlayer_SetCueId)}|BGME: {this.bgmPlayer.PlayerHn:X} || {acbHn:X} || {cueId}");
+
+            var bgmFile = this.GetBgmFile(cueId);
+            var format = Path.GetExtension(bgmFile) == ".hca" ? CRIATOM_FORMAT.HCA : CRIATOM_FORMAT.ADX;
+            var ptr = StringsCache.GetStringPtr(bgmFile);
+
+            this.criAtomEx.Player_SetFile(this.bgmPlayer.PlayerHn, IntPtr.Zero, (byte*)ptr);
+            this.criAtomEx.Player_SetFormat(this.bgmPlayer.PlayerHn, format);
+            this.criAtomEx.Player_SetNumChannels(this.bgmPlayer.PlayerHn, 2);
+            this.criAtomEx.Player_SetSamplingRate(this.bgmPlayer.PlayerHn, 48000);
+            this.criAtomEx.Player_SetCategoryById(this.bgmPlayer.PlayerHn, 1);
+        }
+        else
+        {
+            this.setCueIdHook!.OriginalFunction(player, acbHn, cueId);
+        }
+    }
+
+    private string GetBgmFile(int bgmId)
+    {
+        if (bgmId >= 10000 && bgmId <= 19999)
+        {
+            return $"BGME/P5R/BGM_42/{bgmId - EXTENDED_BGM_ID}.adx";
+        }
+
+        return $"BGME/P5R/{bgmId}.adx";
     }
 }

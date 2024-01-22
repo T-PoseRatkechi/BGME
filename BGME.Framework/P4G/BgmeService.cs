@@ -18,4 +18,8 @@ internal class BgmeService : IBgmeService
         this.floorPatcher = new(hooks, scanner, music);
         this.eventBgm = new(hooks, scanner, this.sound, music);
     }
+
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
+    {
+    }
 }
