@@ -1,4 +1,5 @@
-﻿using BGME.Framework.Interfaces;
+﻿using BGME.Framework.CRI;
+using BGME.Framework.Interfaces;
 using BGME.Framework.Music;
 using BGME.Framework.Template;
 using BGME.Framework.Template.Configuration;
@@ -36,7 +37,7 @@ public class Mod : ModBase, IExports
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
 
-        Log.Logger = this.logger;
+        Log.Initialize("BGME Framework", this.logger);
         Log.LogLevel = this.config.LogLevel;
 
 #if DEBUG
@@ -73,7 +74,9 @@ public class Mod : ModBase, IExports
                 this.bgme = new P3P.BgmeService(this.hooks, scanner!, this.music);
                 break;
             case Game.P5R_PC:
-                this.bgme = new P5R.BgmeService(this.hooks, scanner!, this.music);
+                var criAtomEx = new CriAtomEx(game);
+                criAtomEx.Initialize(scanner!, this.hooks);
+                this.bgme = new P5R.BgmeService(criAtomEx, this.music);
                 break;
             default:
                 Log.Error($"Missing BGME service for game {game}.");
