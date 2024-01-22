@@ -8,7 +8,7 @@ using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P5R;
 
-internal unsafe class EncounterBgm : BaseEncounterBgm
+internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 {
     [Function(Register.rbx, Register.rax, true)]
     private delegate void GetEncounterBgmId(nint encounterPtr);
@@ -22,12 +22,13 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
     private IAsmHook? victoryBgmHook;
     private IAsmHook? victoryBgmHook2;
 
-    private readonly Sound sound;
-
-    public EncounterBgm(IReloadedHooks hooks, IStartupScanner scanner, Sound sound, MusicService music)
+    public EncounterBgm(MusicService music)
         : base(music)
     {
-        this.sound = sound;
+    }
+
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
+    {
         var victoryBgmCall = hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper);
 
         scanner.Scan("Encounter BGM", "8B 83 ?? ?? ?? ?? 3D 81 02 00 00", result =>
@@ -89,7 +90,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
                 "mov edx, eax",
                 "label original",
             };
-            
+
             try
             {
                 this.victoryBgmHook2 = hooks.CreateAsmHook(patch, result + 5, AsmHookBehaviour.ExecuteFirst).Activate()

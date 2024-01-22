@@ -1,17 +1,24 @@
-﻿using BGME.Framework.Music;
+﻿using BGME.Framework.CRI;
+using BGME.Framework.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 
 namespace BGME.Framework.P5R;
 
-internal class BgmeService : IBgmeService
+internal class BgmeService : IBgmeService, IGameHook
 {
-    private readonly Sound sound;
+    private readonly SoundPlayback sound;
     private readonly EncounterBgm encounterBgm;
 
-    public BgmeService(IReloadedHooks hooks, IStartupScanner scanner, MusicService music)
+    public BgmeService(CriAtomEx criAtomEx, MusicService music)
     {
-        this.sound = new(hooks, scanner, music);
-        this.encounterBgm = new(hooks, scanner, this.sound, music);
+        this.sound = new(criAtomEx, music);
+        this.encounterBgm = new(music);
+    }
+
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
+    {
+        this.sound.Initialize(scanner, hooks);
+        this.encounterBgm.Initialize(scanner, hooks);
     }
 }
