@@ -23,6 +23,7 @@ internal static class CriAtomExGames
             CriAtomExPlayer_SetVolume = "48 85 C9 75 ?? 44 8D 41 ?? 48 8D 15 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B 89 ?? ?? ?? ?? 33 D2",
             CriAtomExPlayer_SetCategoryById = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 50 48 8B F9 8B F2",
             CriAtomExCategory_GetVolumeById = "40 53 48 83 EC 20 8B D9 33 C9 E8 ?? ?? ?? ?? 85 C0 75 ?? 48 8D 15 ?? ?? ?? ?? 33 C9 E8 ?? ?? ?? ?? F3 0F 10 05",
+            CriAtomExPlayer_GetLastPlaybackId = "48 83 EC 28 48 85 C9 75 ?? 44 8D 41 ?? 48 8D 15 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 C8 FF EB ?? 8B 81",
         }
     };
 
@@ -30,7 +31,6 @@ internal static class CriAtomExGames
         => patterns.First(x => x.Game.Contains(game));
 }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 internal class CriAtomExPatterns
 {
     public CriAtomExPatterns(Game game)
@@ -45,33 +45,34 @@ internal class CriAtomExPatterns
 
     public Game[] Game { get; }
 
-    public string CriAtomExPlayer_GetNumPlayedSamples { get; init; }
+    public string? CriAtomExPlayer_GetNumPlayedSamples { get; init; }
 
-    public string CriAtomExAcb_LoadAcbFile { get; init; }
+    public string? CriAtomExAcb_LoadAcbFile { get; init; }
 
-    public string CriAtomExPlayer_SetCueId { get; init; }
+    public string? CriAtomExPlayer_SetCueId { get; init; }
 
-    public string CriAtomExPlayer_Start { get; init; }
+    public string? CriAtomExPlayer_Start { get; init; }
 
-    public string CriAtomExPlayer_SetFile { get; init; }
+    public string? CriAtomExPlayer_SetFile { get; init; }
 
-    public string CriAtomExPlayer_SetFormat { get; init; }
+    public string? CriAtomExPlayer_SetFormat { get; init; }
 
-    public string CriAtomExPlayer_SetSamplingRate { get; init; }
+    public string? CriAtomExPlayer_SetSamplingRate { get; init; }
 
-    public string CriAtomExPlayer_SetNumChannels { get; init; }
+    public string? CriAtomExPlayer_SetNumChannels { get; init; }
 
-    public string CriAtomExCategory_GetVolumeById { get; init; }
+    public string? CriAtomExCategory_GetVolumeById { get; init; }
 
-    public string CriAtomExPlayer_SetVolume { get; init; }
+    public string? CriAtomExPlayer_SetVolume { get; init; }
 
-    public string CriAtomExPlayer_SetVolumeById { get; init; }
+    public string? CriAtomExPlayer_SetVolumeById { get; init; }
 
-    public string CriAtomExPlayer_SetCategoryById { get; init; }
+    public string? CriAtomExPlayer_SetCategoryById { get; init; }
 
-    public string CriAtomExPlayer_SetStartTime { get; init; }
+    public string? CriAtomExPlayer_SetStartTime { get; init; }
 
-    public string CriAtomExPlayback_GetTimeSyncedWithAudio { get; init; }
+    public string? CriAtomExPlayback_GetTimeSyncedWithAudio { get; init; }
 
-    public string CriAtomExPlayer_Create { get; init; }
+    public string? CriAtomExPlayer_Create { get; init; }
+    public string? CriAtomExPlayer_GetLastPlaybackId { get; init; }
 }
