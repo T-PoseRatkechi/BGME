@@ -294,14 +294,21 @@ internal unsafe class BeatHitEffect : IGameHook
         if (this.successEffect && this.currentEffect == null)
         {
             this.p5rLib.FlowCaller.FLD_EFFECT_BANK_FREE(1);
-            this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(1, 50);
+            this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(1, 51);
             this.p5rLib.FlowCaller.FLD_EFFECT_BANK_SYNC(1);
             this.currentEffect = this.p5rLib.FlowCaller.FLD_EFFECT_BANK_START(1);
+            //var x = this.p5rLib.FlowCaller.FLD_CAMERA_GET_X_POS();
+            //var y = this.p5rLib.FlowCaller.FLD_CAMERA_GET_Y_POS();
+            //var z = this.p5rLib.FlowCaller.FLD_CAMERA_GET_Z_POS();
+
+            //Log.Information($"X: {x} || Y: {y} || Z: {z}");
+            //this.p5rLib.FlowCaller.FLD_EFFECT_SET_POS((int)this.currentEffect, 400, 800, -300);
+            //this.p5rLib.FlowCaller.FLD_EFFECT_SET_ROT((int)this.currentEffect, 90, 90, 90);
         }
 
-        if (this.currentEffect != null && currentBeat > endBeat + 0.5f)
+        if (this.currentEffect != null && currentBeat > endBeat + 1f)
         {
-            this.p5rLib.FlowCaller.FLD_EFFECT_END((int)this.currentEffect);
+            //this.p5rLib.FlowCaller.FLD_EFFECT_END((int)this.currentEffect);
             this.currentEffect = null;
             this.successEffect = false;
         }
@@ -342,23 +349,6 @@ internal unsafe class BeatHitEffect : IGameHook
     {
         Log.Information(this.messages[Random.Shared.Next(0, this.messages.Length)]);
         this.successEffect = true;
-
-        // crashes
-        //var current = this.p5rLib.FlowCaller.BTL_GET_CURRENT_CHARAID();
-
-        //var x = this.p5rLib.FlowCaller.FLD_MODEL_GET_X_TRANSLATE(this.p5rLib.FlowCaller.FLD_PC_GET_RESHND(0));
-        //var y = this.p5rLib.FlowCaller.FLD_MODEL_GET_Y_TRANSLATE(this.p5rLib.FlowCaller.FLD_PC_GET_RESHND(0));
-        //var z = this.p5rLib.FlowCaller.FLD_MODEL_GET_Z_TRANSLATE(this.p5rLib.FlowCaller.FLD_PC_GET_RESHND(0));
-
-        //this.p5rLib.FlowCaller.FLD_EFFECT_BANK_FREE(2);
-        //this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(2, 50);
-        //this.p5rLib.FlowCaller.FLD_EFFECT_BANK_SYNC(2);
-        //this.currentEffect = this.p5rLib.FlowCaller.FLD_EFFECT_BANK_START(2);
-        //this.p5rLib.FlowCaller.FLD_EFFECT_SET_POS((int)this.currentEffect, x, y, z);
-        //this.p5rLib.FlowCaller.FLD_EFFECT_SET_SCALE((int)this.currentEffect, 1, 1, 1);
-        //this.p5rLib.FlowCaller.FLD_EFFECT_SET_ALPHA((int)this.currentEffect, 1);
-        //this.p5rLib.FlowCaller.FLD_EFFECT_SET_SPEED((int)this.currentEffect, 1);
-
         return 0;
     }
 }

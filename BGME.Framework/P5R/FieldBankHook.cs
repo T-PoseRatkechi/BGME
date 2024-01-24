@@ -15,6 +15,9 @@ internal class FieldBankHook : IGameHook
     private readonly Dictionary<int, string> assignedEffects = new()
     {
         [50] = "EFFECT/EVENT/EE695_030.EPL",
+        [51] = "BATTLE/EVENT/BCD/BATONTOUCH/bes_btn_touch_yuka4.EPL",
+        [52] = "BATTLE/EVENT/BCD/HOLD_UP/ICON/BES_H_01.EPL",
+        [53] = "BATTLE/EVENT/BCD/SP_GUN/bes_sp_bang_shita.EPL",
     };
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
