@@ -4,6 +4,7 @@ using BGME.Framework.Music;
 using BGME.Framework.Template;
 using BGME.Framework.Template.Configuration;
 using CriFs.V2.Hook.Interfaces;
+using p5rpc.lib.interfaces;
 using PersonaModdingMetadata.Shared.Games;
 using PersonaMusicScript.Types;
 using Reloaded.Hooks.ReloadedII.Interfaces;
@@ -24,6 +25,7 @@ public class Mod : ModBase, IExports
     private readonly Config config;
 
     private readonly ICriFsRedirectorApi criFsApi;
+    private readonly IP5RLib p5rLib;
     private readonly IBgmeService? bgme;
     private readonly Game game;
     private readonly MusicService? music;
@@ -50,6 +52,7 @@ public class Mod : ModBase, IExports
 
         this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
         this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
+        this.modLoader.GetController<IP5RLib>().TryGetTarget(out this.p5rLib!);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         Setup.Start(this.criFsApi, modDir, game);
@@ -77,7 +80,7 @@ public class Mod : ModBase, IExports
             case Game.P5R_PC:
                 var criAtomEx = new CriAtomEx(game);
                 criAtomEx.Initialize(scanner!, this.hooks);
-                this.bgme = new P5R.BgmeService(criAtomEx, this.music);
+                this.bgme = new P5R.BgmeService(this.p5rLib, criAtomEx, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             default:
@@ -161,29 +164,4 @@ public class Mod : ModBase, IExports
     public Mod() { }
 #pragma warning restore CS8618
     #endregion
-}
-
-internal static class ICriFsRedirectorApiExtensions
-{
-    public static void AddBind(
-        this ICriFsRedirectorApi api,
-        string file,
-        string bindPath,
-        string modId)
-    {
-        api.AddBindCallback(context =>
-        {
-            context.RelativePathToFileMap[$@"R2\{bindPath}"] = new()
-            {
-                new()
-                {
-                    FullPath = file,
-                    LastWriteTime = DateTime.UtcNow,
-                    ModId = modId,
-                },
-            };
-
-            Log.Debug($"Bind: {bindPath}\nFile: {file}");
-        });
-    }
 }
