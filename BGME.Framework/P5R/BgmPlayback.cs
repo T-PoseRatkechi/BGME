@@ -7,7 +7,7 @@ using Timer = System.Timers.Timer;
 
 namespace BGME.Framework.P5R;
 
-internal unsafe class SoundPlayback : BaseSound, IGameHook
+internal unsafe class BgmPlayback : BaseSound, IGameHook
 {
     [Function(CallingConventions.Microsoft)]
     public delegate void PlayBgmFunction(nint param1, nint param2, int bgmId, nint param4, nint param5);
@@ -19,7 +19,7 @@ internal unsafe class SoundPlayback : BaseSound, IGameHook
     private int currentBgmTime;
     private readonly Timer holdupBgmBuffer = new(TimeSpan.FromMilliseconds(1000)) { AutoReset = false };
 
-    public SoundPlayback(CriAtomEx criAtomEx, MusicService music)
+    public BgmPlayback(CriAtomEx criAtomEx, MusicService music)
         : base(music)
     {
         this.criAtomEx = criAtomEx;
@@ -48,7 +48,7 @@ internal unsafe class SoundPlayback : BaseSound, IGameHook
         });
     }
 
-    private PlayerConfig BgmPlayer
+    public PlayerConfig BgmPlayer
     {
         get
         {
@@ -71,7 +71,7 @@ internal unsafe class SoundPlayback : BaseSound, IGameHook
         // interrupt battle BGM if quick AOA.
         if (bgmId == 341 && !this.holdupBgmBuffer.Enabled)
         {
-            this.holdupBgmBuffer.Start();
+            //this.holdupBgmBuffer.Start();
             return;
         }
 

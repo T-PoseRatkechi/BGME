@@ -1,9 +1,9 @@
 ﻿using BGME.Framework.CRI;
 using BGME.Framework.CRI.Types;
 using BGME.Framework.Music;
+using p5rpc.lib.interfaces;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using System;
 using static BGME.Framework.CRI.CriAtomExFunctions;
 
 namespace BGME.Framework.P5R;
@@ -13,16 +13,18 @@ internal class BgmeService : IBgmeService
     private const int EXTENDED_BGM_ID = 10000;
 
     private readonly CriAtomEx criAtomEx;
-    private readonly SoundPlayback sound;
+    private readonly BgmPlayback bgm;
     private readonly EncounterBgm encounterBgm;
+    private readonly FieldBankHook fieldBankHook;
     private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
     private PlayerConfig? bgmPlayer;
 
-    public BgmeService(CriAtomEx criAtomEx, MusicService music)
+    public BgmeService(IP5RLib p5rLib, CriAtomEx criAtomEx, MusicService music)
     {
         this.criAtomEx = criAtomEx;
-        this.sound = new(criAtomEx, music);
-        this.encounterBgm = new(music);
+        this.bgm = new(criAtomEx, music);
+        this.encounterBgm = new(p5rLib, music, criAtomEx, bgm);
+        this.fieldBankHook = new();
 
         criAtomEx.PropertyChanged += (sender, args) =>
         {
@@ -35,8 +37,9 @@ internal class BgmeService : IBgmeService
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
-        this.sound.Initialize(scanner, hooks);
+        this.bgm.Initialize(scanner, hooks);
         this.encounterBgm.Initialize(scanner, hooks);
+        this.fieldBankHook.Initialize(scanner, hooks);
     }
 
     private unsafe void CriAtomExPlayer_SetCueId(nint player, nint acbHn, int cueId)
