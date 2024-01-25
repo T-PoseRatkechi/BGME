@@ -8,7 +8,7 @@ using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P4G;
 
-internal unsafe class EncounterBgm : BaseEncounterBgm
+internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 {
     [Function(new[] { Register.r8, Register.rcx }, Register.rax, true)]
     private delegate int GetEncounterBgm(nint encounterPtr, int encounterId);
@@ -20,11 +20,12 @@ internal unsafe class EncounterBgm : BaseEncounterBgm
     private IReverseWrapper<GetVictoryBgm>? victoryReverseWrapper;
     private IAsmHook? victoryBgmHook;
 
-    public EncounterBgm(
-        IReloadedHooks hooks,
-        IStartupScanner scanner,
-        MusicService music)
+    public EncounterBgm(MusicService music)
         : base(music)
+    {
+    }
+
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
         scanner.AddMainModuleScan("0F B7 4C D0 16", (result) =>
         {

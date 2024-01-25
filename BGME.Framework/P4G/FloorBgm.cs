@@ -7,18 +7,19 @@ using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P4G;
 
-internal class FloorBgm : BaseFloorBgm
+internal class FloorBgm : BaseFloorBgm, IGameHook
 {
     [Function(Register.rdi, Register.rax, true)]
     private delegate int GetFloorBgmFunction(int floorId);
     private IReverseWrapper<GetFloorBgmFunction>? floorReverseWrapper;
     private IAsmHook? floorBgmHook;
 
-    public FloorBgm(
-        IReloadedHooks hooks,
-        IStartupScanner scanner,
-        MusicService music)
+    public FloorBgm(MusicService music) 
         : base(music)
+    {
+    }
+
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
         scanner.AddMainModuleScan("83 FF 05 0F 8E C1 00 00 00", (result) =>
         {

@@ -11,7 +11,7 @@ namespace BGME.Framework.P4G;
 /// <summary>
 /// Based on p4g64.EventLogger by Secre-C.
 /// </summary>
-internal unsafe class EventBgm
+internal unsafe class EventBgm : IGameHook
 {
     [Function(CallingConventions.Microsoft)]
     private delegate void* RunCommandFunction(nint commandPtr, nint param2);
@@ -24,22 +24,21 @@ internal unsafe class EventBgm
 
     private IAsmHook? setCurrentEventHook;
 
-    private readonly Sound sound;
+    private readonly BgmPlayback sound;
     private readonly MusicService music;
 
     private readonly int* currentMajorId = (int*)NativeMemory.AllocZeroed(sizeof(int));
     private readonly int* currentMinorId = (int*)NativeMemory.AllocZeroed(sizeof(int));
     private int currentFrame = -1;
 
-    public EventBgm(
-        IReloadedHooks hooks,
-        IStartupScanner scanner,
-        Sound sound,
-        MusicService music)
+    public EventBgm(BgmPlayback sound, MusicService music)
     {
         this.sound = sound;
         this.music = music;
+    }
 
+    public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
+    {
         scanner.AddMainModuleScan("48 89 6C 24 ?? 56 57 41 56 48 83 EC 30 89 CD", (result) =>
         {
             if (!result.Found)
