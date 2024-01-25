@@ -49,4 +49,10 @@ internal unsafe static class CriAtomExFunctions
 
     [Function(CallingConventions.Microsoft)]
     public delegate uint criAtomExPlayer_GetLastPlaybackId(nint playerHn);
+
+    [Function(CallingConventions.Microsoft)]
+    public delegate void criAtomExPlayer_SetCategoryByName(nint playerHn, byte* name);
+
+    [Function(CallingConventions.Microsoft)]
+    public delegate bool criAtomExPlayer_GetCategoryInfo(nint playerHn, ushort index, CriAtomExCategoryInfo* info);
 }

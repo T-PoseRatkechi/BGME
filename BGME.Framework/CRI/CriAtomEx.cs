@@ -32,6 +32,8 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
     private IFunction<criAtomExPlayer_SetVolume>? setVolume;
     private IFunction<criAtomExPlayer_SetCategoryById>? setCategoryById;
     private IFunction<criAtomExPlayer_GetLastPlaybackId>? getLastPlaybackId;
+    private IFunction<criAtomExPlayer_SetCategoryByName>? setCategoryByName;
+    private IFunction<criAtomExPlayer_GetCategoryInfo>? getCategoryInfo;
 
     [ObservableProperty]
     private IFunction<criAtomExPlayer_SetCueId>? setCueId;
@@ -64,7 +66,7 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             });
 
         this.AddHookScan(
-            nameof(CriAtomExFunctions.criAtomExPlayer_SetCueId),
+            nameof(criAtomExPlayer_SetCueId),
             this.patterns.CriAtomExPlayer_SetCueId,
             (hooks, result) =>
             {
@@ -73,12 +75,12 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             });
 
         this.AddHookScan(
-            nameof(CriAtomExFunctions.criAtomExPlayer_SetStartTime),
+            nameof(criAtomExPlayer_SetStartTime),
             this.patterns.CriAtomExPlayer_SetStartTime,
             (hooks, result) => this.setStartTime = hooks.CreateFunction<criAtomExPlayer_SetStartTime>(result));
 
         this.AddHookScan(
-            nameof(CriAtomExFunctions.criAtomExPlayback_GetTimeSyncedWithAudio),
+            nameof(criAtomExPlayback_GetTimeSyncedWithAudio),
             this.patterns.CriAtomExPlayback_GetTimeSyncedWithAudio,
             (hooks, result) => this.getTimeSyncedWithAudio = hooks.CreateFunction<criAtomExPlayback_GetTimeSyncedWithAudio>(result));
 
@@ -88,27 +90,27 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             (hooks, result) => this.getNumPlayedSamples = hooks.CreateFunction<criAtomExPlayer_GetNumPlayedSamples>(result));
 
         this.AddHookScan(
-            nameof(CriAtomExFunctions.criAtomExPlayer_Start),
+            nameof(criAtomExPlayer_Start),
             this.patterns.CriAtomExPlayer_Start,
             (hooks, result) => this.start = hooks.CreateFunction<criAtomExPlayer_Start>(result));
 
         this.AddHookScan(
-            nameof(Player_SetFile),
+            nameof(criAtomExPlayer_SetFile),
             this.patterns.CriAtomExPlayer_SetFile,
             (hooks, result) => this.setFile = hooks.CreateFunction<criAtomExPlayer_SetFile>(result));
 
         this.AddHookScan(
-            nameof(Player_SetFormat),
+            nameof(criAtomExPlayer_SetFormat),
             this.patterns.CriAtomExPlayer_SetFormat,
             (hooks, result) => this.setFormat = hooks.CreateFunction<criAtomExPlayer_SetFormat>(result));
 
         this.AddHookScan(
-            nameof(Player_SetSamplingRate),
+            nameof(criAtomExPlayer_SetSamplingRate),
             this.patterns.CriAtomExPlayer_SetSamplingRate,
             (hooks, result) => this.setSamplingRate = hooks.CreateFunction<criAtomExPlayer_SetSamplingRate>(result));
 
         this.AddHookScan(
-            nameof(Player_SetNumChannels),
+            nameof(criAtomExPlayer_SetNumChannels),
             this.patterns.CriAtomExPlayer_SetNumChannels,
             (hooks, result) => this.setNumChannels = hooks.CreateFunction<criAtomExPlayer_SetNumChannels>(result));
 
@@ -123,14 +125,24 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             (hooks, result) => this.setVolume = hooks.CreateFunction<criAtomExPlayer_SetVolume>(result));
 
         this.AddHookScan(
-            nameof(Player_SetCategoryById),
+            nameof(criAtomExPlayer_SetCategoryById),
             this.patterns.CriAtomExPlayer_SetCategoryById,
             (hooks, result) => this.setCategoryById = hooks.CreateFunction<criAtomExPlayer_SetCategoryById>(result));
 
         this.AddHookScan(
-            nameof(Player_GetLastPlaybackId),
+            nameof(criAtomExPlayer_GetLastPlaybackId),
             this.patterns.CriAtomExPlayer_GetLastPlaybackId,
             (hooks, result) => this.getLastPlaybackId = hooks.CreateFunction<criAtomExPlayer_GetLastPlaybackId>(result));
+
+        this.AddHookScan(
+            nameof(criAtomExPlayer_SetCategoryByName),
+            this.patterns.CriAtomExPlayer_SetCategoryByName,
+            (hooks, result) => this.setCategoryByName = hooks.CreateFunction<criAtomExPlayer_SetCategoryByName>(result));
+        
+        this.AddHookScan(
+            nameof(criAtomExPlayer_GetCategoryInfo),
+            this.patterns.CriAtomExPlayer_GetCategoryInfo,
+            (hooks, result) => this.getCategoryInfo = hooks.CreateFunction<criAtomExPlayer_GetCategoryInfo>(result));
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
@@ -148,7 +160,15 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
     }
 
     public PlayerConfig? GetPlayerByAcbPath(string acbPath)
-        => this.players.FirstOrDefault(x => x.Acb.AcbPath == acbPath);
+    {
+        var player = this.players.FirstOrDefault(x => x.Acb.AcbPath == acbPath);
+        if (player != null)
+        {
+            Log.Debug($"PlayerHn: {player.PlayerHn} || ACB Path: {player.Acb.AcbPath} || ID: {this.players.IndexOf(player)}");
+        }
+
+        return player;
+    }
 
     public void SetPlayerConfigById(int id, CriAtomExPlayerConfigTag config)
         => this.playerConfigs[id] = config;
@@ -179,21 +199,39 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
     public uint Player_GetLastPlaybackId(nint playerHn)
         => this.getLastPlaybackId!.GetWrapper()(playerHn);
 
+    public void Player_SetCategoryByName(nint playerHn, byte* name)
+        => this.setCategoryByName!.GetWrapper()(playerHn, name);
+
+    public bool Player_GetCategoryInfo(nint playerHn, ushort index, CriAtomExCategoryInfo* info)
+        => this.getCategoryInfo!.GetWrapper()(playerHn, index, info);
+
+    public float Category_GetVolumeById(uint id)
+        => this.getVolumeById!.GetWrapper()(id);
+
+    public void Player_SetVolume(nint playerHn, float volume)
+        => this.setVolume!.GetWrapper()(playerHn, volume);
+
     public void Player_SetCueId(nint playerHn, nint acbHn, int cueId)
     {
         // Update player ACB.
         var player = this.players.First(x => x.PlayerHn == playerHn);
-        var acb = this.acbs.First(x => x.AcbHn == acbHn);
-        player.Acb = acb;
+        var acb = this.acbs.FirstOrDefault(x => x.AcbHn == acbHn);
+        if (acb != null)
+        {
+            player.Acb = acb;
+        }
+        else
+        {
+            Log.Debug($"Unknown ACB Hn: {acbHn}");
+        }
 
         this.setCueIdHook!.OriginalFunction(playerHn, acbHn, cueId);
     }
 
     private nint Player_Create(CriAtomExPlayerConfigTag* config, void* work, int workSize)
     {
-        Log.Verbose($"Create || Config: {(nint)config:X} || Work: {(nint)work:X} || WorkSize: {workSize}");
-
         var playerId = this.players.Count;
+        Log.Verbose($"Create || Config: {(nint)config:X} || Work: {(nint)work:X} || WorkSize: {workSize}");
 
         CriAtomExPlayerConfigTag* currentConfigPtr;
         if (this.playerConfigs.TryGetValue(playerId, out var newConfig))
@@ -232,7 +270,7 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             AcbPath = acbPath,
         });
 
-        Log.Debug($"{nameof(criAtomExAcb_LoadAcbFile)}: {acbPath} || {(nint)acbHn:X}");
+        Log.Debug($"{nameof(criAtomExAcb_LoadAcbFile)}: {acbPath} || {acbHn:X}");
         return acbHn;
     }
 
