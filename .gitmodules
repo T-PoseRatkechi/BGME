@@ -13,3 +13,6 @@
 [submodule "submodules/Project.Utils"]
 	path = submodules/Project.Utils
 	url = https://github.com/T-PoseRatkechi/Project.Utils.git
+[submodule "submodules/P5R.ModdingToolkit"]
+	path = submodules/P5R.ModdingToolkit
+	url = https://github.com/T-PoseRatkechi/P5R.ModdingToolkit.git
