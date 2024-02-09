@@ -24,7 +24,7 @@ internal unsafe static class CriAtomExFunctions
     public delegate void criAtomExPlayer_SetFormat(nint playerHn, CRIATOM_FORMAT format);
 
     [Function(CallingConventions.Microsoft)]
-    public delegate void criAtomExPlayer_SetSamplingRate(nint plaplayerHnyer, int samplingRate);
+    public delegate void criAtomExPlayer_SetSamplingRate(nint playerHn, int samplingRate);
 
     [Function(CallingConventions.Microsoft)]
     public delegate void criAtomExPlayer_SetNumChannels(nint playerHn, int numChannels);
@@ -55,4 +55,10 @@ internal unsafe static class CriAtomExFunctions
 
     [Function(CallingConventions.Microsoft)]
     public delegate bool criAtomExPlayer_GetCategoryInfo(nint playerHn, ushort index, CriAtomExCategoryInfo* info);
+
+    [Function(CallingConventions.Microsoft)]
+    public delegate void criAtomExPlayer_SetData(nint playerHn, byte* buffer, int size);
+
+    [Function(CallingConventions.Microsoft)]
+    public delegate void criAtomExPlayer_SetCueName(nint playerHn, nint acbHn, byte* cueName);
 }

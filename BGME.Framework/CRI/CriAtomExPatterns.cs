@@ -45,6 +45,17 @@ internal static class CriAtomExGames
             CriAtomExPlayer_GetLastPlaybackId = "48 83 EC 28 48 85 C9 75 ?? 44 8D 41 ?? 48 8D 15 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 C8 FF EB ?? 8B 81",
             CriAtomExPlayer_SetCategoryByName = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 50 48 8B F9 48 8B F2",
             CriAtomExPlayer_GetCategoryInfo = "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 48 89 CB 4C 89 C6",
+        },
+        new(Game.P3R_PC)
+        {
+            CriAtomExPlayer_Create = "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 54 41 55 41 56 41 57 48 8B EC 48 83 EC 40 45 33 ED 41 8B F8",
+            CriAtomExPlayer_Start = "48 89 5C 24 ?? 57 48 83 EC 20 48 8B F9 48 85 C9 75 ?? 44 8D 41 ?? 48 8D 15 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 C8 FF",
+            CriAtomExPlayer_SetData = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 44 89 C6",
+            CriAtomExPlayer_SetFormat = "48 89 5C 24 ?? 57 48 83 EC 20 48 8B F9 48 85 C9 75 ?? 48 8D 15",
+            CriAtomExPlayer_SetNumChannels = "48 89 5C 24 ?? 57 48 83 EC 20 89 D7 48 89 CB 48 85 C9 74 ?? 8D 42",
+            CriAtomExPlayer_SetSamplingRate = "48 89 5C 24 ?? 57 48 83 EC 20 89 D7 48 89 CB 48 85 C9 74 ?? 85 D2",
+            CriAtomExPlayer_SetCategoryById = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 50 48 8B F9 8B F2",
+            CriAtomExPlayer_SetCueName = "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 49 8B F8 48 8B EA 48 8B D9",
         }
     };
 
@@ -101,4 +112,8 @@ internal class CriAtomExPatterns
     public string? CriAtomExPlayer_SetCategoryByName { get; init; }
 
     public string? CriAtomExPlayer_GetCategoryInfo { get; init; }
+
+    public string? CriAtomExPlayer_SetData { get; init; }
+
+    public string? CriAtomExPlayer_SetCueName { get; init; }
 }

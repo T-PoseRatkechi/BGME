@@ -34,6 +34,10 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
     private IFunction<criAtomExPlayer_GetLastPlaybackId>? getLastPlaybackId;
     private IFunction<criAtomExPlayer_SetCategoryByName>? setCategoryByName;
     private IFunction<criAtomExPlayer_GetCategoryInfo>? getCategoryInfo;
+    private IFunction<criAtomExPlayer_SetData>? setData;
+
+    [ObservableProperty]
+    private IFunction<criAtomExPlayer_SetCueName>? setCueName;
 
     [ObservableProperty]
     private IFunction<criAtomExPlayer_SetCueId>? setCueId;
@@ -41,6 +45,7 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
     private IHook<criAtomExPlayer_Create>? createHook;
     private IHook<criAtomExAcb_LoadAcbFile>? loadAcbFileHook;
     private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
+    private IHook<criAtomExPlayer_SetCueName>? setCueNameHook;
 
     public CriAtomEx(Game game)
     {
@@ -63,6 +68,15 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             {
                 this.loadAcbFile = hooks.CreateFunction<criAtomExAcb_LoadAcbFile>(result);
                 this.loadAcbFileHook = this.loadAcbFile.Hook(this.Acb_LoadAcbFile).Activate();
+            });
+
+        this.AddHookScan(
+            nameof(criAtomExPlayer_SetCueName),
+            this.patterns.CriAtomExPlayer_SetCueName,
+            (hooks, result) =>
+            {
+                this.SetCueName = hooks.CreateFunction<criAtomExPlayer_SetCueName>(result);
+                this.setCueNameHook = this.SetCueName.Hook(this.Player_SetCueName).Activate();
             });
 
         this.AddHookScan(
@@ -143,6 +157,11 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
             nameof(criAtomExPlayer_GetCategoryInfo),
             this.patterns.CriAtomExPlayer_GetCategoryInfo,
             (hooks, result) => this.getCategoryInfo = hooks.CreateFunction<criAtomExPlayer_GetCategoryInfo>(result));
+
+        this.AddHookScan(
+            nameof(criAtomExPlayer_SetData),
+            this.patterns.CriAtomExPlayer_SetData,
+            (hooks, result) => this.setData = hooks.CreateFunction<criAtomExPlayer_SetData>(result));
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
@@ -168,6 +187,44 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
         }
 
         return player;
+    }
+
+    public PlayerConfig? GetPlayerByPreviousCueName(string cueName)
+    {
+        var player = this.players.FirstOrDefault(x => x.PreviousCueName == cueName);
+        if (player != null)
+        {
+            Log.Debug($"PlayerHn: {player.PlayerHn} || ACB Path: {player.Acb.AcbPath} || ID: {this.players.IndexOf(player)}");
+        }
+
+        return player;
+    }
+
+    public void Player_SetCueId(nint playerHn, nint acbHn, int cueId)
+    {
+        // Update player ACB.
+        var player = this.players.First(x => x.PlayerHn == playerHn);
+        var acb = this.acbs.FirstOrDefault(x => x.AcbHn == acbHn);
+        if (acb != null)
+        {
+            player.Acb = acb;
+        }
+        else
+        {
+            Log.Debug($"Unknown ACB Hn: {acbHn}");
+        }
+
+        this.setCueIdHook!.OriginalFunction(playerHn, acbHn, cueId);
+    }
+
+    public void Player_SetCueName(nint playerHn, nint acbHn, byte* cueName)
+    {
+        // Update player last played cue.
+        var player = this.players.First(x => x.PlayerHn == playerHn);
+        var cueNameStr = Marshal.PtrToStringAnsi((nint)cueName);
+        player.PreviousCueName = cueNameStr;
+
+        this.setCueNameHook!.OriginalFunction(playerHn, acbHn, cueName);
     }
 
     public void SetPlayerConfigById(int id, CriAtomExPlayerConfigTag config)
@@ -211,22 +268,8 @@ internal unsafe partial class CriAtomEx : ObservableObject, IGameHook
     public void Player_SetVolume(nint playerHn, float volume)
         => this.setVolume!.GetWrapper()(playerHn, volume);
 
-    public void Player_SetCueId(nint playerHn, nint acbHn, int cueId)
-    {
-        // Update player ACB.
-        var player = this.players.First(x => x.PlayerHn == playerHn);
-        var acb = this.acbs.FirstOrDefault(x => x.AcbHn == acbHn);
-        if (acb != null)
-        {
-            player.Acb = acb;
-        }
-        else
-        {
-            Log.Debug($"Unknown ACB Hn: {acbHn}");
-        }
-
-        this.setCueIdHook!.OriginalFunction(playerHn, acbHn, cueId);
-    }
+    public void Player_SetData(nint playerHn, byte* buffer, int size)
+        => this.setData!.GetWrapper()(playerHn, buffer, size);
 
     private nint Player_Create(CriAtomExPlayerConfigTag* config, void* work, int workSize)
     {
@@ -283,6 +326,8 @@ internal class PlayerConfig
     public nint PlayerHn { get; set; }
 
     public AcbConfig Acb { get; set; } = new();
+
+    public string? PreviousCueName { get; set; }
 }
 
 internal class AcbConfig
