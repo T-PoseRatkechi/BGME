@@ -12,19 +12,21 @@ internal class BgmeService : IBgmeService
 {
     private const int EXTENDED_BGM_ID = 10000;
 
+    private readonly IP5RLib p5rLib;
     private readonly CriAtomEx criAtomEx;
     private readonly BgmPlayback bgm;
     private readonly EncounterBgm encounterBgm;
-    private readonly FieldBankHook fieldBankHook;
+    private readonly EffectsHook effectsHook;
     private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
     private PlayerConfig? bgmPlayer;
 
     public BgmeService(IP5RLib p5rLib, CriAtomEx criAtomEx, MusicService music)
     {
+        this.p5rLib = p5rLib;
         this.criAtomEx = criAtomEx;
         this.bgm = new(criAtomEx, music);
-        this.encounterBgm = new(p5rLib, music, criAtomEx, bgm);
-        this.fieldBankHook = new();
+        this.effectsHook = new();
+        this.encounterBgm = new(p5rLib, music, criAtomEx, bgm, effectsHook);
 
         criAtomEx.PropertyChanged += (sender, args) =>
         {
@@ -39,7 +41,7 @@ internal class BgmeService : IBgmeService
     {
         this.bgm.Initialize(scanner, hooks);
         this.encounterBgm.Initialize(scanner, hooks);
-        this.fieldBankHook.Initialize(scanner, hooks);
+        this.effectsHook.Initialize(scanner, hooks);
     }
 
     private unsafe void CriAtomExPlayer_SetCueId(nint player, nint acbHn, int cueId)
@@ -50,7 +52,7 @@ internal class BgmeService : IBgmeService
         {
             Log.Debug($"{nameof(CriAtomExPlayer_SetCueId)}|BGME: {this.bgmPlayer.PlayerHn:X} || {acbHn:X} || {cueId}");
 
-            var bgmFile = this.GetBgmFile(cueId);
+            var bgmFile = GetBgmFile(cueId);
             var format = Path.GetExtension(bgmFile) == ".hca" ? CRIATOM_FORMAT.HCA : CRIATOM_FORMAT.ADX;
             var ptr = StringsCache.GetStringPtr(bgmFile);
 
@@ -66,8 +68,9 @@ internal class BgmeService : IBgmeService
         }
     }
 
-    private string GetBgmFile(int bgmId)
+    private static string GetBgmFile(int bgmId)
     {
+        // Handle legacy BGM IDs.
         if (bgmId >= 10000 && bgmId <= 19999)
         {
             return $"BGME/P5R/BGM_42/{bgmId - EXTENDED_BGM_ID}.adx";
