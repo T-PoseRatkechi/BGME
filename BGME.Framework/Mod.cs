@@ -189,6 +189,10 @@ public class Mod : ModBase, IExports
         {
             return Game.P4G_PC;
         }
+        else if (appId.Contains("p3r", StringComparison.OrdinalIgnoreCase))
+        {
+            return Game.P3R_PC;
+        }
         else
         {
             return Game.P3P_PC;
