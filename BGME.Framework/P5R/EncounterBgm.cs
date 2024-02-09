@@ -29,19 +29,28 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     private readonly IP5RLib p5rLib;
     private readonly CriAtomEx criAtomEx;
     private readonly BgmPlayback bgm;
+    private readonly EffectsHook effectsHook;
 
-    public EncounterBgm(IP5RLib p5rLib, MusicService music, CriAtomEx criAtomEx, BgmPlayback bgm)
+    public EncounterBgm(
+        IP5RLib p5rLib,
+        MusicService music,
+        CriAtomEx criAtomEx,
+        BgmPlayback bgm,
+        EffectsHook effectsHook)
         : base(music)
     {
         this.p5rLib = p5rLib;
         this.criAtomEx = criAtomEx;
         this.bgm = bgm;
-        this.beatHitEffect = new(p5rLib, this.timingWindow);
+        this.beatHitEffect = new(p5rLib, this.timingWindows, effectsHook);
+        this.effectsHook = effectsHook;
+
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
         this.beatHitEffect.Initialize(scanner, hooks);
+
         var victoryBgmCall = hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper);
         scanner.Scan("Encounter BGM", "8B 83 ?? ?? ?? ?? 3D 81 02 00 00", result =>
         {
@@ -165,7 +174,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
             this.beatsPlayed.Clear();
             this.beatHitEffect.Deactivate();
             this.p5rLib.FlowCaller.FLD_DASH_EFFECT(0);
-            this.nextHitInBeats = 0;
+            this.nextHitActivation = 0;
             Log.Information("Stopped Battle Rhythm Game");
         });
     }
@@ -178,8 +187,8 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     private HashSet<int> beatsPlayed = new();
     private int? currentEffect;
 
-    private float nextHitInBeats = 0;
-    private TimeSpan timingWindow = TimeSpan.FromMilliseconds(140);
+    private float nextHitActivation = 0;
+    private readonly HitTimingWindows timingWindows = new();
 
     private void UpdateRhythmGame()
     {
@@ -209,11 +218,16 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 
         var currentBgmTime = this.criAtomEx.Playback_GetTimeSyncedWithAudio((uint)this.battleBgmPlaybackId!);
         this.conductor.Update(currentBgmTime);
+        this.beatHitEffect.Update();
 
         // Visual window logic.
         var currentWholeBeat = (int)Math.Round(this.conductor.SongPositionInBeats);
         if (!this.beatsPlayed.Contains(currentWholeBeat) && currentWholeBeat % 2 == 0)
         {
+            this.beatsPlayed.Add(currentWholeBeat);
+
+            Log.Information($"Visual Beat: {this.conductor.SongPositionInSeconds}");
+            Log.Information($"Next Hit Beat: {this.conductor.SongPositionInSeconds}");
             this.p5rLib.FlowCaller.FLD_DASH_EFFECT(1);
         }
         else
@@ -222,25 +236,11 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         }
 
         // Hit window logic.
-        if (this.conductor.SongPositionInBeats >= this.nextHitInBeats)
+        if (this.conductor.SongPositionInSeconds >= this.nextHitActivation)
         {
-            Log.Debug($"Beat: {this.conductor.SongPositionInBeats}");
-            //this.nextHitInBeats = (float)(Math.Round(this.conductor.SongPositionInBeats) + 2 - (this.timingWindow.TotalSeconds / 2 * this.conductor.SecPerBeat));
-            this.nextHitInBeats = (float)(Math.Round(this.nextHitInBeats) + 2 - (this.timingWindow.TotalSeconds / 2 * this.conductor.SecPerBeat));
-            this.beatHitEffect.Activate(conductor);
+            Log.Debug($"Current Hit: {this.nextHitActivation}");
+            this.nextHitActivation = this.beatHitEffect.Activate(conductor);
         }
-
-        this.beatHitEffect.Update(conductor);
-    }
-
-    private bool HitWindowEnabled(Conductor conductor, int timingWindowMs)
-    {
-        if (conductor.SongPositionInSeconds > (conductor.SongPositionInSeconds - TimeSpan.FromMilliseconds(timingWindowMs / 2).TotalSeconds))
-        {
-            return true;
-        }
-
-        return false;
     }
 }
 
@@ -278,24 +278,46 @@ internal unsafe class BeatHitEffect : IGameHook
     private IAsmHook? setHpHook;
 
     private readonly IP5RLib p5rLib;
-    private readonly TimeSpan timingWindow;
+    private readonly EffectsHook effectsHook;
+    private readonly HitTimingWindows hitWindows;
     private readonly bool* effectEnabled;
     private int? currentEffect;
     private bool successEffect = false;
 
-    public BeatHitEffect(IP5RLib p5rLib, TimeSpan timingWindow)
+    private readonly BattleHooks battle = new();
+    private Conductor? conductor;
+
+    private float lastHitTime;
+
+    public BeatHitEffect(IP5RLib p5rLib, HitTimingWindows hitWindows, EffectsHook effectsHook)
     {
         this.p5rLib = p5rLib;
-        this.timingWindow = timingWindow;
+        this.effectsHook = effectsHook;
+        this.hitWindows = hitWindows;
         this.effectEnabled = (bool*)Marshal.AllocHGlobal(sizeof(bool));
         *this.effectEnabled = false;
+
+        this.battle.ParticipantActed += (arg1, arg2) => this.OnParticipantActed((nint*)arg1, (void*)arg2);
     }
 
-    private float endTimeInSeconds;
-    public void Activate(Conductor conductor)
+    private void OnParticipantActed(nint* participantPtr, void* param2)
     {
-        this.endTimeInSeconds = (float)(conductor.SongPositionInSeconds + (this.timingWindow.TotalSeconds / 2));
-        *this.effectEnabled = true;
+        // Act event can fire before the hit window is set.
+        // Save last hit time then check if success in update.
+        this.lastHitTime = this.conductor?.SongPositionInSeconds ?? 0;
+        Log.Information($"Hit Time: {lastHitTime} || {(nint)participantPtr:X} / {*participantPtr:X} || {(nint)param2:X}");
+    }
+
+    private float hitTimeActual;
+
+    public float Activate(Conductor conductor)
+    {
+        this.conductor = conductor;
+        this.hitTimeActual = (float)(conductor.SongPositionInSeconds + this.hitWindows.GoodWindow.TotalSeconds);
+
+        var currentWholeBeat = Math.Round(conductor.SongPositionInBeats);
+        var nextActivation = (float)((currentWholeBeat + 2) * this.conductor.SecPerBeat) - this.hitWindows.GoodWindow.TotalSeconds;
+        return (float)nextActivation;
     }
 
     public void Deactivate()
@@ -303,38 +325,52 @@ internal unsafe class BeatHitEffect : IGameHook
         *this.effectEnabled = false;
     }
 
-    public void Update(Conductor conductor)
+    public void Update()
     {
-        if (conductor.SongPositionInSeconds > endTimeInSeconds)
+        if (this.lastHitTime != 0 && this.IsHitSuccessful(this.hitWindows.GoodWindow))
         {
-            this.Deactivate();
-        }
+            this.lastHitTime = 0;
+            this.p5rLib.FlowCaller.SET_COUNT(500, 1);
+            // this.p5rLib.FlowCaller.FLD_EFFECT_BANK_FREE(1);
+            //if (this.IsHitSuccessful(this.hitWindows.PerfectWindow))
+            //{
+            //    Log.Information("Perfect!");
+            //    this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(1, 51);
+            //}
+            //else if (this.IsHitSuccessful(this.hitWindows.GreatWindow))
+            //{
+            //    Log.Information("Great!");
+            //    this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(1, 55);
+            //}
+            //else
+            //{
+            //    Log.Information("Good!");
+            //    this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(1, 54);
+            //}
 
-        if (this.successEffect && this.currentEffect == null)
-        {
-            this.p5rLib.FlowCaller.FLD_EFFECT_BANK_FREE(1);
-            this.p5rLib.FlowCaller.FLD_EFFECT_BANK_LOAD(1, 51);
-            this.p5rLib.FlowCaller.FLD_EFFECT_BANK_SYNC(1);
-            this.currentEffect = this.p5rLib.FlowCaller.FLD_EFFECT_BANK_START(1);
+            //this.p5rLib.FlowCaller.FLD_EFFECT_BANK_SYNC(1);
+            //this.currentEffect = this.p5rLib.FlowCaller.FLD_EFFECT_BANK_START(1);
+            //this.successEffect = true;
             //var x = this.p5rLib.FlowCaller.FLD_CAMERA_GET_X_POS();
             //var y = this.p5rLib.FlowCaller.FLD_CAMERA_GET_Y_POS();
             //var z = this.p5rLib.FlowCaller.FLD_CAMERA_GET_Z_POS();
+            //this.p5rLib.FlowCaller.FLD_EFFECT_SET_POS((int)this.currentEffect, x, y, z);
 
-            //Log.Information($"X: {x} || Y: {y} || Z: {z}");
-            //this.p5rLib.FlowCaller.FLD_EFFECT_SET_POS((int)this.currentEffect, 400, 800, -300);
-            //this.p5rLib.FlowCaller.FLD_EFFECT_SET_ROT((int)this.currentEffect, 90, 90, 90);
-        }
-
-        if (this.currentEffect != null && conductor.SongPositionInSeconds > endTimeInSeconds + 0.5f)
-        {
-            //this.p5rLib.FlowCaller.FLD_EFFECT_END((int)this.currentEffect);
-            this.currentEffect = null;
-            this.successEffect = false;
+            //var bcd = this.p5rLib.FlowCaller.BTL_CUTSCENE_LOAD(779, 1);
+            //this.p5rLib.FlowCaller.BTL_CUTSCENE_LOADSYNC(bcd);
+            //this.p5rLib.FlowCaller.BTL_CUTSCENE_PLAY(bcd, 1, 0, 2, 0);
+            //this.p5rLib.FlowCaller.BTL_CUTSCENE_END(bcd);
+            //var bcd = this.p5rLib.FlowCaller.SCRIPT_READ(1, 2, 3);
+            //this.p5rLib.FlowCaller.SCRIPT_READ_SYNC(bcd);
+            //this.p5rLib.FlowCaller.SCRIPT_EXEC(bcd, 0);
+            //this.p5rLib.FlowCaller.SCRIPT_FREE(bcd);
         }
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
+        this.battle.Initialize(scanner, hooks);
+
         scanner.Scan("Set Post-Damage HP Hook", "89 5F ?? 41 F7 85 ?? ?? ?? ?? 00 80 00 00", result =>
         {
             var patch = new string[]
@@ -355,19 +391,31 @@ internal unsafe class BeatHitEffect : IGameHook
         });
     }
 
-    private string[] messages = new string[]
-    {
-        "Nice!",
-        "Perfect!",
-        "Awesome!",
-        "Feel the beat!",
-        "Flawless!",
-    };
-
     private int SetPostDamageHpImpl(int originalHp)
     {
-        Log.Information(this.messages[Random.Shared.Next(0, this.messages.Length)]);
-        this.successEffect = true;
         return 0;
+        return originalHp;
     }
+
+    private bool IsHitSuccessful(TimeSpan hitWindow)
+    {
+        var min = this.hitTimeActual - hitWindow.TotalSeconds;
+        var max = this.hitTimeActual + hitWindow.TotalSeconds;
+
+        if (this.lastHitTime >= min && this.lastHitTime <= max)
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+internal class HitTimingWindows
+{
+    public TimeSpan GoodWindow { get; } = TimeSpan.FromMilliseconds(142);
+
+    public TimeSpan GreatWindow { get; } = TimeSpan.FromMilliseconds(92);
+
+    public TimeSpan PerfectWindow { get; } = TimeSpan.FromMilliseconds(33);
 }
