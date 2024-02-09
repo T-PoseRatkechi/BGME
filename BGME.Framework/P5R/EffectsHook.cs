@@ -5,7 +5,7 @@ using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P5R;
 
-internal class FieldBankHook : IGameHook
+internal unsafe class EffectsHook : IGameHook
 {
     [Function(Register.r8, Register.rax, true)]
     private delegate nint SetFieldEffect(int id);
@@ -18,6 +18,8 @@ internal class FieldBankHook : IGameHook
         [51] = "BATTLE/EVENT/BCD/BATONTOUCH/bes_btn_touch_yuka4.EPL",
         [52] = "BATTLE/EVENT/BCD/HOLD_UP/ICON/BES_H_01.EPL",
         [53] = "BATTLE/EVENT/BCD/SP_GUN/bes_sp_bang_shita.EPL",
+        [54] = "BATTLE/EVENT/BCD/BATONTOUCH/bes_btn_touch_yuka.EPL",
+        [55] = "BATTLE/EVENT/BCD/BATONTOUCH/bes_btn_touch_yuka3.EPL",
     };
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
