@@ -1,8 +1,6 @@
-﻿using BGME.Framework.CRI;
-using BGME.Framework.Models;
+﻿using BGME.Framework.Models;
 using BGME.Framework.Music;
 using BGME.Framework.P5R.Rhythm;
-using p5rpc.lib.interfaces;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
@@ -22,35 +20,19 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     private delegate int GetVictoryBgmFunction(int defaultBgmId);
     private IReverseWrapper<GetVictoryBgmFunction>? victoryBgmWrapper;
 
-    private BeatHitEffect beatHitEffect;
     private IAsmHook? victoryBgmHook;
     private IAsmHook? victoryBgmHook2;
 
-    private readonly IP5RLib p5rLib;
-    private readonly CriAtomEx criAtomEx;
-    private readonly BgmPlayback bgm;
-    private readonly EffectsHook effectsHook;
+    private readonly RhythmGame? rhythmGame;
 
-    public EncounterBgm(
-        IP5RLib p5rLib,
-        MusicService music,
-        CriAtomEx criAtomEx,
-        BgmPlayback bgm,
-        EffectsHook effectsHook)
+    public EncounterBgm(MusicService music, RhythmGame? rhythmGame = null)
         : base(music)
     {
-        this.p5rLib = p5rLib;
-        this.criAtomEx = criAtomEx;
-        this.bgm = bgm;
-        this.beatHitEffect = new(p5rLib, effectsHook);
-        this.effectsHook = effectsHook;
-
+        this.rhythmGame = rhythmGame;
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
-        this.beatHitEffect.Initialize(scanner, hooks);
-
         var victoryBgmCall = hooks.Utilities.GetAbsoluteCallMnemonics(this.GetVictoryBgm, out this.victoryBgmWrapper);
         scanner.Scan("Encounter BGM", "8B 83 ?? ?? ?? ?? 3D 81 02 00 00", result =>
         {
@@ -114,7 +96,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 
     private void GetEncounterBgmIdImpl(nint encounterPtr)
     {
-        this.StartBattleBgm();
+        this.rhythmGame?.StartBattleBgm();
         var encounterId = (int*)(encounterPtr + 0x278);
         var context = (EncounterContext) (*(int*)(encounterPtr + 0x28c));
 
@@ -139,106 +121,5 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         *encounterBgmPtr = battleMusicId;
 
         Log.Debug($"Encounter BGM ID written: {battleMusicId}");
-    }
-
-    private Task? rhythmGameLoop;
-    private CancellationTokenSource rhythmGameLoopToken;
-
-    private void StartBattleBgm()
-    {
-        Log.Information("Starting Battle Rhythm Game");
-        this.initialPlaybackId = this.criAtomEx.Player_GetLastPlaybackId(this.bgm.BgmPlayer.PlayerHn);
-        Log.Information($"Initial BGM: {initialPlaybackId}");
-        this.battleBgmPlaybackId = null;
-
-        this.rhythmGameLoopToken = new();
-        this.rhythmGameLoop = Task.Run(() =>
-        {
-            var lastUpdate = DateTime.Now;
-            while (true)
-            {
-                var current = DateTime.Now;
-                var elapsedMs = (current - lastUpdate).TotalMilliseconds;
-                if (elapsedMs > 1)
-                {
-                    this.UpdateRhythmGame();
-                    lastUpdate = DateTime.Now;
-                }
-            }
-        }, this.rhythmGameLoopToken.Token);
-
-        this.rhythmGameLoopToken.Token.Register(() =>
-        {
-            this.initialPlaybackId = 0;
-            this.battleBgmPlaybackId = null;
-            this.beatsPlayed.Clear();
-            this.beatHitEffect.Deactivate();
-            this.p5rLib.FlowCaller.FLD_DASH_EFFECT(0);
-            this.nextHitActivation = 0;
-            Log.Information("Stopped Battle Rhythm Game");
-        });
-    }
-
-    private uint initialPlaybackId;
-    private uint? battleBgmPlaybackId;
-
-    private Conductor conductor = new();
-
-    private HashSet<int> beatsPlayed = new();
-    private int? currentEffect;
-
-    private float nextHitActivation = 0;
-
-    private void UpdateRhythmGame()
-    {
-        var currentPlaybackId = this.criAtomEx.Player_GetLastPlaybackId(this.bgm.BgmPlayer.PlayerHn);
-
-        // Wait for BGM to change.
-        if (this.initialPlaybackId == currentPlaybackId)
-        {
-            return;
-        }
-
-        // Set battle BGM playback ID.
-        else if (this.battleBgmPlaybackId == null)
-        {
-            Log.Information($"Battle BGM: {currentPlaybackId}");
-            this.battleBgmPlaybackId = currentPlaybackId;
-            this.conductor = new();
-            this.conductor.Start(125);
-        }
-
-        // End battle loop when BGM ends.
-        else if (currentPlaybackId != this.battleBgmPlaybackId)
-        {
-            Log.Information($"Current BGM: {currentPlaybackId}");
-            this.rhythmGameLoopToken.Cancel();
-        }
-
-        var currentBgmTime = this.criAtomEx.Playback_GetTimeSyncedWithAudio((uint)this.battleBgmPlaybackId!);
-        this.conductor.Update(currentBgmTime);
-        this.beatHitEffect.Update();
-
-        // Visual window logic.
-        var currentWholeBeat = (int)Math.Round(this.conductor.SongPositionInBeats);
-        if (!this.beatsPlayed.Contains(currentWholeBeat) && currentWholeBeat % 2 == 0)
-        {
-            this.beatsPlayed.Add(currentWholeBeat);
-
-            Log.Information($"Visual Beat: {this.conductor.SongPositionInSeconds}");
-            Log.Information($"Next Hit Beat: {this.conductor.SongPositionInSeconds}");
-            this.p5rLib.FlowCaller.FLD_DASH_EFFECT(1);
-        }
-        else
-        {
-            this.p5rLib.FlowCaller.FLD_DASH_EFFECT(0);
-        }
-
-        // Hit window logic.
-        if (this.conductor.SongPositionInSeconds >= this.nextHitActivation)
-        {
-            Log.Debug($"Current Hit: {this.nextHitActivation}");
-            this.nextHitActivation = this.beatHitEffect.Activate(conductor);
-        }
     }
 }

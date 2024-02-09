@@ -17,8 +17,6 @@ internal unsafe class BeatHitEffect : IGameHook
     private readonly IP5RLib p5rLib;
     private readonly EffectsHook effectsHook;
     private readonly bool* effectEnabled;
-    private int? currentEffect;
-    private bool successEffect = false;
 
     private readonly BattleHooks battle = new();
     private Conductor? conductor;
