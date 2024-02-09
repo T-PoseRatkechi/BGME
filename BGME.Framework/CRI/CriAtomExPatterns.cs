@@ -1,5 +1,4 @@
 ﻿using PersonaModdingMetadata.Shared.Games;
-using static BGME.Framework.CRI.CriAtomExFunctions;
 
 namespace BGME.Framework.CRI;
 

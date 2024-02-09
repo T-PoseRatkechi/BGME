@@ -1,6 +1,7 @@
 ﻿using BGME.Framework.CRI;
 using BGME.Framework.CRI.Types;
 using BGME.Framework.Music;
+using BGME.Framework.P5R.Rhythm;
 using p5rpc.lib.interfaces;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
@@ -16,17 +17,17 @@ internal class BgmeService : IBgmeService
     private readonly CriAtomEx criAtomEx;
     private readonly BgmPlayback bgm;
     private readonly EncounterBgm encounterBgm;
-    private readonly EffectsHook effectsHook;
     private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
     private PlayerConfig? bgmPlayer;
+
+    private readonly RhythmGame? rhythmGame;
 
     public BgmeService(IP5RLib p5rLib, CriAtomEx criAtomEx, MusicService music)
     {
         this.p5rLib = p5rLib;
         this.criAtomEx = criAtomEx;
         this.bgm = new(criAtomEx, music);
-        this.effectsHook = new();
-        this.encounterBgm = new(p5rLib, music, criAtomEx, bgm, effectsHook);
+        this.encounterBgm = new(music);
 
         criAtomEx.PropertyChanged += (sender, args) =>
         {
@@ -41,7 +42,6 @@ internal class BgmeService : IBgmeService
     {
         this.bgm.Initialize(scanner, hooks);
         this.encounterBgm.Initialize(scanner, hooks);
-        this.effectsHook.Initialize(scanner, hooks);
     }
 
     private unsafe void CriAtomExPlayer_SetCueId(nint player, nint acbHn, int cueId)

@@ -34,7 +34,7 @@ public class Mod : ModBase, IExports
     private readonly Game game;
     private readonly MusicService? music;
     private readonly MusicScriptsManager musicScripts = new();
-    private readonly CriAtomEx criAtomEx;
+    private readonly CriAtomEx? criAtomEx;
 
     public Mod(ModContext context)
     {
@@ -99,10 +99,10 @@ public class Mod : ModBase, IExports
 
     private void OnModLoading(IModV1 mod, IModConfigV1 config)
     {
-        //if (!config.ModDependencies.Contains(this.modConfig.ModId))
-        //{
-        //    return;
-        //}
+        if (!config.ModDependencies.Contains(this.modConfig.ModId))
+        {
+            return;
+        }
 
         var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
         var bgmeDir = Path.Join(modDir, "bgme");
