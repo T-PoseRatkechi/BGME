@@ -91,6 +91,12 @@ public class Mod : ModBase, IExports
                 this.bgme = new P5R.BgmeService(this.p5rLib, this.criAtomEx, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
+            case Game.P3R_PC:
+                this.criAtomEx = new CriAtomEx(game);
+                this.criAtomEx.Initialize(scanner!, this.hooks);
+                this.bgme = new P3R.BgmeService(this.criAtomEx, Path.Join(modDir, "test.hca"));
+                this.bgme.Initialize(scanner!, hooks);
+                break;
             default:
                 Log.Error($"Missing BGME service for game {game}.");
                 break;
