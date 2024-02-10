@@ -55,9 +55,10 @@ public class Mod : ModBase, IExports
         var appId = this.modLoader.GetAppConfig().AppId;
         this.game = GetGame(this.modLoader.GetAppConfig().AppId);
 
-        this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
-        this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
-        this.modLoader.GetController<IP5RLib>().TryGetTarget(out this.p5rLib!);
+        IStartupScanner? scanner = null;
+        this.modLoader.GetController<IStartupScanner>()?.TryGetTarget(out scanner);
+        this.modLoader.GetController<ICriFsRedirectorApi>()?.TryGetTarget(out this.criFsApi!);
+        this.modLoader.GetController<IP5RLib>()?.TryGetTarget(out this.p5rLib!);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         Setup.Start(this.criFsApi, modDir, game);
