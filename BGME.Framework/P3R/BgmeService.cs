@@ -44,7 +44,7 @@ internal unsafe class BgmeService : IBgmeService
             this.criAtomEx.Player_SetData(playerHn, (byte*)this.songBuffer, this.bufferSize);
             this.criAtomEx.Player_SetFormat(playerHn, CRIATOM_FORMAT.HCA);
             this.criAtomEx.Player_SetNumChannels(playerHn, 2);
-            this.criAtomEx.Player_SetSamplingRate(playerHn, 48000);
+            this.criAtomEx.Player_SetSamplingRate(playerHn, 41000);
         }
         else
         {
