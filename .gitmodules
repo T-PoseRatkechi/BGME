@@ -16,3 +16,6 @@
 [submodule "submodules/P5R.ModdingToolkit"]
 	path = submodules/P5R.ModdingToolkit
 	url = https://github.com/T-PoseRatkechi/P5R.ModdingToolkit.git
+[submodule "submodules/Ryo"]
+	path = submodules/Ryo
+	url = https://github.com/T-PoseRatkechi/Ryo.git
