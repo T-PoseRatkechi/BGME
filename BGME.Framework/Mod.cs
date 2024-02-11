@@ -29,7 +29,6 @@ public class Mod : ModBase, IExports
     private readonly Config config;
 
     private readonly ICriFsRedirectorApi criFsApi;
-    private readonly IP5RLib p5rLib;
     private readonly IBgmeService? bgme;
     private readonly Game game;
     private readonly MusicService? music;
@@ -55,10 +54,8 @@ public class Mod : ModBase, IExports
         var appId = this.modLoader.GetAppConfig().AppId;
         this.game = GetGame(this.modLoader.GetAppConfig().AppId);
 
-        IStartupScanner? scanner = null;
-        this.modLoader.GetController<IStartupScanner>()?.TryGetTarget(out scanner);
-        this.modLoader.GetController<ICriFsRedirectorApi>()?.TryGetTarget(out this.criFsApi!);
-        this.modLoader.GetController<IP5RLib>()?.TryGetTarget(out this.p5rLib!);
+        this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
+        this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         Setup.Start(this.criFsApi, modDir, game);
@@ -89,13 +86,8 @@ public class Mod : ModBase, IExports
             case Game.P5R_PC:
                 this.criAtomEx = new CriAtomEx(game);
                 this.criAtomEx.Initialize(scanner!, this.hooks);
-                this.bgme = new P5R.BgmeService(this.p5rLib, this.criAtomEx, this.music);
-                this.bgme.Initialize(scanner!, hooks);
-                break;
-            case Game.P3R_PC:
-                this.criAtomEx = new CriAtomEx(game);
-                this.criAtomEx.Initialize(scanner!, this.hooks);
-                this.bgme = new P3R.BgmeService(this.criAtomEx, Path.Join(modDir, "test.hca"));
+                this.modLoader.GetController<IP5RLib>().TryGetTarget(out var p5rLib);
+                this.bgme = new P5R.BgmeService(p5rLib!, this.criAtomEx, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             default:
@@ -106,11 +98,6 @@ public class Mod : ModBase, IExports
 
     private void OnModLoading(IModV1 mod, IModConfigV1 config)
     {
-        if (!config.ModDependencies.Contains(this.modConfig.ModId))
-        {
-            return;
-        }
-
         var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
         var bgmeDir = Path.Join(modDir, "bgme");
         if (Directory.Exists(bgmeDir))
