@@ -38,11 +38,7 @@ public class Mod : ModBase, IExports
     private void OnModLoading(IModV1 mod, IModConfigV1 config)
     {
         var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
-        var bgmeDir = Path.Join(modDir, "bgme");
-        if (Directory.Exists(bgmeDir))
-        {
-            this.musicScripts.AddPath(bgmeDir);
-        }
+        this.musicScripts.AddBgmeMod(config.ModId, modDir);
     }
 
     #region Standard Overrides

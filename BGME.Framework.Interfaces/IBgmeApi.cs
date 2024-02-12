@@ -44,4 +44,22 @@ public interface IBgmeApi
     /// <param name="callback">Callback to add.</param>
     /// <param name="originalCallback">Callback to replace.</param>
     void AddMusicScript(Func<string> callback, Func<string> originalCallback);
+
+    /// <summary>
+    /// Gets loaded BGME mods.
+    /// </summary>
+    /// <returns>BGME mods currently loaded.</returns>
+    BgmeMod[] GetLoadedMods();
+
+    /// <summary>
+    /// Gets loaded music scripts.
+    /// </summary>
+    /// <returns>Music scripts currently loaded.</returns>
+    string[] GetMusicScripts();
+
+    public Action<string[]>? MusicScriptsChanged { get; set; }
+
+    public Action<BgmeMod>? BgmeModLoading { get; set; }
 }
+
+public record BgmeMod(string ModId, string ModDir);

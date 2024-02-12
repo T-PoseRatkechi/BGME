@@ -8,6 +8,7 @@ namespace BGME.Framework.API.Music;
 
 internal class MusicScriptsManager : IBgmeApi
 {
+    private readonly List<BgmeMod> bgmeMods = new();
     private readonly ObservableCollection<IMusicScript> musicScripts = new();
     private readonly List<FileSystemWatcher> watchers = new();
     private readonly Timer musicReloadTimer = new(1000)
@@ -19,9 +20,49 @@ internal class MusicScriptsManager : IBgmeApi
     {
         this.musicScripts.CollectionChanged += this.OnMusicCollectionChanged;
         this.musicReloadTimer.Elapsed += (sender, args) => this.OnMusicScriptsChanged();
+
+        this.BgmeModLoading += (newMod) =>
+        {
+            this.bgmeMods.Add(newMod);
+        };
     }
 
-    public Action<string[]>? MusicScriptsChanged;
+    public Action<string[]>? MusicScriptsChanged { get; set; }
+
+    public Action<BgmeMod>? BgmeModLoading { get; set; }
+
+    public BgmeMod[] GetLoadedMods() => this.bgmeMods.ToArray();
+
+    public string[] GetMusicScripts()
+    {
+        var musicScripts = new List<string>();
+
+        // Reload music scripts.
+        foreach (var musicScript in this.musicScripts)
+        {
+            try
+            {
+                musicScript.AddMusic(musicScripts);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to add music script from source.");
+            }
+        }
+
+        return musicScripts.ToArray();
+    }
+
+    public void AddBgmeMod(string modId, string modDir)
+    {
+        this.BgmeModLoading?.Invoke(new(modId, modDir));
+
+        var bgmeDir = Path.Join(modDir, "bgme");
+        if (Directory.Exists(bgmeDir))
+        {
+            this.AddPath(bgmeDir);
+        }
+    }
 
     public void AddPath(string path)
     {
@@ -92,24 +133,7 @@ internal class MusicScriptsManager : IBgmeApi
         => this.RemovePath(folder);
 
     private void OnMusicScriptsChanged()
-    {
-        var musicScripts = new List<string>();
-
-        // Reload music scripts.
-        foreach (var musicScript in this.musicScripts)
-        {
-            try
-            {
-                musicScript.AddMusic(musicScripts);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to add music script from source.");
-            }
-        }
-
-        this.MusicScriptsChanged?.Invoke(musicScripts.ToArray());
-    }
+        => this.MusicScriptsChanged?.Invoke(this.GetMusicScripts());
 
     private void OnMusicCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
