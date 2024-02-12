@@ -1,5 +1,4 @@
-﻿using BGME.Framework.API.Configuration;
-using Reloaded.Mod.Interfaces;
+﻿using Reloaded.Mod.Interfaces;
 
 namespace BGME.Framework.API.Template.Configuration
 {

@@ -1,5 +1,4 @@
-﻿using BGME.Framework.API.Configuration;
-using Reloaded.Mod.Interfaces;
+﻿using Reloaded.Mod.Interfaces;
 using IReloadedHooks = Reloaded.Hooks.ReloadedII.Interfaces.IReloadedHooks;
 
 namespace BGME.Framework.API.Template

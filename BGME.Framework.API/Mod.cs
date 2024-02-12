@@ -1,11 +1,14 @@
-﻿using BGME.Framework.API.Configuration;
+﻿using BGME.Framework.API.Music;
 using BGME.Framework.API.Template;
+using BGME.Framework.Interfaces;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Reloaded.Mod.Interfaces.Internal;
+using System.Drawing;
 
 namespace BGME.Framework.API;
 
-public class Mod : ModBase
+public class Mod : ModBase, IExports
 {
     private readonly IModLoader modLoader;
     private readonly IReloadedHooks? hooks;
@@ -14,6 +17,7 @@ public class Mod : ModBase
 
     private Config config;
     private readonly IModConfig modConfig;
+    private readonly MusicScriptsManager musicScripts = new();
 
     public Mod(ModContext context)
     {
@@ -23,6 +27,22 @@ public class Mod : ModBase
         this.owner = context.Owner;
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
+
+        Log.Initialize("BGME Framework API", this.log, Color.LightBlue);
+        Log.LogLevel = this.config.LogLevel;
+
+        this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, this.musicScripts);
+        this.modLoader.ModLoading += this.OnModLoading;
+    }
+
+    private void OnModLoading(IModV1 mod, IModConfigV1 config)
+    {
+        var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
+        var bgmeDir = Path.Join(modDir, "bgme");
+        if (Directory.Exists(bgmeDir))
+        {
+            this.musicScripts.AddPath(bgmeDir);
+        }
     }
 
     #region Standard Overrides
@@ -32,7 +52,11 @@ public class Mod : ModBase
         // ... your code here.
         config = configuration;
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
+        Log.LogLevel = this.config.LogLevel;
     }
+
+    public Type[] GetTypes() => new Type[] { typeof(IBgmeApi) };
+
     #endregion
 
     #region For Exports, Serialization etc.

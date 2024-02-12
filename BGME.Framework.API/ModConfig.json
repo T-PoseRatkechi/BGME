@@ -10,11 +10,30 @@
   "ModR2RManagedDll64": "x64/BGME.Framework.API.dll",
   "ModNativeDll32": "",
   "ModNativeDll64": "",
-  "IsLibrary": false,
+  "Tags": [],
+  "CanUnload": null,
+  "HasExports": true,
+  "IsLibrary": true,
   "ReleaseMetadataFileName": "BGME.Framework.API.ReleaseMetadata.json",
-  "PluginData": {},
-  "IsUniversalMod": false,
-  "ModDependencies": [ "reloaded.sharedlib.hooks" ],
+  "PluginData": {
+    "GitHubDependencies": {
+      "IdToConfigMap": {
+        "reloaded.sharedlib.hooks": {
+          "Config": {
+            "UserName": "Sewer56",
+            "RepositoryName": "Reloaded.SharedLib.Hooks.ReloadedII",
+            "UseReleaseTag": true,
+            "AssetFileName": "reloaded.sharedlib.hooks.zip"
+          },
+          "ReleaseMetadataName": "Sewer56.Update.ReleaseMetadata.json"
+        }
+      }
+    }
+  },
+  "IsUniversalMod": true,
+  "ModDependencies": [
+    "reloaded.sharedlib.hooks"
+  ],
   "OptionalDependencies": [],
   "SupportedAppId": [],
   "ProjectUrl": ""

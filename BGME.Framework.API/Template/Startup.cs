@@ -3,7 +3,6 @@
  * to make it easier to upgrade to newer versions of the template.
 */
 
-using BGME.Framework.API.Configuration;
 using BGME.Framework.API.Template.Configuration;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;

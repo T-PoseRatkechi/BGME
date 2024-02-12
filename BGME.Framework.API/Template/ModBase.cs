@@ -1,6 +1,4 @@
-﻿using BGME.Framework.API.Configuration;
-
-namespace BGME.Framework.API.Template
+﻿namespace BGME.Framework.API.Template
 {
     /// <summary>
     /// Base class for implementing mod functionality.
