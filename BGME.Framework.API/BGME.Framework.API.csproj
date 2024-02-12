@@ -44,7 +44,13 @@
 
   <ItemGroup>
     <PackageReference Include="Reloaded.Mod.Interfaces" Version="2.4.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Reloaded.Mod.Loader.IO" Version="2.5.0" />
     <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BGME.Framework.Interfaces\BGME.Framework.Interfaces.csproj" />
+    <ProjectReference Include="..\submodules\Project.Utils\Project.Utils.csproj" />
   </ItemGroup>
 
 </Project>
