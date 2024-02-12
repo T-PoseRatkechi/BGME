@@ -1,4 +1,5 @@
-﻿using PersonaMusicScript.Library;
+﻿using BGME.Framework.Interfaces;
+using PersonaMusicScript.Library;
 using PersonaMusicScript.Types;
 using PersonaMusicScript.Types.Music;
 using PersonaMusicScript.Types.MusicCollections;
@@ -10,25 +11,27 @@ internal class MusicService
     private readonly MusicParser parser;
     private readonly MusicResources resources;
     private readonly IFileBuilder? fileBuilder;
-    private readonly MusicScriptsManager musicScripts;
+    private readonly IBgmeApi bgmeApi;
     private readonly bool hotReload;
 
     private MusicSource currentMusic;
 
     public MusicService(
         MusicResources resources,
-        MusicScriptsManager musicScripts,
+        IBgmeApi musicScripts,
         IFileBuilder? fileBuilder = null,
         bool hotReload = false)
     {
         this.resources = resources;
-        this.musicScripts = musicScripts;
+        this.bgmeApi = musicScripts;
         this.fileBuilder = fileBuilder;
         this.hotReload = hotReload;
 
         this.parser = new(resources);
         this.currentMusic = new(resources);
-        this.musicScripts.MusicScriptsChanged += this.OnMusicScriptsChanged;
+
+        this.OnMusicScriptsChanged(this.bgmeApi.GetMusicScripts());
+        this.bgmeApi.MusicScriptsChanged += this.OnMusicScriptsChanged;
     }
 
     private void OnMusicScriptsChanged(string[] newMusicScripts)
