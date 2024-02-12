@@ -10,14 +10,13 @@ using PersonaMusicScript.Types;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
-using Reloaded.Mod.Interfaces.Internal;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text.RegularExpressions;
 
 namespace BGME.Framework;
 
-public class Mod : ModBase, IExports
+public class Mod : ModBase
 {
     private static readonly Regex numReg = new(@"\d+");
 
@@ -28,11 +27,12 @@ public class Mod : ModBase, IExports
     private readonly IModConfig modConfig;
     private readonly Config config;
 
+    private readonly IBgmeApi bgmeApi;
     private readonly ICriFsRedirectorApi criFsApi;
+
     private readonly IBgmeService? bgme;
     private readonly Game game;
     private readonly MusicService? music;
-    private readonly MusicScriptsManager musicScripts = new();
     private readonly CriAtomEx? criAtomEx;
 
     public Mod(ModContext context)
@@ -44,7 +44,7 @@ public class Mod : ModBase, IExports
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
 
-        Log.Initialize("BGME Framework", this.logger, Color.AliceBlue);
+        Log.Initialize("BGME Framework", this.logger, Color.LightBlue);
         Log.LogLevel = this.config.LogLevel;
 
 #if DEBUG
@@ -58,19 +58,23 @@ public class Mod : ModBase, IExports
         this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
-        Setup.Start(this.criFsApi, modDir, game);
 
         var musicResources = new MusicResources(game, modDir);
         var fileBuilder = GetGameBuilder(this.criFsApi, modDir, game);
 
-        this.music = new(musicResources, this.musicScripts, fileBuilder, this.config.HotReload);
-        this.modLoader.AddOrReplaceController<IBgmeApi>(this.owner, musicScripts);
+        this.modLoader.GetController<IBgmeApi>().TryGetTarget(out this.bgmeApi!);
+        this.music = new(musicResources, bgmeApi!, fileBuilder, this.config.HotReload);
 
-        this.modLoader.ModLoading += this.OnModLoading;
         this.modLoader.OnModLoaderInitialized += () =>
         {
             fileBuilder?.Build(this.music);
         };
+
+        this.bgmeApi.BgmeModLoading += this.OnBgmeModLoading;
+        foreach (var mod in this.bgmeApi.GetLoadedMods())
+        {
+            this.OnBgmeModLoading(mod);
+        }
 
         switch (game)
         {
@@ -96,21 +100,14 @@ public class Mod : ModBase, IExports
         }
     }
 
-    private void OnModLoading(IModV1 mod, IModConfigV1 config)
+    private void OnBgmeModLoading(BgmeMod mod)
     {
-        var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
-        var bgmeDir = Path.Join(modDir, "bgme");
-        if (Directory.Exists(bgmeDir))
-        {
-            this.musicScripts.AddPath(bgmeDir);
-        }
-
         // Bind FEmulator/AWB with CriFs.
         if (this.game == Game.P5R_PC)
         {
             Log.Debug("Binding BGM_42.AWB files.");
 
-            var awbDir = Path.Join(modDir, "FEmulator", "AWB", "BGM_42.AWB");
+            var awbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "BGM_42.AWB");
             if (Directory.Exists(awbDir))
             {
                 foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
@@ -121,13 +118,13 @@ public class Mod : ModBase, IExports
                 }
             }
 
-            var awbDir2 = Path.Join(modDir, "bgme", "p5r");
+            var awbDir2 = Path.Join(mod.ModDir, "bgme", "p5r");
             if (Directory.Exists(awbDir2))
             {
                 foreach (var file in Directory.EnumerateFiles(awbDir2, "*.adx"))
                 {
                     var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                    var bindPath = Path.GetRelativePath(modDir, file);
+                    var bindPath = Path.GetRelativePath(mod.ModDir, file);
                     this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
                 }
             }
@@ -136,17 +133,17 @@ public class Mod : ModBase, IExports
         {
             Log.Debug("Binding BGME P4G music.");
 
-            var p4gMusicDir = Path.Join(modDir, "bgme", "p4g");
+            var p4gMusicDir = Path.Join(mod.ModDir, "bgme", "p4g");
             if (Directory.Exists(p4gMusicDir))
             {
                 foreach (var file in Directory.EnumerateFiles(p4gMusicDir, "*.hca"))
                 {
-                    var bindPath = Path.GetRelativePath(modDir, file);
+                    var bindPath = Path.GetRelativePath(mod.ModDir, file);
                     this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
                 }
             }
 
-            var p4gAwbDir = Path.Join(modDir, "FEmulator", "AWB", "snd00_bgm.awb");
+            var p4gAwbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "snd00_bgm.awb");
             if (Directory.Exists(p4gAwbDir))
             {
                 foreach (var file in Directory.EnumerateFiles(p4gAwbDir, "*.hca"))
@@ -195,8 +192,6 @@ public class Mod : ModBase, IExports
             _ => null
         };
     }
-
-    public Type[] GetTypes() => new[] { typeof(IBgmeApi) };
 
     #region Standard Overrides
     public override void ConfigurationUpdated(Config configuration)
