@@ -1,10 +1,10 @@
-﻿using BGME.Framework.Interfaces;
-using BGME.Framework.Music.MusicScripts;
+﻿using BGME.Framework.API.Music.MusicScripts;
+using BGME.Framework.Interfaces;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Timer = System.Timers.Timer;
 
-namespace BGME.Framework.Music;
+namespace BGME.Framework.API.Music;
 
 internal class MusicScriptsManager : IBgmeApi
 {
@@ -29,7 +29,7 @@ internal class MusicScriptsManager : IBgmeApi
         {
             var pathMusicScript = new PathMusicScript(path);
             this.musicScripts.Add(pathMusicScript);
-            var watcher = MusicUtils.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), pathMusicScript.IsFile ? null : "*.pme");
+            var watcher = Utils.CreateWatch(path, (sender, arg) => this.OnMusicChanged(), pathMusicScript.IsFile ? null : "*.pme");
             this.watchers.Add(watcher);
         }
     }

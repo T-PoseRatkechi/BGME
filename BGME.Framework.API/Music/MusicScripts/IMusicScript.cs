@@ -1,4 +1,4 @@
-﻿namespace BGME.Framework.Music.MusicScripts;
+﻿namespace BGME.Framework.API.Music.MusicScripts;
 
 internal interface IMusicScript
 {
