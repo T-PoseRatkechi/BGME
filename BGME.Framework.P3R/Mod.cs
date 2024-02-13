@@ -74,7 +74,7 @@ public class Mod : ModBase
 
     private void OnBgmeModLoading(BgmeMod mod)
     {
-        var bgmeMusicDir = Path.Join(mod.ModDir, "bgme", "p3r", "music");
+        var bgmeMusicDir = Path.Join(mod.ModDir, "bgme", "p3r");
         if (Directory.Exists(bgmeMusicDir))
         {
             this.ryo.AddAudioFolder(bgmeMusicDir);
