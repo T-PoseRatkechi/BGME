@@ -1,5 +1,5 @@
 ﻿namespace BGME.Framework;
 
-internal interface IBgmeService : IGameHook
+public interface IBgmeService : IGameHook
 {
 }

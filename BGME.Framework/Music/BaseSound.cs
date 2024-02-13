@@ -2,7 +2,7 @@
 
 namespace BGME.Framework.Music;
 
-internal abstract class BaseSound
+public abstract class BaseSound
 {
     private readonly MusicService music;
 

@@ -1,6 +1,6 @@
 ﻿namespace BGME.Framework.Music;
 
-internal interface IFileBuilder
+public interface IFileBuilder
 {
     void Build(MusicService music);
 }

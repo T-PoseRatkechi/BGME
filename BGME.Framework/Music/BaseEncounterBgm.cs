@@ -3,7 +3,7 @@ using PersonaMusicScript.Types.MusicCollections.Entries;
 
 namespace BGME.Framework.Music;
 
-internal abstract class BaseEncounterBgm
+public abstract class BaseEncounterBgm
 {
     private readonly MusicService music;
     private EncounterMusic? currentEncounterMusic;

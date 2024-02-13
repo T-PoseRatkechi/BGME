@@ -6,7 +6,7 @@ using PersonaMusicScript.Types.MusicCollections;
 
 namespace BGME.Framework.Music;
 
-internal class MusicService
+public class MusicService
 {
     private readonly MusicParser parser;
     private readonly MusicResources resources;
