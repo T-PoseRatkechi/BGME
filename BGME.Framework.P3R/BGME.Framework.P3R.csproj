@@ -47,4 +47,9 @@
     <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.9.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BGME.Framework\BGME.Framework.csproj" />
+    <ProjectReference Include="..\submodules\Ryo\Ryo.Interfaces\Ryo.Interfaces.csproj" />
+  </ItemGroup>
+
 </Project>

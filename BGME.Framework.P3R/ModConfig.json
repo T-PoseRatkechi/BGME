@@ -13,7 +13,7 @@
   "Tags": [],
   "CanUnload": null,
   "HasExports": null,
-  "IsLibrary": true,
+  "IsLibrary": false,
   "ReleaseMetadataFileName": "BGME.Framework.P3R.ReleaseMetadata.json",
   "PluginData": {
     "GitHubDependencies": {
@@ -42,7 +42,9 @@
   "IsUniversalMod": false,
   "ModDependencies": [
     "Reloaded.Memory.SigScan.ReloadedII",
-    "reloaded.sharedlib.hooks"
+    "reloaded.sharedlib.hooks",
+    "BGME.Framework.API",
+    "Ryo.Reloaded"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [
