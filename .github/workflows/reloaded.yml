@@ -25,9 +25,14 @@ env:
   RELOADEDIIMODS: .
   PUBLISH_COMMON_PATH: ./Publish/ToUpload/
 
-  PUBLISH_GAMEBANANA_PATH: ./Publish/ToUpload/GameBanana
-  PUBLISH_GITHUB_PATH: ./Publish/ToUpload/Generic
-  PUBLISH_NUGET_PATH: ./Publish/ToUpload/NuGet
+  PUBLISH_GAMEBANANA_FRAMEWORK_PATH: ./Publish/ToUpload/Framework/GameBanana
+  PUBLISH_GITHUB_FRAMEWORK_PATH: ./Publish/ToUpload/Framework/Generic
+
+  PUBLISH_GAMEBANANA_FRAMEWORK_P3R_PATH: ./Publish/ToUpload/Framework.P3R/GameBanana
+  PUBLISH_GITHUB_FRAMEWORK_P3R_PATH: ./Publish/ToUpload/Framework.P3R/Generic
+
+  PUBLISH_GAMEBANANA_FRAMEWORK_API_PATH: ./Publish/ToUpload/Framework.API/GameBanana
+  PUBLISH_GITHUB_FRAMEWORK_API_PATH: ./Publish/ToUpload/Framework.API/Generic
   
   PUBLISH_CHANGELOG_PATH: ./Publish/Changelog.md
   PUBLISH_PATH: ./Publish
@@ -49,7 +54,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-        submodules: 'recursive'
+        submodules: 'true'
         
     - name: Setup .NET Core SDK (5.0)
       uses: actions/setup-dotnet@v3
@@ -80,10 +85,10 @@ jobs:
         }
         
     - name: Build
-      run: ./BGME.Framework/Publish.ps1
+      run: ./Publish.ps1
 
-    - name: Copy Build
-      run: Copy-Item -Force -Path "./BGME.Framework/Publish/*" -Destination "./Publish" -Recurse
+#    - name: Copy Build
+#      run: Copy-Item -Force -Path "${{ env.PROJECT_DIR }}/Publish/*" -Destination "./Publish" -Recurse
 
     - name: Upload GitHub Release Artifact
       uses: actions/upload-artifact@v2.2.4
@@ -92,7 +97,9 @@ jobs:
         name: GitHub Release
         # A file, directory or wildcard pattern that describes what to upload
         path: |
-          ${{ env.PUBLISH_GITHUB_PATH }}/*
+          ${{ env.PUBLISH_GITHUB_FRAMEWORK_PATH }}/*
+          ${{ env.PUBLISH_GITHUB_FRAMEWORK_P3R_PATH }}/*
+          ${{ env.PUBLISH_GITHUB_FRAMEWORK_API_PATH }}/*
           
     - name: Upload GameBanana Release Artifact
       uses: actions/upload-artifact@v2.2.4
@@ -101,7 +108,9 @@ jobs:
         name: GameBanana Release
         # A file, directory or wildcard pattern that describes what to upload
         path: |
-          ${{ env.PUBLISH_GAMEBANANA_PATH }}/*
+          ${{ env.PUBLISH_GAMEBANANA_FRAMEWORK_PATH }}/*
+          ${{ env.PUBLISH_GAMEBANANA_FRAMEWORK_P3R_PATH }}/*
+          ${{ env.PUBLISH_GAMEBANANA_FRAMEWORK_API_PATH }}/*
 
     - name: Upload Changelog Artifact
       uses: actions/upload-artifact@v2.2.4
@@ -127,8 +136,6 @@ jobs:
       with:
         name: GitHub Release
         path: release
-    - name: dir
-      run: dir -s
     - name: Upload to GitHub Releases (on Tag)
       uses: softprops/action-gh-release@v0.1.14
       if: env.IS_RELEASE == 'true'
