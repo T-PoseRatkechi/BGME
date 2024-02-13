@@ -50,6 +50,13 @@
             "ItemId": 495507
           },
           "ReleaseMetadataName": "Ryo.Reloaded.ReleaseMetadata.json"
+        },
+        "BGME.Framework.API": {
+          "Config": {
+            "ItemType": "Mod",
+            "ItemId": 477399
+          },
+          "ReleaseMetadataName": "BGME.Framework.API.ReleaseMetadata.json"
         }
       }
     }
