@@ -111,19 +111,6 @@ jobs:
           ${{ env.PUBLISH_GAMEBANANA_FRAMEWORK_P3R_PATH }}/*
           ${{ env.PUBLISH_GAMEBANANA_FRAMEWORK_API_PATH }}/*
 
-    - name: Upload to GitHub Releases (on Tag)
-      uses: softprops/action-gh-release@v0.1.14
-      if: env.IS_RELEASE == 'true'
-      with:
-        token: ${{ github.bgme-release }}
-        # Path to load note-worthy description of changes in release from
-        body_path: ${{ env.PUBLISH_CHANGELOG_PATH }}
-        # Newline-delimited list of path globs for asset files to upload
-        files: |
-          ${{ env.PUBLISH_GITHUB_FRAMEWORK_PATH }}/*
-          ${{ env.PUBLISH_GITHUB_FRAMEWORK_P3R_PATH }}/*
-          ${{ env.PUBLISH_GITHUB_FRAMEWORK_API_PATH }}/*
-
     - name: Upload Changelog Artifact
       uses: actions/upload-artifact@v2.2.4
       with:
@@ -132,3 +119,27 @@ jobs:
         # A file, directory or wildcard pattern that describes what to upload
         path: ${{ env.PUBLISH_CHANGELOG_PATH }}
         retention-days: 0
+
+  github_release:
+    needs: build
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Get changelog
+      uses: actions/download-artifact@v3
+      with:
+        name: Changelog
+    - name: Get release
+      uses: actions/download-artifact@v3
+      with:
+        name: GitHub Release
+        path: release
+    - name: Upload to GitHub Releases (on Tag)
+      uses: softprops/action-gh-release@v0.1.14
+      if: env.IS_RELEASE == 'true'
+      with:
+        # Path to load note-worthy description of changes in release from
+        body_path: "Changelog.md"
+        # Newline-delimited list of path globs for asset files to upload
+        files: release/**
