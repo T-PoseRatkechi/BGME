@@ -85,7 +85,7 @@ jobs:
         }
         
     - name: Build
-      run: ./Publish.ps1
+      run: ./PublishAll.ps1
 
 #    - name: Copy Build
 #      run: Copy-Item -Force -Path "${{ env.PROJECT_DIR }}/Publish/*" -Destination "./Publish" -Recurse
