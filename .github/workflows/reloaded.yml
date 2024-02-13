@@ -22,7 +22,6 @@ on:
   workflow_dispatch:
 
 env: 
-  RELOADEDIIMODS: .
   PUBLISH_COMMON_PATH: ./Publish/ToUpload/
 
   PUBLISH_GAMEBANANA_FRAMEWORK_PATH: ./Publish/ToUpload/Framework/GameBanana
