@@ -46,7 +46,7 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
             return;
         }
 
-        if (cueId >= 400)
+        if (currentBgmId >= 400)
         {
             // Manually play.
             var player = this.criAtomEx.GetPlayerById(0);
