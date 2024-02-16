@@ -10,8 +10,8 @@ namespace BGME.Framework.P3R.P3R;
 internal unsafe class BgmPlayback : BaseSound, IGameHook
 {
     [Function(CallingConventions.Microsoft)]
-    private delegate void PlayCueId(nint param1, int param2, int param3, int cueId);
-    private IHook<PlayCueId>? playCueHook;
+    private delegate void PlayBgmFunction(int bgmId);
+    private IHook<PlayBgmFunction>? playBgmHook;
 
     private readonly ICriAtomEx criAtomEx;
 
@@ -24,23 +24,20 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
         scanner.Scan(
-            "PlayCueId Function",
-            "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 45 31 D2",
+            "Play Aria of the Soul Function",
+            "40 53 48 83 EC 20 F3 0F 58 49",
         result =>
         {
-            this.playCueHook = hooks.CreateHook<PlayCueId>(this.PlayCueIdImpl, result).Activate();
+            var thunkFunc = *(int*)(result + 0x4a + 1) + result + 0x4a + 5;
+            thunkFunc = *(int*)(thunkFunc + 1) + thunkFunc + 5;
+            var actual = thunkFunc = *(int*)(thunkFunc + 1) + thunkFunc + 5;
+            this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, actual).Activate();
         });
     }
 
-    private void PlayCueIdImpl(nint param1, int param2, int param3, int cueId)
+    protected override void PlayBgm(int bgmId)
     {
-        if (param2 != 0 || param3 != 0)
-        {
-            this.playCueHook!.OriginalFunction(param1, param2, param3, cueId);
-            return;
-        }
-
-        var currentBgmId = this.GetGlobalBgmId(cueId);
+        var currentBgmId = this.GetGlobalBgmId(bgmId);
         if (currentBgmId == null)
         {
             return;
@@ -49,19 +46,14 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
         if (currentBgmId >= 400)
         {
             // Manually play.
-            var player = this.criAtomEx.GetPlayerById(0);
+            var player = this.criAtomEx.GetPlayerById(0)!;
             var strPtr = StringsCache.GetStringPtr($"{currentBgmId}");
             this.criAtomEx.Player_SetCueName(player.PlayerHn, 0, (byte*)strPtr);
             this.criAtomEx.Player_Start(player.PlayerHn);
         }
         else
         {
-            this.playCueHook!.OriginalFunction(param1, param2, param3, (int)currentBgmId);
+            this.playBgmHook!.OriginalFunction(bgmId);
         }
-    }
-
-    protected override void PlayBgm(int bgmId)
-    {
-        throw new NotImplementedException();
     }
 }
