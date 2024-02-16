@@ -43,7 +43,7 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
             return;
         }
 
-        if (currentBgmId >= 400)
+        if (currentBgmId >= 400 && NotDlcBgm(bgmId))
         {
             // Manually play.
             var player = this.criAtomEx.GetPlayerById(0)!;
@@ -53,7 +53,10 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
         }
         else
         {
-            this.playBgmHook!.OriginalFunction(bgmId);
+            this.playBgmHook!.OriginalFunction((int)currentBgmId);
         }
     }
+
+    private static bool NotDlcBgm(int bgmId)
+        => bgmId >= 1000 && bgmId <= 1100;
 }
