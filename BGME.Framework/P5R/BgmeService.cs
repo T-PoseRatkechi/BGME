@@ -52,7 +52,7 @@ internal class BgmeService : IBgmeService
         {
             Log.Debug($"{nameof(CriAtomExPlayer_SetCueId)}|BGME: {this.bgmPlayer.PlayerHn:X} || {acbHn:X} || {cueId}");
 
-            var bgmFile = GetBgmFile(cueId);
+            var bgmFile = $"BGME/P5R/{cueId}.adx";
             var format = Path.GetExtension(bgmFile) == ".hca" ? CRIATOM_FORMAT.HCA : CRIATOM_FORMAT.ADX;
             var ptr = StringsCache.GetStringPtr(bgmFile);
 
@@ -66,16 +66,5 @@ internal class BgmeService : IBgmeService
         {
             this.setCueIdHook!.OriginalFunction(player, acbHn, cueId);
         }
-    }
-
-    private static string GetBgmFile(int bgmId)
-    {
-        // Handle legacy BGM IDs.
-        if (bgmId >= 10000 && bgmId <= 19999)
-        {
-            return $"BGME/P5R/BGM_42/{bgmId - EXTENDED_BGM_ID}.adx";
-        }
-
-        return $"BGME/P5R/{bgmId}.adx";
     }
 }
