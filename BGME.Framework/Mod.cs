@@ -124,7 +124,7 @@ public class Mod : ModBase
                 foreach (var file in Directory.EnumerateFiles(awbDir2, "*.adx"))
                 {
                     var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                    var bindPath = Path.GetRelativePath(mod.ModDir, file);
+                    var bindPath = $"BGME/P5R/{fileNameIndex}.adx";
                     this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
                 }
             }
