@@ -105,11 +105,10 @@ public class Mod : ModBase
         // Bind FEmulator/AWB with CriFs.
         if (this.game == Game.P5R_PC)
         {
-            Log.Debug("Binding BGM_42.AWB files.");
-
             var awbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "BGM_42.AWB");
             if (Directory.Exists(awbDir))
             {
+                Log.Debug("Binding BGM_42.AWB files.");
                 foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
                 {
                     var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
@@ -121,6 +120,7 @@ public class Mod : ModBase
             var awbDir2 = Path.Join(mod.ModDir, "bgme", "p5r");
             if (Directory.Exists(awbDir2))
             {
+                Log.Debug("Binding P5R files.");
                 foreach (var file in Directory.EnumerateFiles(awbDir2, "*.adx"))
                 {
                     var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
