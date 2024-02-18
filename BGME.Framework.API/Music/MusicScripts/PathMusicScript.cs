@@ -29,7 +29,7 @@ internal class PathMusicScript : IMusicScript
             foreach (var file in files)
             {
                 musicScripts.Add(File.ReadAllText(file));
-                Log.Debug($"Added music script from file.\nFile: {this.MusicPath}");
+                Log.Debug($"Added music script from file.\nFile: {file}");
             }
         }
     }

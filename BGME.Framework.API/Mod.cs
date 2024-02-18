@@ -4,6 +4,7 @@ using BGME.Framework.Interfaces;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Reloaded.Mod.Interfaces.Internal;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace BGME.Framework.API;
@@ -27,6 +28,10 @@ public class Mod : ModBase, IExports
         this.owner = context.Owner;
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
+
+#if DEBUG
+        Debugger.Launch();
+#endif
 
         Log.Initialize("BGME Framework API", this.log, Color.LightBlue);
         Log.LogLevel = this.config.LogLevel;
