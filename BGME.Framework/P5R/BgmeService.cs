@@ -61,6 +61,7 @@ internal class BgmeService : IBgmeService
             this.criAtomEx.Player_SetNumChannels(this.bgmPlayer.PlayerHn, 2);
             this.criAtomEx.Player_SetSamplingRate(this.bgmPlayer.PlayerHn, 48000);
             this.criAtomEx.Player_SetCategoryById(this.bgmPlayer.PlayerHn, 1);
+            this.criAtomEx.Player_SetCategoryById(this.bgmPlayer.PlayerHn, 8);
         }
         else
         {
