@@ -14,10 +14,11 @@ internal class BgmeService : IBgmeService, IGameHook
     private readonly CriAtomEx criAtomEx;
     private readonly MusicService music;
 
-    private BgmPlayback bgm;
-    private EncounterBgm encounterPatcher;
-    private FloorBgm floorPatcher;
-    private EventBgm eventBgm;
+    private readonly BgmPlayback bgm;
+    private readonly EncounterBgm encounterPatcher;
+    private readonly FloorBgm floorPatcher;
+    private readonly EventBgm eventBgm;
+    private LegacySound sound;
 
     private IHook<criAtomExPlayer_SetCueId>? setCueIdHook;
     private PlayerConfig? bgmPlayer;
@@ -33,19 +34,19 @@ internal class BgmeService : IBgmeService, IGameHook
         this.floorPatcher = new(music);
         this.eventBgm = new(this.bgm, music);
 
-        this.criAtomEx.SetPlayerConfigById(0, new()
-        {
-            maxPath = 512,
-            maxPathStrings = 2,
-        });
+        //this.criAtomEx.SetPlayerConfigById(0, new()
+        //{
+        //    maxPath = 512,
+        //    maxPathStrings = 2,
+        //});
 
-        criAtomEx.PropertyChanged += (sender, args) =>
-        {
-            if (args.PropertyName == nameof(criAtomEx.SetCueId))
-            {
-                this.setCueIdHook = criAtomEx.SetCueId!.Hook(this.CriAtomExPlayer_SetCueId).Activate();
-            }
-        };
+        //criAtomEx.PropertyChanged += (sender, args) =>
+        //{
+        //    if (args.PropertyName == nameof(criAtomEx.SetCueId))
+        //    {
+        //        this.setCueIdHook = criAtomEx.SetCueId!.Hook(this.CriAtomExPlayer_SetCueId).Activate();
+        //    }
+        //};
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
@@ -54,6 +55,7 @@ internal class BgmeService : IBgmeService, IGameHook
         this.encounterPatcher.Initialize(scanner, hooks);
         this.floorPatcher.Initialize(scanner, hooks);
         this.eventBgm.Initialize(scanner, hooks);
+        this.sound = new(hooks, scanner, this.music);
     }
 
     private unsafe void CriAtomExPlayer_SetCueId(nint player, nint acbHn, int cueId)
@@ -77,6 +79,7 @@ internal class BgmeService : IBgmeService, IGameHook
             // Does not respect music volume level though.
             // Does not respect ANY KIND OF VOLUME setting...
             this.criAtomEx.Player_SetCategoryById(player, 13);
+            this.criAtomEx.Player_SetCategoryById(player, 6);
         }
         else
         {
