@@ -12,9 +12,13 @@ namespace BGME.Framework.P3R.P3R;
 internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 {
     [Function(new Register[] { Register.rdi, Register.r8 }, Register.rax, true)]
-    private delegate ushort GetEncounterBgm(Encounter* encounter, EncounterStage stage);
+    private delegate ushort GetEncounterBgm(UBtlCoreComponent* encounter, EncounterStage stage);
     private IReverseWrapper<GetEncounterBgm>? encounterBgmWrapper;
     private IAsmHook? encounterBgmHook;
+
+    [Function(CallingConventions.Microsoft)]
+    private delegate void UBtlCoreComponent_FadeoutBGM(UBtlCoreComponent* btlCore, uint param2);
+    private IHook<UBtlCoreComponent_FadeoutBGM>? fadeoutBgmHook;
 
     public EncounterBgm(MusicService music)
         : base(music)
@@ -39,9 +43,32 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 
             this.encounterBgmHook = hooks.CreateAsmHook(patch, result).Activate();
         });
+
+        scanner.Scan(
+            nameof(UBtlCoreComponent_FadeoutBGM),
+            "40 53 48 83 EC 20 48 8B D9 8B CA E8 ?? ?? ?? ?? C7 83 ?? ?? ?? ?? 00 00 00 00"
+            , result =>
+            {
+                this.fadeoutBgmHook = hooks.CreateHook<UBtlCoreComponent_FadeoutBGM>(this.FadeoutBGM_Impl, result).Activate();
+            });
     }
 
-    private ushort GetEncounterBgmImpl(Encounter* encounter, EncounterStage stage)
+    private void FadeoutBGM_Impl(UBtlCoreComponent* btlCore, uint param2)
+    {
+        // param2 = 10 when fading out back to overworld music.
+        // Maybe a fade out duration?
+        if (param2 != 10 && btlCore->currentBgm == this.GetVictoryMusic())
+        {
+            Log.Debug($"{nameof(UBtlCoreComponent_FadeoutBGM)} || {param2} || Blocked for seamless transition to victory BGM.");
+        }
+        else
+        {
+            Log.Debug($"{nameof(UBtlCoreComponent_FadeoutBGM)} || {param2}");
+            this.fadeoutBgmHook!.OriginalFunction(btlCore, param2);
+        }
+    }
+
+    private ushort GetEncounterBgmImpl(UBtlCoreComponent* encounter, EncounterStage stage)
         => stage switch
         {
             EncounterStage.Victory => this.GetVictoryBgm(),
@@ -60,10 +87,10 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         return (ushort)victoryMusicId;
     }
 
-    private ushort GetBattleBgm(Encounter* encounter)
+    private ushort GetBattleBgm(UBtlCoreComponent* encounter)
     {
-        var id = encounter->id;
-        var context = encounter->context;
+        var id = encounter->encountId;
+        var context = encounter->encountContext;
 
         // P3R swaps encounter context values.
         if (context == EncounterContext.Advantage)
@@ -86,19 +113,22 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    private struct Encounter
+    private struct UBtlCoreComponent
     {
         [FieldOffset(0x298)]
-        public uint id;
+        public uint encountId;
 
         [FieldOffset(0x29c)]
-        public EncounterContext context;
+        public EncounterContext encountContext;
+
+        [FieldOffset(0x46c)]
+        public uint currentBgm;
     }
 
     private enum EncounterStage
         : byte
     {
-        Battle,
+        Fighting,
         Victory,
     }
 }
