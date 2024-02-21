@@ -2,7 +2,7 @@
   "ModId": "BGME.Framework",
   "ModName": "BGME Framework",
   "ModAuthor": "zutomayofan50",
-  "ModVersion": "2.1.0",
+  "ModVersion": "2.1.1",
   "ModDescription": "Extends BGM functionality in Persona games.",
   "ModDll": "BGME.Framework.dll",
   "ModIcon": "Preview.png",
@@ -54,6 +54,15 @@
           },
           "ReleaseMetadataName": "CriFs.V2.Hook.ReleaseMetadata.json"
         },
+        "p5rpc.lib": {
+          "Config": {
+            "UserName": "AnimatedSwine37",
+            "RepositoryName": "p5rpc.lib",
+            "UseReleaseTag": true,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "p5rpc.lib.ReleaseMetadata.json"
+        },
         "CriFs.V2.Hook.Awb": {
           "Config": {
             "UserName": "Sewer56",
@@ -62,6 +71,15 @@
             "AssetFileName": "Mod.zip"
           },
           "ReleaseMetadataName": "CriFs.V2.Hook.Awb.ReleaseMetadata.json"
+        },
+        "reloaded.universal.fileemulationframework.bf": {
+          "Config": {
+            "UserName": "Sewer56",
+            "RepositoryName": "FileEmulationFramework",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "BF.File.Emulator.ReleaseMetadata.json"
         },
         "reloaded.universal.fileemulationframework.pak": {
           "Config": {
@@ -72,14 +90,14 @@
           },
           "ReleaseMetadataName": "PAK.Stream.Emulator.ReleaseMetadata.json"
         },
-        "reloaded.universal.fileemulationframework.bf": {
+        "reloaded.universal.fileemulationframework.spd": {
           "Config": {
             "UserName": "Sewer56",
             "RepositoryName": "FileEmulationFramework",
             "UseReleaseTag": false,
             "AssetFileName": "Mod.zip"
           },
-          "ReleaseMetadataName": "BF.File.Emulator.ReleaseMetadata.json"
+          "ReleaseMetadataName": "SPD.File.Emulator.ReleaseMetadata.json"
         },
         "reloaded.universal.fileemulationframework.awb": {
           "Config": {
@@ -104,6 +122,17 @@
     "GameBanana": {
       "ItemType": "Mod",
       "ItemId": 477399
+    },
+    "GameBananaDependencies": {
+      "IdToConfigMap": {
+        "BGME.Framework.API": {
+          "Config": {
+            "ItemType": "Mod",
+            "ItemId": 477399
+          },
+          "ReleaseMetadataName": "BGME.Framework.API.ReleaseMetadata.json"
+        }
+      }
     }
   },
   "IsUniversalMod": false,
