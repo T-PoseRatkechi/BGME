@@ -2,7 +2,7 @@
   "ModId": "BGME.Framework.API",
   "ModName": "BGME Framework API",
   "ModAuthor": "zutomayofan50",
-  "ModVersion": "1.0.0",
+  "ModVersion": "1.0.1",
   "ModDescription": "BGME Framework API.",
   "ModDll": "BGME.Framework.API.dll",
   "ModIcon": "Preview.png",
