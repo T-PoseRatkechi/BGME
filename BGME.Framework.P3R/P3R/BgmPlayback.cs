@@ -37,6 +37,7 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
 
     protected override void PlayBgm(int bgmId)
     {
+        Log.Debug($"{nameof(PlayBgm)} || Cue ID: {bgmId}");
         var currentBgmId = this.GetGlobalBgmId(bgmId);
         if (currentBgmId == null)
         {

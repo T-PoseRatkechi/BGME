@@ -57,13 +57,17 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     {
         // param2 = 10 when fading out back to overworld music.
         // Maybe a fade out duration?
-        if (param2 != 10 && btlCore->currentBgm == this.GetVictoryMusic())
+
+        // Block normal BGM fadeout until battle is over
+        // to fix BGM muting after starting.
+        // TODO: Maybe hook RequestBGM? It's weird that it's an issue
+        // but maybe Ryo redirecting adds some unexpected delay?
+        if (btlCore->CurrentPhase != null)
         {
-            Log.Debug($"{nameof(UBtlCoreComponent_FadeoutBGM)} || {param2} || Blocked for seamless transition to victory BGM.");
+            Log.Debug($"{nameof(UBtlCoreComponent_FadeoutBGM)} || {param2} || Blocked.");
         }
         else
         {
-            Log.Debug($"{nameof(UBtlCoreComponent_FadeoutBGM)} || {param2}");
             this.fadeoutBgmHook!.OriginalFunction(btlCore, param2);
         }
     }
@@ -89,8 +93,8 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 
     private ushort GetBattleBgm(UBtlCoreComponent* encounter)
     {
-        var id = encounter->encountId;
-        var context = encounter->encountContext;
+        var id = encounter->Id;
+        var context = encounter->Context;
 
         // P3R swaps encounter context values.
         if (context == EncounterContext.Advantage)
@@ -116,13 +120,16 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     private struct UBtlCoreComponent
     {
         [FieldOffset(0x298)]
-        public uint encountId;
+        public uint Id;
 
         [FieldOffset(0x29c)]
-        public EncounterContext encountContext;
+        public EncounterContext Context;
 
         [FieldOffset(0x46c)]
-        public uint currentBgm;
+        public uint CurrentBgm;
+
+        [FieldOffset(0x03D0)]
+        public ABtlPhase* CurrentPhase;
     }
 
     private enum EncounterStage
@@ -130,5 +137,10 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     {
         Fighting,
         Victory,
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x280)]
+    public unsafe struct ABtlPhase
+    {
     }
 }
