@@ -14,6 +14,7 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
     private IHook<PlayBgmFunction>? playBgmHook;
 
     private readonly ICriAtomEx criAtomEx;
+    private int currentNewBgm = -1;
 
     public BgmPlayback(ICriAtomEx criAtomEx, MusicService music)
         : base(music)
@@ -44,17 +45,25 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
             return;
         }
 
-        if (currentBgmId >= 400 && !IsDlcBgm(bgmId))
+        if (currentBgmId >= 400 && !IsDlcBgm((int)currentBgmId))
         {
+            if (this.currentNewBgm == currentBgmId)
+            {
+                return;
+            }
+
             // Manually play.
             var player = this.criAtomEx.GetPlayerById(0)!;
             var strPtr = StringsCache.GetStringPtr($"{currentBgmId}");
             this.criAtomEx.Player_SetCueName(player.PlayerHn, 0, (byte*)strPtr);
             this.criAtomEx.Player_Start(player.PlayerHn);
+
+            this.currentNewBgm = (int)currentBgmId;
         }
         else
         {
             this.playBgmHook!.OriginalFunction((int)currentBgmId);
+            this.currentNewBgm = -1;
         }
     }
 
