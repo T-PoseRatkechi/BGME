@@ -34,6 +34,7 @@ public class Mod : ModBase
     private readonly Game game;
     private readonly MusicService? music;
     private readonly CriAtomEx? criAtomEx;
+    private bool foundDisableVictoryMod;
 
     public Mod(ModContext context)
     {
@@ -155,6 +156,12 @@ public class Mod : ModBase
                 }
             }
         }
+
+        if (mod.ModId == "BGME.DisableVictoryTheme")
+        {
+            this.foundDisableVictoryMod = true;
+            this.bgme.SetVictoryDisabled(true);
+        }
     }
 
     private static int GetAwbIndex(string file)
@@ -195,7 +202,14 @@ public class Mod : ModBase
     private void ApplyConfig()
     {
         Log.LogLevel = this.config.LogLevel;
-        this.bgme.SetVictoryDisabled(this.config.DisableVictoryBgm);
+        if (this.config.DisableVictoryBgm || this.foundDisableVictoryMod)
+        {
+            this.bgme.SetVictoryDisabled(true);
+        }
+        else
+        {
+            this.bgme.SetVictoryDisabled(false);
+        }
     }
 
     #region Standard Overrides
