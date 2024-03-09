@@ -57,6 +57,8 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
         }
     }
 
+    protected override int VictoryBgmId { get; } = 111;
+
     private void PlayBgm(nint param1, nint param2, int bgmId, nint param4, nint param5)
     {
         var currentBgmId = this.GetGlobalBgmId(bgmId);

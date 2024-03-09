@@ -20,4 +20,10 @@ internal class BgmeService : IBgmeService
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
     }
+
+    public void SetVictoryDisabled(bool isDisabled)
+    {
+        this.soundPatcher.SetVictoryDisabled(isDisabled);
+        this.encounterPatcher.SetVictoryDisabled(isDisabled);
+    }
 }

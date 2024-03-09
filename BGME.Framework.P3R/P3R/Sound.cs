@@ -5,7 +5,6 @@ using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Ryo.Definitions.Structs;
 using Ryo.Interfaces;
-using System.Runtime.InteropServices;
 
 namespace BGME.Framework.P3R.P3R;
 
@@ -13,13 +12,12 @@ internal unsafe class Sound : BaseSound, IGameHook
 {
     [Function(CallingConventions.Microsoft)]
     private delegate void PlayBgmFunction(int bgmId);
-    private IHook<PlayBgmFunction>? playBgmHook;
+    private PlayBgmFunction? playBgm;
 
     [Function(CallingConventions.Microsoft)]
     private delegate void RequestSound(UPlayAdxControl* self, int playerMajorId, int playerMinorId, int cueId);
 
     private readonly ICriAtomEx criAtomEx;
-    private int currentNewBgm = -1;
     private IHook<RequestSound>? requestSoundHook;
 
     public Sound(ICriAtomEx criAtomEx, MusicService music)
@@ -27,6 +25,8 @@ internal unsafe class Sound : BaseSound, IGameHook
     {
         this.criAtomEx = criAtomEx;
     }
+
+    protected override int VictoryBgmId { get; } = 60;
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
@@ -39,6 +39,7 @@ internal unsafe class Sound : BaseSound, IGameHook
             thunkFunc = *(int*)(thunkFunc + 1) + thunkFunc + 5;
             var actual = thunkFunc = *(int*)(thunkFunc + 1) + thunkFunc + 5;
             //this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, actual).Activate();
+            this.playBgm = hooks.CreateWrapper<PlayBgmFunction>(actual, out _);
         });
 
         scanner.Scan(
@@ -65,11 +66,6 @@ internal unsafe class Sound : BaseSound, IGameHook
 
         if (currentBgmId >= 400 && !IsDlcBgm((int)currentBgmId))
         {
-            if (this.currentNewBgm == currentBgmId)
-            {
-                return;
-            }
-
             // Manually play.
             var player = this.criAtomEx.GetPlayerById(0)!;
             var strPtr = StringsCache.GetStringPtr($"{currentBgmId}");
@@ -83,35 +79,7 @@ internal unsafe class Sound : BaseSound, IGameHook
     }
 
     protected override void PlayBgm(int bgmId)
-    {
-        Log.Debug($"{nameof(PlayBgm)} || Cue ID: {bgmId}");
-        var currentBgmId = this.GetGlobalBgmId(bgmId);
-        if (currentBgmId == null)
-        {
-            return;
-        }
-
-        if (currentBgmId >= 400 && !IsDlcBgm((int)currentBgmId))
-        {
-            if (this.currentNewBgm == currentBgmId)
-            {
-                return;
-            }
-
-            // Manually play.
-            var player = this.criAtomEx.GetPlayerById(0)!;
-            var strPtr = StringsCache.GetStringPtr($"{currentBgmId}");
-            this.criAtomEx.Player_SetCueName(player.PlayerHn, 0, (byte*)strPtr);
-            this.criAtomEx.Player_Start(player.PlayerHn);
-
-            this.currentNewBgm = (int)currentBgmId;
-        }
-        else
-        {
-            this.playBgmHook!.OriginalFunction((int)currentBgmId);
-            this.currentNewBgm = -1;
-        }
-    }
+        => this.playBgm!(bgmId);
 
     private static bool IsDlcBgm(int bgmId)
         => bgmId >= 1000 && bgmId <= 1100;

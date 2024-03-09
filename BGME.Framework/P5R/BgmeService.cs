@@ -68,4 +68,10 @@ internal class BgmeService : IBgmeService
             this.setCueIdHook!.OriginalFunction(player, acbHn, cueId);
         }
     }
+
+    public void SetVictoryDisabled(bool isDisabled)
+    {
+        this.bgm.SetVictoryDisabled(isDisabled);
+        this.encounterBgm.SetVictoryDisabled(isDisabled);
+    }
 }

@@ -10,6 +10,9 @@ public class Config : Configurable<Config>
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
+    [DisplayName("Disable Victory Theme")]
+    [DefaultValue(false)]
+    public bool DisableVictoryBgm { get; set; } = false;
 }
 
 /// <summary>

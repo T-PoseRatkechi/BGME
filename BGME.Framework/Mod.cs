@@ -30,7 +30,7 @@ public class Mod : ModBase
     private readonly IBgmeApi bgmeApi;
     private readonly ICriFsRedirectorApi criFsApi;
 
-    private readonly IBgmeService? bgme;
+    private readonly IBgmeService bgme;
     private readonly Game game;
     private readonly MusicService? music;
     private readonly CriAtomEx? criAtomEx;
@@ -95,8 +95,7 @@ public class Mod : ModBase
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             default:
-                Log.Error($"Missing BGME service for game {game}.");
-                break;
+                throw new Exception($"Missing BGME service for game {game}.");
         }
     }
 
@@ -193,12 +192,19 @@ public class Mod : ModBase
         };
     }
 
+    private void ApplyConfig()
+    {
+        Log.LogLevel = this.config.LogLevel;
+        this.bgme.SetVictoryDisabled(this.config.DisableVictoryBgm);
+    }
+
     #region Standard Overrides
     public override void ConfigurationUpdated(Config configuration)
     {
         // Apply settings from configuration.
         // ... your code here.
         logger.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
+        this.ApplyConfig();
     }
     #endregion
 

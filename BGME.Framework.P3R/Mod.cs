@@ -27,7 +27,7 @@ public class Mod : ModBase
 
     private readonly IRyoApi ryo;
     private readonly IBgmeApi bgmeApi;
-    private readonly IBgmeService? bgme;
+    private readonly IBgmeService bgme;
 
     public Mod(ModContext context)
     {
@@ -61,15 +61,10 @@ public class Mod : ModBase
             this.OnBgmeModLoading(mod);
         }
 
-        try
-        {
-            this.bgme = new BgmeService(criAtomEx!, music);
-            this.bgme.Initialize(scanner!, this.hooks);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to start BGME service.");
-        }
+        this.bgme = new BgmeService(criAtomEx!, music);
+        this.bgme.Initialize(scanner!, this.hooks);
+
+        this.ApplyConfig();
     }
 
     private void OnBgmeModLoading(BgmeMod mod)
@@ -81,6 +76,12 @@ public class Mod : ModBase
         }
     }
 
+    private void ApplyConfig()
+    {
+        Log.LogLevel = this.config.LogLevel;
+        this.bgme.SetVictoryDisabled(this.config.DisableVictoryBgm);
+    }
+
     #region Standard Overrides
     public override void ConfigurationUpdated(Config configuration)
     {
@@ -88,7 +89,7 @@ public class Mod : ModBase
         // ... your code here.
         config = configuration;
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
-        Log.LogLevel = this.config.LogLevel;
+        this.ApplyConfig();
     }
     #endregion
 

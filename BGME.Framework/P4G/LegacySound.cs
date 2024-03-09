@@ -99,6 +99,8 @@ internal unsafe class LegacySound : BaseSound
         }
     }
 
+    protected override int VictoryBgmId { get; } = 35;
+
     protected override void PlayBgm(int bgmId)
     {
         this.playSoundFunction?.GetWrapper()(0, bgmId, 0, 0);

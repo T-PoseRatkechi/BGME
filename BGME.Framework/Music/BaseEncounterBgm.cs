@@ -7,15 +7,19 @@ public abstract class BaseEncounterBgm
 {
     private readonly MusicService music;
     private EncounterMusic? currentEncounterMusic;
+    private bool isVictoryDisabled;
 
     public BaseEncounterBgm(MusicService music)
     {
         this.music = music;
     }
 
+    public void SetVictoryDisabled(bool isDisabled)
+        => this.isVictoryDisabled = isDisabled;
+
     protected int GetVictoryMusic()
     {
-        if (currentEncounterMusic?.Encounter.VictoryMusic != null)
+        if (currentEncounterMusic?.Encounter.VictoryMusic != null && this.isVictoryDisabled == false)
         {
             Log.Debug("Victory Music uses BGME");
             var musicId = MusicUtils.CalculateMusicId(currentEncounterMusic.Encounter.VictoryMusic, currentEncounterMusic.Context);

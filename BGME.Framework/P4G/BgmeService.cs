@@ -104,4 +104,10 @@ internal class BgmeService : IBgmeService, IGameHook
 
     private string GetBgmFile(int bgmId)
         => $"BGME/P4G/{bgmId}.hca";
+
+    public void SetVictoryDisabled(bool isDisabled)
+    {
+        this.bgm.SetVictoryDisabled(isDisabled);
+        this.encounterPatcher.SetVictoryDisabled(isDisabled);
+    }
 }

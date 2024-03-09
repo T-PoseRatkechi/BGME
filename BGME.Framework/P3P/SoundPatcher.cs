@@ -56,6 +56,8 @@ internal unsafe class SoundPatcher : BaseSound
             });
     }
 
+    protected override int VictoryBgmId { get; } = 60;
+
     protected override void PlayBgm(int bgmId)
     {
         Log.Debug("Play BGM not supported.");

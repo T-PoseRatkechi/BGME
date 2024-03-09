@@ -21,4 +21,10 @@ internal class BgmeService : IBgmeService
         this.bgm.Initialize(scanner, hooks);
         this.encounterBgm.Initialize(scanner, hooks);
     }
+
+    public void SetVictoryDisabled(bool isDisabled)
+    {
+        this.bgm.SetVictoryDisabled(isDisabled);
+        this.encounterBgm.SetVictoryDisabled(isDisabled);
+    }
 }

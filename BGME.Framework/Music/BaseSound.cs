@@ -8,21 +8,32 @@ public abstract class BaseSound
 
     private int prevOriginalBgmId;
     private int? currentBgmId;
+    private bool isVictoryDisabled;
 
     public BaseSound(MusicService music)
     {
         this.music = music;
     }
 
+    protected abstract int VictoryBgmId { get; }
+
     public void RefreshBgm()
     {
         this.PlayBgm(this.prevOriginalBgmId);
     }
 
+    public void SetVictoryDisabled(bool isDisabled)
+        => this.isVictoryDisabled = isDisabled;
+
     protected abstract void PlayBgm(int bgmId);
 
     protected int? GetGlobalBgmId(int originalBgmId)
     {
+        if (originalBgmId == this.VictoryBgmId && this.isVictoryDisabled)
+        {
+            return null;
+        }
+
         if (this.music.Global.TryGetValue(originalBgmId, out var newMusic))
         {
             Log.Debug($"Global BGM overwriting BGM ID: {originalBgmId}");
