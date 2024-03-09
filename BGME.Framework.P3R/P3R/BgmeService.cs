@@ -8,7 +8,7 @@ namespace BGME.Framework.P3R.P3R;
 internal class BgmeService : IBgmeService
 {
     private readonly EncounterBgm encounterBgm;
-    private readonly BgmPlayback bgm;
+    private readonly Sound bgm;
 
     public BgmeService(ICriAtomEx criAtomEx, MusicService music)
     {
