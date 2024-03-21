@@ -20,6 +20,10 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     private delegate int GetVictoryBgmFunction(int defaultBgmId);
     private IReverseWrapper<GetVictoryBgmFunction>? victoryBgmWrapper;
 
+    [Function(CallingConventions.Microsoft)]
+    private delegate bool BIT_CHK(int flag);
+    private BIT_CHK? bitChk;
+
     private IAsmHook? victoryBgmHook;
     private IAsmHook? victoryBgmHook2;
 
@@ -81,6 +85,11 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 
             this.victoryBgmHook2 = hooks.CreateAsmHook(patch, result + 5, AsmHookBehaviour.ExecuteFirst).Activate();
         });
+
+        scanner.Scan(
+            nameof(BIT_CHK),
+            "4C 8D 05 ?? ?? ?? ?? 33 C0 49 8B D0 0F 1F 40 00 39 0A 74 ?? FF C0 48 83 C2 08 83 F8 10 72 ?? 8B D1",
+            result => this.bitChk = hooks.CreateWrapper<BIT_CHK>(result, out _));
     }
 
     private int GetVictoryBgm(int defaultBgmId)
@@ -111,7 +120,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         }
 
         var battleMusicId = this.GetBattleMusic(*encounterId, context);
-        if (battleMusicId == -1)
+        if (battleMusicId == -1 || this.bitChk!(0x20000050))
         {
             return;
         }
