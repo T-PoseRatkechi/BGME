@@ -120,7 +120,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         }
 
         var battleMusicId = this.GetBattleMusic(*encounterId, context);
-        if (battleMusicId == -1 || this.bitChk!(0x20000050))
+        if (battleMusicId == -1/* || this.bitChk!(0x20000050)*/)
         {
             return;
         }
