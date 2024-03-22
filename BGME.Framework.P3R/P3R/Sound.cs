@@ -74,7 +74,7 @@ internal unsafe class Sound : BaseSound, IGameHook
         }
         else
         {
-            this.requestSoundHook!.OriginalFunction(self, playerMajorId, playerMinorId, cueId);
+            this.requestSoundHook!.OriginalFunction(self, playerMajorId, playerMinorId, (int)currentBgmId);
         }
     }
 
