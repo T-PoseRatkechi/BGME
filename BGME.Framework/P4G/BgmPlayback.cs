@@ -37,7 +37,7 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
         }
     }
 
-    protected override int VictoryBgmId { get; } = 35;
+    protected override int VictoryBgmId { get; } = 7;
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {

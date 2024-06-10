@@ -99,7 +99,7 @@ internal unsafe class LegacySound : BaseSound
         }
     }
 
-    protected override int VictoryBgmId { get; } = 35;
+    protected override int VictoryBgmId { get; } = 7;
 
     protected override void PlayBgm(int bgmId)
     {
