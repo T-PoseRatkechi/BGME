@@ -98,6 +98,8 @@ public class Mod : ModBase
             default:
                 throw new Exception($"Missing BGME service for game {game}.");
         }
+
+        this.ApplyConfig();
     }
 
     private void OnBgmeModLoading(BgmeMod mod)

@@ -71,6 +71,7 @@ internal class BgmeService : IBgmeService
 
     public void SetVictoryDisabled(bool isDisabled)
     {
+        Log.Debug($"Disable Victory BGM: {isDisabled}");
         this.bgm.SetVictoryDisabled(isDisabled);
         this.encounterBgm.SetVictoryDisabled(isDisabled);
     }

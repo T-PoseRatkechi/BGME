@@ -10,14 +10,18 @@ namespace BGME.Framework.P5R;
 internal unsafe class BgmPlayback : BaseSound, IGameHook
 {
     [Function(CallingConventions.Microsoft)]
-    public delegate void PlayBgmFunction(nint param1, nint param2, int bgmId, nint param4, nint param5);
-    private IHook<PlayBgmFunction>? playBgmHook;
+    public delegate void PlayBgmCue(nint param1, nint param2, int bgmId, nint param4, nint param5);
+    private IHook<PlayBgmCue>? playBgmHook;
+
+    [Function(CallingConventions.Microsoft)]
+    public delegate void PlayBgmFunction(int cueId);
+    private PlayBgmFunction? playBgm;
 
     private readonly CriAtomEx criAtomEx;
     private PlayerConfig? bgmPlayer;
 
-    private int currentBgmTime;
     private readonly Timer holdupBgmBuffer = new(TimeSpan.FromMilliseconds(1000)) { AutoReset = false };
+    private bool holdupBgmQueued;
 
     public BgmPlayback(CriAtomEx criAtomEx, MusicService music)
         : base(music)
@@ -33,19 +37,22 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
 
         this.holdupBgmBuffer.Elapsed += (sender, args) =>
         {
-            this.currentBgmTime = this.criAtomEx.Playback_GetTimeSyncedWithAudio(this.criAtomEx.Player_GetLastPlaybackId(this.BgmPlayer.PlayerHn));
-            Log.Debug($"Saved BGM Time: {currentBgmTime}");
-            this.criAtomEx.Player_SetCueId(this.BgmPlayer.PlayerHn, this.BgmPlayer.Acb.AcbHn, 341);
-            this.criAtomEx.Player_Start(this.BgmPlayer.PlayerHn);
+            this.PlayBgm(341);
+            this.holdupBgmQueued = false;
         };
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
-        scanner.Scan("Play BGM Function", "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 80 7C 24 ?? 00", result =>
-        {
-            this.playBgmHook = hooks.CreateHook<PlayBgmFunction>(this.PlayBgm, result).Activate();
-        });
+        scanner.Scan(
+            nameof(PlayBgmCue),
+            "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 80 7C 24 ?? 00",
+            result => this.playBgmHook = hooks.CreateHook<PlayBgmCue>(this.PlayBgmCueImpl, result).Activate());
+
+        scanner.Scan(
+            nameof(PlayBgmCue),
+            "40 53 48 83 EC 30 89 CB",
+            result => this.playBgm = hooks.CreateWrapper<PlayBgmFunction>(result, out _));
     }
 
     public PlayerConfig BgmPlayer
@@ -57,51 +64,33 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
         }
     }
 
-    protected override int VictoryBgmId { get; } = 111;
+    protected override int VictoryBgmId { get; } = 340;
 
-    private void PlayBgm(nint param1, nint param2, int bgmId, nint param4, nint param5)
+    protected override void PlayBgm(int cueId) => this.playBgm!(cueId);
+
+    private void PlayBgmCueImpl(nint param1, nint param2, int cueId, nint param4, nint param5)
     {
-        var currentBgmId = this.GetGlobalBgmId(bgmId);
+        var currentBgmId = this.GetGlobalBgmId(cueId);
         if (currentBgmId == null)
         {
             return;
         }
 
-        Log.Debug($"Playing BGM ID: {currentBgmId}");
-        this.playBgmHook!.OriginalFunction(param1, param2, (int)currentBgmId, param4, param5);
-
-        // TODO: Maybe finish the below. I think the intentention was
-        // was play battle BGM into victory if battle ends fast.
-
         // Buffer playing hold up music so it doesn't
         // interrupt battle BGM if quick AOA.
-        //if (bgmId == 341 && !this.holdupBgmBuffer.Enabled)
-        //{
-        //    this.holdupBgmBuffer.Start();
-        //    return;
-        //}
+        if (cueId == 341 && this.holdupBgmQueued == false)
+        {
+            this.holdupBgmBuffer.Start();
+            this.holdupBgmQueued = true;
+            return;
+        }
+        else
+        {
+            this.holdupBgmBuffer.Stop();
+            this.holdupBgmQueued = false;
 
-        // Reset music to previous time after hold up music.
-        //if (this.currentBgmTime != 0)
-        //{
-        //    this.criAtomEx.Player_SetCueId(this.BgmPlayer.PlayerHn, this.BgmPlayer.Acb.AcbHn, (int)currentBgmId);
-        //    this.criAtomEx.Player_SetStartTime(this.BgmPlayer.PlayerHn, this.currentBgmTime);
-        //    this.criAtomEx.Player_Start(this.BgmPlayer.PlayerHn);
-        //    this.currentBgmTime = 0;
-        //}
-        //else
-        //{
-        //    if (this.holdupBgmBuffer.Enabled)
-        //    {
-        //        this.holdupBgmBuffer.Stop();
-        //    }
-
-        //    this.playBgmHook!.OriginalFunction(param1, param2, (int)currentBgmId, param4, param5);
-        //}
-    }
-
-    protected override void PlayBgm(int bgmId)
-    {
-        throw new NotImplementedException();
+            Log.Debug($"Playing BGM ID: {currentBgmId}");
+            this.playBgmHook!.OriginalFunction(param1, param2, (int)currentBgmId, param4, param5);
+        }
     }
 }
