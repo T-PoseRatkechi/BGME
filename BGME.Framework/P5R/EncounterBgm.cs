@@ -11,8 +11,8 @@ namespace BGME.Framework.P5R;
 
 internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
 {
-    [Function(Register.rbx, Register.rax, true)]
-    private delegate void GetEncounterBgmId(nint encounterPtr);
+    [Function(new Register[] { Register.rbx, Register.rax }, Register.rax, true)]
+    private delegate void GetEncounterBgmId(nint encounterPtr, int originalBgmId);
     private IReverseWrapper<GetEncounterBgmId>? getEncounterBgmWrapper;
     private IAsmHook? getEncounterBgmHook;
 
@@ -21,7 +21,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
     private IReverseWrapper<GetVictoryBgmFunction>? victoryBgmWrapper;
 
     [Function(CallingConventions.Microsoft)]
-    private delegate bool BIT_CHK(int flag);
+    private delegate byte BIT_CHK(uint flag);
     private BIT_CHK? bitChk;
 
     private IAsmHook? victoryBgmHook;
@@ -43,11 +43,10 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
             var patch = new string[]
             {
                 "use64",
-                $"{Utilities.PushCallerRegisters}",
-                $"{hooks.Utilities.GetAbsoluteCallMnemonics(this.GetEncounterBgmIdImpl, out this.getEncounterBgmWrapper)}",
-                $"{Utilities.PopCallerRegisters}",
+                Utilities.PushCallerRegisters,
+                hooks.Utilities.GetAbsoluteCallMnemonics(this.GetEncounterBgmIdImpl, out this.getEncounterBgmWrapper),
+                Utilities.PopCallerRegisters,
             };
-
 
             this.getEncounterBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
@@ -103,7 +102,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         return defaultBgmId;
     }
 
-    private void GetEncounterBgmIdImpl(nint encounterPtr)
+    private void GetEncounterBgmIdImpl(nint encounterPtr, int originalBgmId)
     {
         this.rhythmGame?.StartBattleBgm();
         var encounterId = (int*)(encounterPtr + 0x278);
@@ -120,15 +119,22 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         }
 
         var battleMusicId = this.GetBattleMusic(*encounterId, context);
-        if (battleMusicId == -1/* || this.bitChk!(0x20000050)*/)
+        if (battleMusicId == -1)
         {
             return;
         }
 
         // Write bgm id to encounter bgm var.
-        var encounterBgmPtr = (int*)(encounterPtr + 0x9ac);
-        *encounterBgmPtr = battleMusicId;
+        var encounterBgm = (int*)(encounterPtr + 0x9ac);
+        var inHeist = this.bitChk!(0x20000050) == 1;
+        var isSpecialBattle = originalBgmId != -1;  // EAX register equals BGM value from ENC TBL minus 1.
+                                                    // Normal battles have BGM value 0 in TBL.
 
-        Log.Debug($"Encounter BGM ID written: {battleMusicId}");
+        Log.Debug($"Encounter BGM ID: {originalBgmId} || Heist: {inHeist}");
+        if (isSpecialBattle || inHeist == false)
+        {
+            *encounterBgm = battleMusicId;
+            Log.Debug($"Encounter BGM ID written: {battleMusicId}");
+        }
     }
 }
