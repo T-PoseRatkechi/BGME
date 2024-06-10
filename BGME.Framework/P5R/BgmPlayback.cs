@@ -68,32 +68,36 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
         }
 
         Log.Debug($"Playing BGM ID: {currentBgmId}");
+        this.playBgmHook!.OriginalFunction(param1, param2, (int)currentBgmId, param4, param5);
+
+        // TODO: Maybe finish the below. I think the intentention was
+        // was play battle BGM into victory if battle ends fast.
 
         // Buffer playing hold up music so it doesn't
         // interrupt battle BGM if quick AOA.
-        if (bgmId == 341 && !this.holdupBgmBuffer.Enabled)
-        {
-            //this.holdupBgmBuffer.Start();
-            return;
-        }
+        //if (bgmId == 341 && !this.holdupBgmBuffer.Enabled)
+        //{
+        //    this.holdupBgmBuffer.Start();
+        //    return;
+        //}
 
         // Reset music to previous time after hold up music.
-        else if (this.currentBgmTime != 0)
-        {
-            this.criAtomEx.Player_SetCueId(this.BgmPlayer.PlayerHn, this.BgmPlayer.Acb.AcbHn, (int)currentBgmId);
-            this.criAtomEx.Player_SetStartTime(this.BgmPlayer.PlayerHn, this.currentBgmTime);
-            this.criAtomEx.Player_Start(this.BgmPlayer.PlayerHn);
-            this.currentBgmTime = 0;
-        }
-        else
-        {
-            if (this.holdupBgmBuffer.Enabled)
-            {
-                this.holdupBgmBuffer.Stop();
-            }
+        //if (this.currentBgmTime != 0)
+        //{
+        //    this.criAtomEx.Player_SetCueId(this.BgmPlayer.PlayerHn, this.BgmPlayer.Acb.AcbHn, (int)currentBgmId);
+        //    this.criAtomEx.Player_SetStartTime(this.BgmPlayer.PlayerHn, this.currentBgmTime);
+        //    this.criAtomEx.Player_Start(this.BgmPlayer.PlayerHn);
+        //    this.currentBgmTime = 0;
+        //}
+        //else
+        //{
+        //    if (this.holdupBgmBuffer.Enabled)
+        //    {
+        //        this.holdupBgmBuffer.Stop();
+        //    }
 
-            this.playBgmHook!.OriginalFunction(param1, param2, (int)currentBgmId, param4, param5);
-        }
+        //    this.playBgmHook!.OriginalFunction(param1, param2, (int)currentBgmId, param4, param5);
+        //}
     }
 
     protected override void PlayBgm(int bgmId)
