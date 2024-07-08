@@ -1,9 +1,7 @@
-﻿using BGME.Framework.CRI;
-using BGME.Framework.Music;
+﻿using BGME.Framework.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
-using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
 
 namespace BGME.Framework.P4G;
 
@@ -14,27 +12,9 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
     private IFunction<PlaySoundFunction>? playSoundFunction;
     private IHook<PlaySoundFunction>? playSoundHook;
 
-    [Function(new Register[] { Register.rbx, Register.rax }, Register.rax, true)]
-    private delegate void GetBgmAcbPtr(nint acbStrPtr, nint acbHndlPtr);
-    private IReverseWrapper<GetBgmAcbPtr>? bgmAcbWrapper;
-    private IAsmHook? bgmAcbHook;
-
-    private readonly CriAtomEx criAtomEx;
-    private PlayerConfig? bgmPlayer;
-
-    public BgmPlayback(CriAtomEx criAtomEx, MusicService music)
+    public BgmPlayback(MusicService music)
         : base(music)
     {
-        this.criAtomEx = criAtomEx;
-    }
-
-    public PlayerConfig BgmPlayer
-    {
-        get
-        {
-            this.bgmPlayer ??= this.criAtomEx.GetPlayerByAcbPath("/sound/adx2/bgm/snd00_bgm.acb");
-            return this.bgmPlayer!;
-        }
     }
 
     protected override int VictoryBgmId { get; } = 7;

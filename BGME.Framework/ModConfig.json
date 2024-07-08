@@ -142,7 +142,8 @@
     "reloaded.sharedlib.hooks",
     "crifs.v2.hook",
     "p5rpc.lib",
-    "BGME.Framework.API"
+    "BGME.Framework.API",
+    "Ryo.Reloaded"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [

@@ -10,6 +10,7 @@ using PersonaMusicScript.Types;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Ryo.Interfaces;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text.RegularExpressions;
@@ -25,7 +26,7 @@ public class Mod : ModBase
     private readonly ILogger logger;
     private readonly IMod owner;
     private readonly IModConfig modConfig;
-    private readonly Config config;
+    private Config config;
 
     private readonly IBgmeApi bgmeApi;
     private readonly ICriFsRedirectorApi criFsApi;
@@ -34,6 +35,7 @@ public class Mod : ModBase
     private readonly Game game;
     private readonly MusicService? music;
     private readonly CriAtomEx? criAtomEx;
+    private readonly IRyoApi ryo;
     private bool foundDisableVictoryMod;
 
     public Mod(ModContext context)
@@ -57,6 +59,7 @@ public class Mod : ModBase
 
         this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
         this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
+        this.modLoader.GetController<IRyoApi>().TryGetTarget(out this.ryo!);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
 
@@ -82,7 +85,7 @@ public class Mod : ModBase
             case Game.P4G_PC:
                 this.criAtomEx = new CriAtomEx(game);
                 this.criAtomEx.Initialize(scanner!, this.hooks);
-                this.bgme = new P4G.BgmeService(this.config, this.criAtomEx, this.music);
+                this.bgme = new P4G.BgmeService(this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             case Game.P3P_PC:
@@ -92,7 +95,7 @@ public class Mod : ModBase
                 this.criAtomEx = new CriAtomEx(game);
                 this.criAtomEx.Initialize(scanner!, this.hooks);
                 this.modLoader.GetController<IP5RLib>().TryGetTarget(out var p5rLib);
-                this.bgme = new P5R.BgmeService(p5rLib!, this.criAtomEx, this.music);
+                this.bgme = new P5R.BgmeService(p5rLib!, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             default:
@@ -104,31 +107,18 @@ public class Mod : ModBase
 
     private void OnBgmeModLoading(BgmeMod mod)
     {
-        // Bind FEmulator/AWB with CriFs.
         if (this.game == Game.P5R_PC)
         {
-            var awbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "BGM_42.AWB");
-            if (Directory.Exists(awbDir))
+            var femuAwbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "BGM_42.AWB");
+            if (Directory.Exists(femuAwbDir))
             {
-                Log.Debug("Binding BGM_42.AWB files.");
-                foreach (var file in Directory.EnumerateFiles(awbDir, "*.adx"))
-                {
-                    var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                    var bindPath = $"BGME/P5R/{fileNameIndex + 10000}.adx";
-                    this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
-                }
+                this.ryo.AddAudioFolder(femuAwbDir);
             }
 
-            var awbDir2 = Path.Join(mod.ModDir, "bgme", "p5r");
-            if (Directory.Exists(awbDir2))
+            var bgmeAudioDir_P5R = Path.Join(mod.ModDir, "BGME", "P5R");
+            if (Directory.Exists(bgmeAudioDir_P5R))
             {
-                Log.Debug("Binding P5R files.");
-                foreach (var file in Directory.EnumerateFiles(awbDir2, "*.adx"))
-                {
-                    var fileNameIndex = int.Parse(Path.GetFileNameWithoutExtension(file).Split('_')[0]);
-                    var bindPath = $"BGME/P5R/{fileNameIndex}.adx";
-                    this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
-                }
+                this.ryo.AddAudioFolder(bgmeAudioDir_P5R);
             }
         }
         else if (this.game == Game.P4G_PC)
@@ -219,6 +209,7 @@ public class Mod : ModBase
     {
         // Apply settings from configuration.
         // ... your code here.
+        this.config = configuration;
         logger.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
         this.ApplyConfig();
     }

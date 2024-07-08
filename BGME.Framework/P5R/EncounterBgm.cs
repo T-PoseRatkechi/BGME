@@ -96,6 +96,12 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         var victoryMusicId = this.GetVictoryMusic();
         if (victoryMusicId != -1)
         {
+            // Remove outdated 10k new BGM offset.
+            if (victoryMusicId >= 10000 && victoryMusicId < 20000)
+            {
+                victoryMusicId -= 10000;
+            }
+
             return victoryMusicId;
         }
 
@@ -122,6 +128,12 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
         if (battleMusicId == -1)
         {
             return;
+        }
+
+        // Remove outdated 10k new BGM offset.
+        if (battleMusicId >= 10000 && battleMusicId < 20000)
+        {
+            battleMusicId -= 10000;
         }
 
         // Write bgm id to encounter bgm var.

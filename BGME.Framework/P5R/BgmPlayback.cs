@@ -16,25 +16,14 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
     [Function(CallingConventions.Microsoft)]
     public delegate void PlayBgmFunction(int cueId);
     private PlayBgmFunction? playBgm;
-
-    private readonly CriAtomEx criAtomEx;
     private PlayerConfig? bgmPlayer;
 
     private readonly Timer holdupBgmBuffer = new(TimeSpan.FromMilliseconds(1000)) { AutoReset = false };
     private bool holdupBgmQueued;
 
-    public BgmPlayback(CriAtomEx criAtomEx, MusicService music)
+    public BgmPlayback(MusicService music)
         : base(music)
     {
-        this.criAtomEx = criAtomEx;
-        this.criAtomEx.SetPlayerConfigById(255, new()
-        {
-            maxPathStrings = 2,
-            maxPath = 256,
-            enableAudioSyncedTimer = true,
-            updatesTime = true,
-        });
-
         this.holdupBgmBuffer.Elapsed += (sender, args) =>
         {
             this.PlayBgm(341);
@@ -59,7 +48,7 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
     {
         get
         {
-            this.bgmPlayer ??= this.criAtomEx.GetPlayerByAcbPath("SOUND/BGM.ACB");
+            //this.bgmPlayer ??= this.criAtomEx.GetPlayerByAcbPath("SOUND/BGM.ACB");
             return this.bgmPlayer!;
         }
     }
