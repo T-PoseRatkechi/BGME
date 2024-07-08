@@ -155,7 +155,7 @@ internal unsafe class LegacySound : BaseSound
         //    this.ResetShellSongs();
         //}
 
-        if (currentBgmId >= EXTENDED_BGM_ID)
+        if (currentBgmId >= EXTENDED_BGM_ID && currentBgmId <= 835)
         {
             // Swap shell cue ID to trigger a song change.
             if (this.currentAwbIndex != currentBgmId)

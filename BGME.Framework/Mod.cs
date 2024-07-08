@@ -123,29 +123,10 @@ public class Mod : ModBase
         }
         else if (this.game == Game.P4G_PC)
         {
-            Log.Debug("Binding BGME P4G music.");
-
-            var p4gMusicDir = Path.Join(mod.ModDir, "bgme", "p4g");
-            if (Directory.Exists(p4gMusicDir))
+            var bgmeAudioDir_P4G = Path.Join(mod.ModDir, "BGME", "P4G");
+            if (Directory.Exists(bgmeAudioDir_P4G))
             {
-                foreach (var file in Directory.EnumerateFiles(p4gMusicDir, "*.hca"))
-                {
-                    var bindPath = Path.GetRelativePath(mod.ModDir, file);
-                    this.criFsApi.AddBind(file, bindPath, "BGME.Framework");
-                }
-            }
-
-            var p4gAwbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "snd00_bgm.awb");
-            if (Directory.Exists(p4gAwbDir))
-            {
-                foreach (var file in Directory.EnumerateFiles(p4gAwbDir, "*.hca"))
-                {
-                    var awbIndex = GetAwbIndex(file);
-                    if (awbIndex >= 678)
-                    {
-                        this.criFsApi.AddBind(file, $"BGME/P4G/{awbIndex}.hca", "BGME.Framework");
-                    }
-                }
+                this.ryo.AddAudioFolder(bgmeAudioDir_P4G);
             }
         }
 

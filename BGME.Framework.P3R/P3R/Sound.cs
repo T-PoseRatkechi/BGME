@@ -18,6 +18,7 @@ internal unsafe class Sound : BaseSound, IGameHook
     private delegate void RequestSound(UPlayAdxControl* self, int playerMajorId, int playerMinorId, int cueId, nint param5);
 
     private readonly ICriAtomEx criAtomEx;
+    private readonly IRyoUtils ryoUtils;
     private IHook<RequestSound>? requestSoundHook;
 
     public Sound(ICriAtomEx criAtomEx, MusicService music)
@@ -69,7 +70,7 @@ internal unsafe class Sound : BaseSound, IGameHook
             // Manually play.
             var player = this.criAtomEx.GetPlayerById(0)!;
             var strPtr = StringsCache.GetStringPtr($"{currentBgmId}");
-            this.criAtomEx.Player_SetCueName(player.PlayerHn, 0, (byte*)strPtr);
+            this.criAtomEx.Player_SetCueName(player.PlayerHn, this.ryoUtils.GetAcbHn("bgm"), (byte*)strPtr);
             this.criAtomEx.Player_Start(player.PlayerHn);
         }
         else
