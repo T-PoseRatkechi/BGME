@@ -48,6 +48,7 @@ public class Mod : ModBase
 
         this.modLoader.GetController<IBgmeApi>().TryGetTarget(out this.bgmeApi!);
         this.modLoader.GetController<IRyoApi>().TryGetTarget(out this.ryo!);
+        this.modLoader.GetController<IRyoUtils>().TryGetTarget(out var ryoUtils);
         this.modLoader.GetController<ICriAtomEx>().TryGetTarget(out var criAtomEx);
         this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
 
@@ -62,7 +63,7 @@ public class Mod : ModBase
             this.OnBgmeModLoading(mod);
         }
 
-        this.bgme = new BgmeService(criAtomEx!, music);
+        this.bgme = new BgmeService(criAtomEx!, ryoUtils!, music);
         this.bgme.Initialize(scanner!, this.hooks);
 
         this.ApplyConfig();

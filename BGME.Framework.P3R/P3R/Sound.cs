@@ -21,10 +21,11 @@ internal unsafe class Sound : BaseSound, IGameHook
     private readonly IRyoUtils ryoUtils;
     private IHook<RequestSound>? requestSoundHook;
 
-    public Sound(ICriAtomEx criAtomEx, MusicService music)
+    public Sound(ICriAtomEx criAtomEx, IRyoUtils ryoUtils, MusicService music)
         : base(music)
     {
         this.criAtomEx = criAtomEx;
+        this.ryoUtils = ryoUtils;
     }
 
     protected override int VictoryBgmId { get; } = 60;
