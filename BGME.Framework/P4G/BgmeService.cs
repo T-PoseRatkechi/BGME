@@ -13,7 +13,6 @@ internal class BgmeService : IBgmeService, IGameHook
     private readonly EncounterBgm encounterPatcher;
     private readonly FloorBgm floorPatcher;
     private readonly EventBgm eventBgm;
-    private LegacySound? legacySound;
 
     public BgmeService(ICriAtomEx criAtomEx, MusicService music)
     {
@@ -31,9 +30,6 @@ internal class BgmeService : IBgmeService, IGameHook
         this.encounterPatcher.Initialize(scanner, hooks);
         this.floorPatcher.Initialize(scanner, hooks);
         this.eventBgm.Initialize(scanner, hooks);
-
-        // Legacy BGM handler for new BGM in snd00_bgm.
-        this.legacySound = new LegacySound(hooks, scanner, this.music);
     }
 
     public void SetVictoryDisabled(bool isDisabled)

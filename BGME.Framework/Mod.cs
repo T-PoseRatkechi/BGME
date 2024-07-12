@@ -110,24 +110,47 @@ public class Mod : ModBase
     {
         if (this.game == Game.P5R_PC)
         {
-            var femuAwbDir = Path.Join(mod.ModDir, "FEmulator", "AWB", "BGM_42.AWB");
-            if (Directory.Exists(femuAwbDir))
+            var femuAwbDir_P5R = Path.Join(mod.ModDir, "FEmulator", "AWB", "BGM_42.AWB");
+            if (Directory.Exists(femuAwbDir_P5R))
             {
-                this.ryo.AddAudioFolder(femuAwbDir);
+                // For legacy BGM files in BGM_42, assign them to Cue IDs 10,000 more
+                // than their AWB index.
+                foreach (var file in Directory.EnumerateFiles(femuAwbDir_P5R, "*.adx"))
+                {
+                    var ryoCueId = GetAwbIndex(file) + 10000;
+                    this.ryo.AddAudioPath(file, new()
+                    {
+                        CueName = ryoCueId.ToString(),
+                    });
+                }
             }
 
             var bgmeAudioDir_P5R = Path.Join(mod.ModDir, "BGME", "P5R");
             if (Directory.Exists(bgmeAudioDir_P5R))
             {
-                this.ryo.AddAudioFolder(bgmeAudioDir_P5R);
+                this.ryo.AddAudioPath(bgmeAudioDir_P5R, null);
             }
         }
         else if (this.game == Game.P4G_PC)
         {
+            // For legacy BGM files using unused AWB indexes in 'snd00_bgm.awb'.
+            var femuAwbDir_P4G = Path.Join(mod.ModDir, "FEmulator", "AWB", "snd00_bgm.awb");
+            if (Directory.Exists(femuAwbDir_P4G))
+            {
+                foreach (var file in Directory.EnumerateFiles(femuAwbDir_P4G, "*.hca"))
+                {
+                    var awbIndex = GetAwbIndex(file);
+                    if (awbIndex >= 678 && awbIndex <= 835)
+                    {
+                        this.ryo.AddAudioPath(file, null);
+                    }
+                }
+            }
+
             var bgmeAudioDir_P4G = Path.Join(mod.ModDir, "BGME", "P4G");
             if (Directory.Exists(bgmeAudioDir_P4G))
             {
-                this.ryo.AddAudioFolder(bgmeAudioDir_P4G);
+                this.ryo.AddAudioPath(bgmeAudioDir_P4G, null);
             }
         }
 
