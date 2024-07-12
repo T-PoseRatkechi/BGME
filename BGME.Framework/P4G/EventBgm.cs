@@ -24,14 +24,14 @@ internal unsafe class EventBgm : IGameHook
 
     private IAsmHook? setCurrentEventHook;
 
-    private readonly BgmPlayback sound;
+    private readonly Sound sound;
     private readonly MusicService music;
 
     private readonly int* currentMajorId = (int*)NativeMemory.AllocZeroed(sizeof(int));
     private readonly int* currentMinorId = (int*)NativeMemory.AllocZeroed(sizeof(int));
     private int currentFrame = -1;
 
-    public EventBgm(BgmPlayback sound, MusicService music)
+    public EventBgm(Sound sound, MusicService music)
     {
         this.sound = sound;
         this.music = music;

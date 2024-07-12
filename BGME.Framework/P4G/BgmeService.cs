@@ -1,6 +1,7 @@
 ﻿using BGME.Framework.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
+using Ryo.Interfaces;
 
 namespace BGME.Framework.P4G;
 
@@ -8,34 +9,36 @@ internal class BgmeService : IBgmeService, IGameHook
 {
     private readonly MusicService music;
 
-    private readonly BgmPlayback bgm;
+    private readonly Sound sound;
     private readonly EncounterBgm encounterPatcher;
     private readonly FloorBgm floorPatcher;
     private readonly EventBgm eventBgm;
-    private LegacySound? sound;
+    private LegacySound? legacySound;
 
-    public BgmeService(MusicService music)
+    public BgmeService(ICriAtomEx criAtomEx, MusicService music)
     {
         this.music = music;
 
-        this.bgm = new(this.music);
+        this.sound = new(criAtomEx, this.music);
         this.encounterPatcher = new(music);
         this.floorPatcher = new(music);
-        this.eventBgm = new(this.bgm, music);
+        this.eventBgm = new(this.sound, music);
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)
     {
-        this.bgm.Initialize(scanner, hooks);
+        this.sound.Initialize(scanner, hooks);
         this.encounterPatcher.Initialize(scanner, hooks);
         this.floorPatcher.Initialize(scanner, hooks);
         this.eventBgm.Initialize(scanner, hooks);
-        this.sound = new(hooks, scanner, this.music);
+
+        // Legacy BGM handler for new BGM in snd00_bgm.
+        this.legacySound = new LegacySound(hooks, scanner, this.music);
     }
 
     public void SetVictoryDisabled(bool isDisabled)
     {
-        this.bgm.SetVictoryDisabled(isDisabled);
+        this.sound.SetVictoryDisabled(isDisabled);
         this.encounterPatcher.SetVictoryDisabled(isDisabled);
     }
 }

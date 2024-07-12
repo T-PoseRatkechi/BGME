@@ -60,6 +60,7 @@ public class Mod : ModBase
         this.modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
         this.modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out this.criFsApi!);
         this.modLoader.GetController<IRyoApi>().TryGetTarget(out this.ryo!);
+        this.modLoader.GetController<ICriAtomEx>().TryGetTarget(out var criAtomEx);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
 
@@ -85,7 +86,7 @@ public class Mod : ModBase
             case Game.P4G_PC:
                 this.criAtomEx = new CriAtomEx(game);
                 this.criAtomEx.Initialize(scanner!, this.hooks);
-                this.bgme = new P4G.BgmeService(this.music);
+                this.bgme = new P4G.BgmeService(criAtomEx!, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             case Game.P3P_PC:

@@ -113,7 +113,7 @@ internal unsafe class LegacySound : BaseSound
         {
             return;
         }
-        else if (music is Sound sound)
+        else if (music is PersonaMusicScript.Types.Music.Sound sound)
         {
             Log.Debug($"PlaySound({sound.Setting_1}, {bgmId}, {sound.Setting_2}, {sound.Setting_3})");
             this.playSoundFunction?.GetWrapper()(sound.Setting_1, (int)bgmId, sound.Setting_2, sound.Setting_3);
