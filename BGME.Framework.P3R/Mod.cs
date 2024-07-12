@@ -73,7 +73,7 @@ public class Mod : ModBase
         var bgmeMusicDir = Path.Join(mod.ModDir, "bgme", "p3r");
         if (Directory.Exists(bgmeMusicDir))
         {
-            this.ryo.AddAudioFolder(bgmeMusicDir);
+            this.ryo.AddAudioPath(bgmeMusicDir, null);
         }
 
         if (mod.ModId == "BGME.DisableVictoryTheme")
