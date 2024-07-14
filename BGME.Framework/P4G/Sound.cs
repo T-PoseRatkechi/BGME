@@ -21,13 +21,13 @@ internal unsafe class Sound : BaseSound, IGameHook
     private delegate void SetPlayerVolumeCategory(nint playerHn, uint param2, int cueId);
     private IHook<SetPlayerVolumeCategory>? setPlayerVolumeCategoryHook;
 
-    private readonly ICriAtomEx criAtomEx;
+    private readonly ICriAtomRegistry criAtomRegistry;
     private DateTime prevBattleSfxTime = DateTime.Now;
 
-    public Sound(ICriAtomEx criAtomEx, MusicService music)
+    public Sound(ICriAtomRegistry criAtomRegistry, MusicService music)
         : base(music)
     {
-        this.criAtomEx = criAtomEx;
+        this.criAtomRegistry = criAtomRegistry;
     }
 
     protected override int VictoryBgmId { get; } = 7;
@@ -92,7 +92,7 @@ internal unsafe class Sound : BaseSound, IGameHook
     {
         // Unsets categories after Ryo applies them, breaking Ryo audio.
         // Skip when running on the BGM player.
-        var player = this.criAtomEx.GetPlayerByHn(playerHn);
+        var player = this.criAtomRegistry.GetPlayerByHn(playerHn);
         if (player?.Id == 0)
         {
             return;

@@ -14,11 +14,11 @@ internal class BgmeService : IBgmeService, IGameHook
     private readonly FloorBgm floorPatcher;
     private readonly EventBgm eventBgm;
 
-    public BgmeService(ICriAtomEx criAtomEx, MusicService music)
+    public BgmeService(ICriAtomRegistry criAtomRegistry, MusicService music)
     {
         this.music = music;
 
-        this.sound = new(criAtomEx, this.music);
+        this.sound = new(criAtomRegistry, this.music);
         this.encounterPatcher = new(music);
         this.floorPatcher = new(music);
         this.eventBgm = new(this.sound, music);
