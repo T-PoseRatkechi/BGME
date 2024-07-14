@@ -3,6 +3,8 @@ using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
+using Ryo.Definitions.Structs;
+using Ryo.Interfaces;
 using System.Runtime.InteropServices;
 using System.Text;
 using static Reloaded.Hooks.Definitions.X64.FunctionAttribute;
@@ -12,8 +14,7 @@ namespace BGME.Framework.P3P;
 /// <summary>
 /// Patch BGM function to play any BGM audio file.
 /// </summary>
-#pragma warning disable IDE0052 // Remove unread private members
-internal unsafe class SoundPatcher : BaseSound
+internal unsafe class Sound : BaseSound
 {
     private const int MAX_STRING_SIZE = 16;
 
@@ -23,14 +24,26 @@ internal unsafe class SoundPatcher : BaseSound
     private IAsmHook? bgmHook;
     private IAsmHook? fixBgmCrashHook;
 
+    private delegate void PlayComseOrBse(SE_TYPE seType, int param2, ushort majorId, short minorId);
+    private IHook<PlayComseOrBse>? playComseOrBseHook;
+
+    private readonly IRyoApi ryo;
+    private readonly ICriAtomEx criAtomEx;
+    private readonly ICriAtomRegistry criAtomRegistry;
     private readonly byte* bgmStringBuffer;
 
-    public SoundPatcher(
+    public Sound(
         IReloadedHooks hooks,
         IStartupScanner scanner,
+        IRyoApi ryo,
+        ICriAtomEx criAtomEx,
+        ICriAtomRegistry criAtomRegistry,
         MusicService music)
         : base(music)
     {
+        this.ryo = ryo;
+        this.criAtomEx = criAtomEx;
+        this.criAtomRegistry = criAtomRegistry;
         this.bgmStringBuffer = (byte*)NativeMemory.AllocZeroed(MAX_STRING_SIZE, sizeof(byte));
 
         scanner.Scan("BGM Patch", "4E 8B 84 ?? ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 0D", address =>
@@ -54,6 +67,61 @@ internal unsafe class SoundPatcher : BaseSound
             {
                 this.fixBgmCrashHook = hooks.CreateAsmHook(new[] { "use64", "xor ecx, ecx" }, result + 0x7C, AsmHookBehaviour.DoNotExecuteOriginal).Activate();
             });
+
+        scanner.Scan(nameof(PlayComseOrBse), "40 53 55 56 57 41 54 41 57 48 81 EC B8 00 00 00", result =>
+        {
+            this.playComseOrBseHook = hooks.CreateHook<PlayComseOrBse>(this.PlayComseOrBseImpl, result).Activate();
+        });
+    }
+
+    private nint _customSePlayer = IntPtr.Zero;
+
+    private nint CustomeSePlayer
+    {
+        get
+        {
+            if (this._customSePlayer == IntPtr.Zero)
+            {
+                var config = (CriAtomExPlayerConfigTag*)Marshal.AllocHGlobal(Marshal.SizeOf<CriAtomExPlayerConfigTag>());
+                config->maxPathStrings = 8;
+                config->maxPath = 256;
+
+                this._customSePlayer = this.criAtomEx.Player_Create(config, (void*)0, 0);
+            }
+
+            return this._customSePlayer;
+        }
+    }
+
+    /// <summary>
+    /// Play COMSE or BSE SFX.
+    /// </summary>
+    /// <param name="seType">SE type: 0 = COMSE, 1 = BSE</param>
+    /// <param name="param2">Unknown/unused?</param>
+    /// <param name="majorId">First two digits of file.</param>
+    /// <param name="minorId">Last two digits of file.</param>
+    private void PlayComseOrBseImpl(SE_TYPE seType, int param2, ushort majorId, short minorId)
+    {
+        if (Enum.IsDefined(seType))
+        {
+            var seFilePath = $"sound/se/{(seType == SE_TYPE.COMSE ? "comse.pak/" : "bse.pak/b")}{majorId:00}{minorId:00}.vag";
+            Log.Debug($"{nameof(PlayComseOrBse)}: {seFilePath}");
+            if (this.ryo.HasFileContainer(seFilePath))
+            {
+                //var playerHn = this.criAtomRegistry.GetPlayerById(0)!.Handle;
+                this.criAtomEx.Player_SetFile(this.CustomeSePlayer, 0, (byte*)StringsCache.GetStringPtr(seFilePath));
+                this.criAtomEx.Player_Start(this.CustomeSePlayer);
+            }
+            else
+            {
+                this.playComseOrBseHook!.OriginalFunction(seType, param2, majorId, minorId);
+            }
+        }
+        else
+        {
+            Log.Debug($"Unknown SE value: {seType}");
+            this.playComseOrBseHook!.OriginalFunction(seType, param2, majorId, minorId);
+        }
     }
 
     protected override int VictoryBgmId { get; } = 60;
@@ -97,5 +165,12 @@ internal unsafe class SoundPatcher : BaseSound
 
         Log.Debug($"Playing BGM: {bgmString.Trim('\0')}");
         return this.bgmStringBuffer;
+    }
+
+    private enum SE_TYPE
+        : short
+    {
+        COMSE,
+        BSE,
     }
 }
