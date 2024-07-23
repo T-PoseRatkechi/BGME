@@ -18,14 +18,12 @@ internal unsafe class Sound : BaseSound, IGameHook
     private delegate void RequestSound(UPlayAdxControl* self, int playerMajorId, int playerMinorId, int cueId, nint param5);
 
     private readonly ICriAtomEx criAtomEx;
-    private readonly IRyoUtils ryoUtils;
     private IHook<RequestSound>? requestSoundHook;
 
-    public Sound(ICriAtomEx criAtomEx, IRyoUtils ryoUtils, MusicService music)
+    public Sound(ICriAtomEx criAtomEx, MusicService music)
         : base(music)
     {
         this.criAtomEx = criAtomEx;
-        this.ryoUtils = ryoUtils;
     }
 
     protected override int VictoryBgmId { get; } = 60;

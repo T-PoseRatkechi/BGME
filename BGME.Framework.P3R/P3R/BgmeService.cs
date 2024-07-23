@@ -10,9 +10,9 @@ internal class BgmeService : IBgmeService
     private readonly EncounterBgm encounterBgm;
     private readonly Sound bgm;
 
-    public BgmeService(ICriAtomEx criAtomEx, IRyoUtils ryoUtils, MusicService music)
+    public BgmeService(ICriAtomEx criAtomEx, MusicService music)
     {
-        this.bgm = new(criAtomEx, ryoUtils, music);
+        this.bgm = new(criAtomEx, music);
         this.encounterBgm = new(music);
     }
 

@@ -62,7 +62,7 @@ public class Mod : ModBase
             this.OnBgmeModLoading(mod);
         }
 
-        this.bgme = new BgmeService(criAtomEx!, ryo.Utilities, music);
+        this.bgme = new BgmeService(criAtomEx!, music);
         this.bgme.Initialize(scanner!, this.hooks);
 
         this.ApplyConfig();
