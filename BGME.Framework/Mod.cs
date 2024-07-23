@@ -154,6 +154,20 @@ public class Mod : ModBase
                 this.ryo.AddAudioPath(bgmeAudioDir_P4G, null);
             }
         }
+        else if (this.game == Game.P3P_PC)
+        {
+            var bgmeAudioDir_P3P = Path.Join(mod.ModDir, "BGME", "P3P");
+            if (Directory.Exists(bgmeAudioDir_P3P))
+            {
+                foreach (var file in Directory.EnumerateFiles(bgmeAudioDir_P3P, "*.hca"))
+                {
+                    this.ryo.AddAudioPath(file, new()
+                    {
+                        AudioFilePath = $"data/sound/bgm/{GetAwbIndex(file)}.adx"
+                    });
+                }
+            }
+        }
 
         if (mod.ModId == "BGME.DisableVictoryTheme")
         {
