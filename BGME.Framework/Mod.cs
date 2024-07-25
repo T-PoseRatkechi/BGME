@@ -122,6 +122,8 @@ public class Mod : ModBase
                     this.ryo.AddAudioPath(file, new()
                     {
                         CueName = ryoCueId.ToString(),
+                        AcbName = "bgm",
+                        CategoryIds = new int[] { 1, 8 },
                     });
                 }
             }
@@ -129,7 +131,7 @@ public class Mod : ModBase
             var bgmeAudioDir_P5R = Path.Join(mod.ModDir, "BGME", "P5R");
             if (Directory.Exists(bgmeAudioDir_P5R))
             {
-                this.ryo.AddAudioPath(bgmeAudioDir_P5R, null);
+                this.ryo.AddAudioPath(bgmeAudioDir_P5R, new() { AcbName = "bgm", CategoryIds = new int[] { 1, 8 } });
             }
         }
         else if (this.game == Game.P4G_PC)
@@ -143,7 +145,7 @@ public class Mod : ModBase
                     var awbIndex = GetAwbIndex(file);
                     if (awbIndex >= 678 && awbIndex <= 835)
                     {
-                        this.ryo.AddAudioPath(file, null);
+                        this.ryo.AddAudioPath(file, new() { AcbName = "snd00_bgm", CategoryIds = new int[] { 6, 13 } });
                     }
                 }
             }
@@ -151,7 +153,7 @@ public class Mod : ModBase
             var bgmeAudioDir_P4G = Path.Join(mod.ModDir, "BGME", "P4G");
             if (Directory.Exists(bgmeAudioDir_P4G))
             {
-                this.ryo.AddAudioPath(bgmeAudioDir_P4G, null);
+                this.ryo.AddAudioPath(bgmeAudioDir_P4G, new() { AcbName = "snd00_bgm", CategoryIds = new int[] { 6, 13 } });
             }
         }
         else if (this.game == Game.P3P_PC)
