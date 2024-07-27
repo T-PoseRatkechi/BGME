@@ -63,6 +63,7 @@
     <ProjectReference Include="..\submodules\PersonaModdingMetadata\PersonaModdingMetadata.Shared\PersonaModdingMetadata.Shared.csproj" />
     <ProjectReference Include="..\submodules\Project.Utils\Project.Utils.csproj" />
     <ProjectReference Include="..\submodules\Ryo\Ryo.Interfaces\Ryo.Interfaces.csproj" />
+    <ProjectReference Include="..\submodules\SharedScans\SharedScans.Interfaces\SharedScans.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>

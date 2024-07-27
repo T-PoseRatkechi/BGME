@@ -3,6 +3,7 @@ using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Ryo.Interfaces;
+using SharedScans.Interfaces;
 
 namespace BGME.Framework.P4G;
 
@@ -15,19 +16,24 @@ internal unsafe class Sound : BaseSound, IGameHook
     private IFunction<PlaySound>? playSound;
     private IHook<PlaySound>? playSoundHook;
 
+    [Function(CallingConventions.Microsoft)]
     private delegate nint PlayBattleSfx(ushort* param1);
     private IHook<PlayBattleSfx>? playBattleSfx;
+
+    [Function(CallingConventions.Microsoft)]
+    public delegate ushort criAtomExAcf_GetCategoryIndexById(uint id);
+    private readonly HookContainer<criAtomExAcf_GetCategoryIndexById> getCategoryInfoByIndex;
 
     private delegate void SetPlayerVolumeCategory(nint playerHn, uint param2, int cueId);
     private IHook<SetPlayerVolumeCategory>? setPlayerVolumeCategoryHook;
 
     private readonly ICriAtomRegistry criAtomRegistry;
-    private DateTime prevBattleSfxTime = DateTime.Now;
 
-    public Sound(ICriAtomRegistry criAtomRegistry, MusicService music)
+    public Sound(ISharedScans scans, ICriAtomRegistry criAtomRegistry, MusicService music)
         : base(music)
     {
         this.criAtomRegistry = criAtomRegistry;
+        this.getCategoryInfoByIndex = scans.CreateHook<criAtomExAcf_GetCategoryIndexById>(this.GetCategoryIndexById, Mod.NAME);
     }
 
     protected override int VictoryBgmId { get; } = 7;
@@ -38,11 +44,6 @@ internal unsafe class Sound : BaseSound, IGameHook
         {
             this.playSound = hooks.CreateFunction<PlaySound>(result - 30);
             this.playSoundHook = this.playSound.Hook(this.PlaySoundImpl).Activate();
-        });
-        
-        scanner.Scan(nameof(PlayBattleSfx), "40 57 48 83 EC 20 48 8B F9 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 0F B7 0F", result =>
-        {
-            this.playBattleSfx = hooks.CreateHook<PlayBattleSfx>(this.PlayBattleSfxImpl, result).Activate();
         });
 
         scanner.Scan(nameof(SetPlayerVolumeCategory), "40 53 56 57 48 81 EC E0 00 00 00", result =>
@@ -74,20 +75,6 @@ internal unsafe class Sound : BaseSound, IGameHook
         this.playSoundHook!.OriginalFunction(playerId, (int)currentBgmId);
     }
 
-    private nint PlayBattleSfxImpl(ushort* param1)
-    {
-        var now = DateTime.Now;
-        var elapsed = now - this.prevBattleSfxTime;
-        if (elapsed.TotalMilliseconds >= BATTLE_SFX_LIMIT_MS)
-        {
-            this.prevBattleSfxTime = now;
-            return this.playBattleSfx!.OriginalFunction(param1);
-        }
-
-        Log.Verbose($"Limiting battle SFX to 1 per {BATTLE_SFX_LIMIT_MS}ms to fix BGM muting.");
-        return 1;
-    }
-
     private void SetPlayerCategoryVolumeImpl(nint playerHn, uint param2, int cueId)
     {
         // Unsets categories after Ryo applies them, breaking Ryo audio.
@@ -101,5 +88,15 @@ internal unsafe class Sound : BaseSound, IGameHook
         // Still required for some audio/players, strangely enough.
         // For example, door opening SFX is muted without it.
         this.setPlayerVolumeCategoryHook!.OriginalFunction(playerHn, param2, cueId);
+    }
+
+    private ushort GetCategoryIndexById(uint id)
+    {
+        if (id == 5)
+        {
+            return this.getCategoryInfoByIndex.Hook!.OriginalFunction(0);
+        }
+
+        return this.getCategoryInfoByIndex.Hook!.OriginalFunction(id);
     }
 }

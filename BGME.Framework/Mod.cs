@@ -10,6 +10,7 @@ using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using Ryo.Interfaces;
+using SharedScans.Interfaces;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text.RegularExpressions;
@@ -18,6 +19,7 @@ namespace BGME.Framework;
 
 public class Mod : ModBase
 {
+    public static string NAME = "BGME.Framework";
     private static readonly Regex numReg = new(@"\d+");
 
     private readonly IModLoader modLoader;
@@ -60,6 +62,7 @@ public class Mod : ModBase
         this.modLoader.GetController<IRyoApi>().TryGetTarget(out this.ryo!);
         this.modLoader.GetController<ICriAtomEx>().TryGetTarget(out var criAtomEx);
         this.modLoader.GetController<ICriAtomRegistry>().TryGetTarget(out var criAtomRegistry);
+        this.modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
 
@@ -83,7 +86,7 @@ public class Mod : ModBase
         switch (game)
         {
             case Game.P4G_PC:
-                this.bgme = new P4G.BgmeService(criAtomRegistry!, this.music);
+                this.bgme = new P4G.BgmeService(scans!, criAtomRegistry!, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
             case Game.P3P_PC:

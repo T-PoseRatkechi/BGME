@@ -2,6 +2,7 @@
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Ryo.Interfaces;
+using SharedScans.Interfaces;
 
 namespace BGME.Framework.P4G;
 
@@ -14,11 +15,11 @@ internal class BgmeService : IBgmeService, IGameHook
     private readonly FloorBgm floorPatcher;
     private readonly EventBgm eventBgm;
 
-    public BgmeService(ICriAtomRegistry criAtomRegistry, MusicService music)
+    public BgmeService(ISharedScans scans, ICriAtomRegistry criAtomRegistry, MusicService music)
     {
         this.music = music;
 
-        this.sound = new(criAtomRegistry, this.music);
+        this.sound = new(scans, criAtomRegistry, this.music);
         this.encounterPatcher = new(music);
         this.floorPatcher = new(music);
         this.eventBgm = new(this.sound, music);
