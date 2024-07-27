@@ -1,5 +1,4 @@
-﻿using BGME.Framework.CRI;
-using BGME.Framework.Interfaces;
+﻿using BGME.Framework.Interfaces;
 using BGME.Framework.Music;
 using BGME.Framework.Template;
 using BGME.Framework.Template.Configuration;
@@ -34,7 +33,6 @@ public class Mod : ModBase
     private readonly IBgmeService bgme;
     private readonly Game game;
     private readonly MusicService? music;
-    private readonly CriAtomEx? criAtomEx;
     private readonly IRyoApi ryo;
     private bool foundDisableVictoryMod;
 
@@ -85,8 +83,6 @@ public class Mod : ModBase
         switch (game)
         {
             case Game.P4G_PC:
-                this.criAtomEx = new CriAtomEx(game);
-                this.criAtomEx.Initialize(scanner!, this.hooks);
                 this.bgme = new P4G.BgmeService(criAtomRegistry!, this.music);
                 this.bgme.Initialize(scanner!, hooks);
                 break;
@@ -94,8 +90,6 @@ public class Mod : ModBase
                 this.bgme = new P3P.BgmeService(this.hooks, scanner!, this.ryo, criAtomEx!, criAtomRegistry!, this.music);
                 break;
             case Game.P5R_PC:
-                this.criAtomEx = new CriAtomEx(game);
-                this.criAtomEx.Initialize(scanner!, this.hooks);
                 this.modLoader.GetController<IP5RLib>().TryGetTarget(out var p5rLib);
                 this.bgme = new P5R.BgmeService(p5rLib!, this.music);
                 this.bgme.Initialize(scanner!, hooks);

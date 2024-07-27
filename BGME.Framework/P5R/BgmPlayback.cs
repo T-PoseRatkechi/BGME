@@ -1,5 +1,4 @@
-﻿using BGME.Framework.CRI;
-using BGME.Framework.Music;
+﻿using BGME.Framework.Music;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
@@ -16,7 +15,6 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
     [Function(CallingConventions.Microsoft)]
     public delegate void PlayBgmFunction(int cueId);
     private PlayBgmFunction? playBgm;
-    private PlayerConfig? bgmPlayer;
 
     private readonly Timer holdupBgmBuffer = new(TimeSpan.FromMilliseconds(1000)) { AutoReset = false };
     private bool holdupBgmQueued;
@@ -42,15 +40,6 @@ internal unsafe class BgmPlayback : BaseSound, IGameHook
             nameof(PlayBgmCue),
             "40 53 48 83 EC 30 89 CB",
             result => this.playBgm = hooks.CreateWrapper<PlayBgmFunction>(result, out _));
-    }
-
-    public PlayerConfig BgmPlayer
-    {
-        get
-        {
-            //this.bgmPlayer ??= this.criAtomEx.GetPlayerByAcbPath("SOUND/BGM.ACB");
-            return this.bgmPlayer!;
-        }
     }
 
     protected override int VictoryBgmId { get; } = 340;
