@@ -19,3 +19,6 @@
 [submodule "submodules/Ryo"]
 	path = submodules/Ryo
 	url = https://github.com/T-PoseRatkechi/Ryo.git
+[submodule "submodules/SharedScans"]
+	path = submodules/SharedScans
+	url = https://github.com/T-PoseRatkechi/SharedScans.git
