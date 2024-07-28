@@ -14,9 +14,11 @@ internal class BgmeService : IBgmeService, IGameHook
     private readonly EncounterBgm encounterPatcher;
     private readonly FloorBgm floorPatcher;
     private readonly EventBgm eventBgm;
-    private readonly PlaybackService playback;
 
-    public BgmeService(ISharedScans scans, ICriAtomRegistry criAtomRegistry, MusicService music)
+    public BgmeService(
+        ISharedScans scans,
+        ICriAtomRegistry criAtomRegistry,
+        MusicService music)
     {
         this.music = music;
 
@@ -24,7 +26,6 @@ internal class BgmeService : IBgmeService, IGameHook
         this.encounterPatcher = new(music);
         this.floorPatcher = new(music);
         this.eventBgm = new(this.sound, music);
-        this.playback = new(scans, criAtomRegistry);
     }
 
     public void Initialize(IStartupScanner scanner, IReloadedHooks hooks)

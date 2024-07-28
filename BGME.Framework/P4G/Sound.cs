@@ -4,6 +4,7 @@ using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Ryo.Interfaces;
 using SharedScans.Interfaces;
+using static Ryo.Definitions.Functions.CriAtomExFunctions;
 
 namespace BGME.Framework.P4G;
 
@@ -20,20 +21,17 @@ internal unsafe class Sound : BaseSound, IGameHook
     private delegate nint PlayBattleSfx(ushort* param1);
     private IHook<PlayBattleSfx>? playBattleSfx;
 
-    [Function(CallingConventions.Microsoft)]
-    public delegate ushort criAtomExAcf_GetCategoryIndexById(uint id);
-    private readonly HookContainer<criAtomExAcf_GetCategoryIndexById> getCategoryInfoByIndex;
-
     private delegate void SetPlayerVolumeCategory(nint playerHn, uint param2, int cueId);
     private IHook<SetPlayerVolumeCategory>? setPlayerVolumeCategoryHook;
 
     private readonly ICriAtomRegistry criAtomRegistry;
+    private readonly HookContainer<criAtomConfig_GetCategoryIndexById> getCategoryInfoByIndex;
 
     public Sound(ISharedScans scans, ICriAtomRegistry criAtomRegistry, MusicService music)
         : base(music)
     {
         this.criAtomRegistry = criAtomRegistry;
-        this.getCategoryInfoByIndex = scans.CreateHook<criAtomExAcf_GetCategoryIndexById>(this.GetCategoryIndexById, Mod.NAME);
+        this.getCategoryInfoByIndex = scans.CreateHook<criAtomConfig_GetCategoryIndexById>(this.GetCategoryIndexById, Mod.NAME);
     }
 
     protected override int VictoryBgmId { get; } = 7;
@@ -92,7 +90,8 @@ internal unsafe class Sound : BaseSound, IGameHook
 
     private ushort GetCategoryIndexById(uint id)
     {
-        if (id == 5)
+        // Redirect problematic cues to more limited category.
+        if (id == 5 || id == 3 || id == 4)
         {
             return this.getCategoryInfoByIndex.Hook!.OriginalFunction(0);
         }
