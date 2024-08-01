@@ -2,7 +2,7 @@
   "ModId": "BGME.Framework.P3R",
   "ModName": "BGME Framework for P3R",
   "ModAuthor": "zutomayofan50",
-  "ModVersion": "1.1.2",
+  "ModVersion": "3.4.0",
   "ModDescription": "Extends BGM functionality in Persona games.",
   "ModDll": "BGME.Framework.P3R.dll",
   "ModIcon": "Preview.png",
@@ -57,6 +57,13 @@
             "ItemId": 477399
           },
           "ReleaseMetadataName": "BGME.Framework.API.ReleaseMetadata.json"
+        },
+        "SharedScans.Reloaded": {
+          "Config": {
+            "ItemType": "Mod",
+            "ItemId": 495507
+          },
+          "ReleaseMetadataName": "SharedScans.Reloaded.ReleaseMetadata.json"
         }
       }
     }
