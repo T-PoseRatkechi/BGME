@@ -91,7 +91,7 @@ internal unsafe class Sound : BaseSound, IGameHook
     private ushort GetCategoryIndexById(uint id)
     {
         // Redirect problematic cues to more limited category.
-        if (id == 5 || id == 3 || id == 4)
+        if (id == 5 || id == 3 || id == 4 || id == 8)
         {
             return this.getCategoryInfoByIndex.Hook!.OriginalFunction(0);
         }
