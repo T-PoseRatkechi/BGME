@@ -90,7 +90,7 @@ jobs:
 #      run: Copy-Item -Force -Path "${{ env.PROJECT_DIR }}/Publish/*" -Destination "./Publish" -Recurse
 
     - name: Upload GitHub Release Artifact
-      uses: actions/upload-artifact@v2.2.4
+      uses: actions/upload-artifact@v4
       with:
         # Artifact name
         name: GitHub Release
@@ -101,7 +101,7 @@ jobs:
           ${{ env.PUBLISH_GITHUB_FRAMEWORK_API_PATH }}/*
           
     - name: Upload GameBanana Release Artifact
-      uses: actions/upload-artifact@v2.2.4
+      uses: actions/upload-artifact@v4
       with:
         # Artifact name
         name: GameBanana Release
@@ -112,7 +112,7 @@ jobs:
           ${{ env.PUBLISH_GAMEBANANA_FRAMEWORK_API_PATH }}/*
 
     - name: Upload Changelog Artifact
-      uses: actions/upload-artifact@v2.2.4
+      uses: actions/upload-artifact@v4
       with:
         # Artifact name
         name: Changelog
@@ -127,11 +127,11 @@ jobs:
       contents: write
     steps:
     - name: Get changelog
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Changelog
     - name: Get release
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: GitHub Release
         path: release
