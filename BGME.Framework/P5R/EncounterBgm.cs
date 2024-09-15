@@ -51,7 +51,7 @@ internal unsafe class EncounterBgm : BaseEncounterBgm, IGameHook
             this.getEncounterBgmHook = hooks.CreateAsmHook(patch, result, AsmHookBehaviour.ExecuteFirst).Activate();
         });
 
-        scanner.Scan("Victory BGM", "BA 54 01 00 00 48 8B CE E8 ?? ?? ?? ?? 45 33 C9", result =>
+        scanner.Scan("Victory BGM", "BA 54 01 00 00 49 8B CC", result =>
         {
             var patch = new string[]
             {
