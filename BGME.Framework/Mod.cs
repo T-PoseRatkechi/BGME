@@ -92,6 +92,10 @@ public class Mod : ModBase
             case Game.P3P_PC:
                 this.bgme = new P3P.BgmeService(this.hooks, scanner!, this.ryo, criAtomEx!, criAtomRegistry!, this.music);
                 break;
+            case Game.Metaphor:
+                this.bgme = new Metaphor.BgmeService(this.music);
+                this.bgme.Initialize(scanner!, hooks);
+                break;
             case Game.P5R_PC:
                 this.modLoader.GetController<IP5RLib>().TryGetTarget(out var p5rLib);
                 this.bgme = new P5R.BgmeService(p5rLib!, this.music);
@@ -167,6 +171,14 @@ public class Mod : ModBase
                 }
             }
         }
+        else if (this.game == Game.Metaphor)
+        {
+            var bgmeAudioDir_Meta = Path.Join(mod.ModDir, "BGME", "Metaphor");
+            if (Directory.Exists(bgmeAudioDir_Meta))
+            {
+                this.ryo.AddAudioPath(bgmeAudioDir_Meta, new() { AcbName = "bgm", CategoryIds = new int[] { 0, 9, 12 } });
+            }
+        }
 
         if (mod.ModId == "BGME.DisableVictoryTheme")
         {
@@ -194,6 +206,10 @@ public class Mod : ModBase
         else if (appId.Contains("p3r", StringComparison.OrdinalIgnoreCase))
         {
             return Game.P3R_PC;
+        }
+        else if (appId.Contains("metaphor", StringComparison.OrdinalIgnoreCase))
+        {
+            return Game.Metaphor;
         }
         else
         {
